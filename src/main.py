@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+
 from prometheus_fastapi_instrumentator import Instrumentator
 from src.core.config import settings
 from src.core.logging import setup_logging, logger
@@ -17,7 +18,7 @@ setup_logging()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(fastapi_app: FastAPI):
     """
     Modern lifespan management for Enterprise FastAPI apps.
     Handles startup and shutdown logic.
@@ -26,6 +27,7 @@ async def lifespan(app: FastAPI):
     await init_db()
     yield
     logger.info("application_shutdown", status="cleaning_up")
+
 
 
 app = FastAPI(
