@@ -1,0 +1,80 @@
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+from sqlmodel import select, SQLModel
+from src.core.config import settings
+from src.core.logging import logger
+from src.schemas.agents import UserHistory
+
+# Async Engine for PostgreSQL
+engine = create_async_engine(settings.DATABASE_URL, echo=False, future=True)
+
+async def init_db():
+    """
+    Initialize the database and create tables using SQLModel.
+    """
+    async with engine.begin() as conn:
+        # In a real enterprise app, we'd use Alembic migrations.
+        # For this portfolio build, we'll use create_all for speed.
+        await conn.run_sync(SQLModel.metadata.create_all)
+    logger.info("database_initialized", url=settings.DATABASE_URL)
+
+async def get_user_reliability(user_id: str) -> tuple[float, str | None]:
+    """
+    Fetch the reliability score and slack_id for a given user using SQLModel.
+    """
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with async_session() as session:
+        statement = select(UserHistory).where(UserHistory.user_id == user_id)
+        results = await session.execute(statement)
+        user = results.scalar_one_or_none()
+        
+        if user:
+            return user.reliability_score, user.slack_id
+        return 100.0, None
+
+async def update_user_reliability(user_id: str, was_failure: bool):
+    """
+    Update historical stats using SQLModel/SQLAlchemy.
+    """
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with async_session() as session:
+        statement = select(UserHistory).where(UserHistory.user_id == user_id)
+        results = await session.execute(statement)
+        user = results.scalar_one_or_none()
+
+        if not user:
+            user = UserHistory(
+                user_id=user_id,
+                total_commitments=1,
+                failed_commitments=1 if was_failure else 0
+            )
+            session.add(user)
+        else:
+            user.total_commitments += 1
+            if was_failure:
+                user.failed_commitments += 1
+        
+        # Calculate new score
+        user.reliability_score = ((user.total_commitments - user.failed_commitments) / user.total_commitments) * 100
+        
+        await session.commit()
+        logger.info("reliability_updated", user_id=user_id, new_score=user.reliability_score)
+
+async def set_slack_id(user_id: str, slack_id: str):
+    """
+    Maps an internal user_id to a Slack Member ID using SQLModel.
+    """
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with async_session() as session:
+        statement = select(UserHistory).where(UserHistory.user_id == user_id)
+        results = await session.execute(statement)
+        user = results.scalar_one_or_none()
+
+        if not user:
+            user = UserHistory(user_id=user_id, slack_id=slack_id)
+            session.add(user)
+        else:
+            user.slack_id = slack_id
+            
+        await session.commit()
+    logger.info("slack_id_mapped", user_id=user_id, slack_id=slack_id)
