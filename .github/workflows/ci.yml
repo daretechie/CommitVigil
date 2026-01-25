@@ -10,18 +10,18 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6.0.2
-
-      - name: Set up Python 3.14
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-          cache: "poetry"
+      - uses: actions/checkout@v4
 
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          export PATH="$HOME/.local/bin:$PATH"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "poetry"
 
       - name: Install dependencies
         run: poetry install
@@ -33,3 +33,4 @@ jobs:
 
       - name: Run tests with coverage
         run: poetry run pytest --cov=src --cov-report=xml
+
