@@ -1,6 +1,6 @@
 import instructor
 from openai import AsyncOpenAI
-from typing import Type
+
 from src.llm.base import LLMProvider, T
 
 
@@ -13,7 +13,7 @@ class OpenAIProvider(LLMProvider):
         return False
 
     async def chat_completion(
-        self, response_model: Type[T], messages: list[dict[str, str]], model: str
+        self, response_model: type[T], messages: list[dict[str, str]], model: str
     ) -> T:
         return await self.client.chat.completions.create(
             model=model, response_model=response_model, messages=messages

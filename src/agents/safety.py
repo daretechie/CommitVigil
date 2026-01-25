@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
-from src.llm.factory import LLMFactory
+
 from src.core.config import settings
+from src.llm.factory import LLMFactory
 from src.schemas.agents import ToneType
 
 
@@ -19,7 +20,7 @@ class SafetySupervisor:
     This moves ethics from simple 'if/else' into sophisticated agentic reasoning.
     """
 
-    def __init__(self, provider_name: str = None):
+    def __init__(self, provider_name: str | None = None):
         self.provider = LLMFactory.get_provider(provider_name)
         self.model = settings.MODEL_NAME
 
@@ -41,11 +42,14 @@ class SafetySupervisor:
         Proposed Message: "{message}"
         Intended Tone: {tone}
         User Context (Reliability/History): {user_context}
-        
+
         CRITICAL TASK:
-        Analyze        If the message is too harsh (Tone Drift) or culturally insensitive, flag it as unsafe.
-        If the message touches HR territory (Performance reviews, salary, firing), set 'is_hard_blocked': true.
-        If the internal confidence in the current analysis is likely below the threshold, flag 'requires_human_review'.
+        Analyze: If the message is too harsh (Tone Drift) or culturally
+        insensitive, flag it as unsafe.
+        If the message touches HR territory (Performance reviews, salary,
+        firing), set 'is_hard_blocked': true.
+        If the internal confidence in the current analysis is likely below
+        the threshold, flag 'requires_human_review'.
         """
 
         return await self.provider.chat_completion(
@@ -54,7 +58,9 @@ class SafetySupervisor:
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a specialized HR Ethics & Morale Safety Supervisor.",
+                    "content": (
+                        "You are a specialized HR Ethics & Morale Safety Supervisor."
+                    ),
                 },
                 {"role": "user", "content": prompt},
             ],

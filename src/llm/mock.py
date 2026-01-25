@@ -1,6 +1,8 @@
-from typing import Type
-from src.llm.base import LLMProvider, T
+from enum import Enum
+from typing import get_origin
+
 from src.core.logging import logger
+from src.llm.base import LLMProvider, T
 
 
 class MockProvider(LLMProvider):
@@ -14,7 +16,7 @@ class MockProvider(LLMProvider):
         return True
 
     async def chat_completion(
-        self, response_model: Type[T], messages: list[dict[str, str]], model: str
+        self, response_model: type[T], messages: list[dict[str, str]], model: str
     ) -> T:
         logger.warning("llm_mock_completion_triggered", provider="Mock", model=model)
 
@@ -22,23 +24,24 @@ class MockProvider(LLMProvider):
         # Mapping model fields to dummy values
         dummy_data = {}
         for name, field in response_model.model_fields.items():
-            if field.annotation == str:
+            annotation = field.annotation
+            origin = get_origin(annotation)
+
+            if annotation is str:
                 dummy_data[name] = f"mock_{name}"
-            elif field.annotation == float:
+            elif annotation is float:
                 dummy_data[name] = 0.95
-            elif field.annotation == bool:
+            elif annotation is bool:
                 dummy_data[name] = True
-            elif field.annotation == int:
+            elif annotation is int:
                 dummy_data[name] = 1
-            elif hasattr(field.annotation, "__name__") and field.annotation.__name__ == "list":
+            elif origin is list or (
+                hasattr(annotation, "__name__") and annotation.__name__ == "list"
+            ):
                 dummy_data[name] = []
+            elif isinstance(annotation, type) and issubclass(annotation, Enum):
+                dummy_data[name] = next(iter(annotation))
             else:
-                # For Enums or other complex types, we take the first value if it's an Enum
-                from enum import Enum
-                if isinstance(field.annotation, type) and issubclass(field.annotation, Enum):
-                    dummy_data[name] = list(field.annotation)[0]
-                else:
-                    dummy_data[name] = None
+                dummy_data[name] = None
 
         return response_model(**dummy_data)
-

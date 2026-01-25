@@ -1,6 +1,6 @@
 import instructor
 from groq import AsyncGroq
-from typing import Type
+
 from src.llm.base import LLMProvider, T
 
 
@@ -13,7 +13,7 @@ class GroqProvider(LLMProvider):
         return False
 
     async def chat_completion(
-        self, response_model: Type[T], messages: list[dict[str, str]], model: str
+        self, response_model: type[T], messages: list[dict[str, str]], model: str
     ) -> T:
         # Default to a safe Llama 3 model if not specified or incompatible
         # (Though we pass the model from the Brain)

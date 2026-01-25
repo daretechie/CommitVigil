@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
 from enum import Enum
-from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class SlippageStatus(str, Enum):
@@ -32,7 +32,7 @@ class GitCommitPromise(BaseModel):
     author_email: str
     message: str
     extracted_tasks: list[str]
-    deadline_hint: Optional[str] = None
+    deadline_hint: str | None = None
 
 
 class GitInbound(BaseModel):

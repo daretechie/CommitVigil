@@ -1,7 +1,7 @@
-from pydantic import BaseModel
-from sqlmodel import SQLModel, Field
-from typing import Optional
 from enum import Enum
+
+from pydantic import BaseModel
+from sqlmodel import Field, SQLModel
 
 
 class ExcuseCategory(str, Enum):
@@ -64,7 +64,7 @@ class PipelineEvaluation(BaseModel):
     excuse: ExcuseAnalysis
     risk: RiskAssessment
     burnout: BurnoutDetection
-    safety_audit: Optional[SafetyIntervention] = None
+    safety_audit: SafetyIntervention | None = None
 
 
 class ExtractedCommitment(BaseModel):
@@ -91,12 +91,12 @@ class UserHistory(SQLModel, table=True):
     __tablename__ = "user_history"
 
     user_id: str = Field(primary_key=True, index=True)
-    slack_id: Optional[str] = Field(default=None)
-    git_email: Optional[str] = Field(default=None)
+    slack_id: str | None = Field(default=None)
+    git_email: str | None = Field(default=None)
     total_commitments: int = Field(default=0)
     failed_commitments: int = Field(default=0)
     reliability_score: float = Field(default=100.0)
 
     # Ethical Tracking
     consecutive_firm_interventions: int = Field(default=0)
-    last_intervention_at: Optional[str] = Field(default=None)
+    last_intervention_at: str | None = Field(default=None)

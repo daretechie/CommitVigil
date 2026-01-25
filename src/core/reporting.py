@@ -1,7 +1,7 @@
-from src.schemas.performance import SlippageAnalysis, TruthGapAnalysis
+from datetime import datetime
 
 from src.schemas.agents import UserHistory
-from datetime import datetime
+from src.schemas.performance import SlippageAnalysis, TruthGapAnalysis
 
 
 class AuditReportGenerator:

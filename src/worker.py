@@ -1,15 +1,15 @@
-from arq.connections import RedisSettings
-from src.core.config import settings
-from src.core.logging import setup_logging, logger
-from src.agents.brain import CommitGuardBrain
-from src.schemas.agents import RiskLevel, ExcuseCategory
-from src.core.database import init_db, get_user_reliability, update_user_reliability
-
-from src.core.slack import SlackConnector
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-
 from datetime import datetime, timedelta
+from typing import ClassVar
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from arq.connections import RedisSettings
+
+from src.agents.brain import CommitGuardBrain
+from src.core.config import settings
+from src.core.database import get_user_reliability, init_db, update_user_reliability
+from src.core.logging import logger, setup_logging
+from src.core.slack import SlackConnector
+from src.schemas.agents import ExcuseCategory, RiskLevel
 
 # Initialize Logging for the Worker
 setup_logging()
@@ -110,7 +110,7 @@ class WorkerSettings:
     ARQ specific configuration for the background worker process.
     """
 
-    functions = [process_commitment_eval]
+    functions: ClassVar[list] = [process_commitment_eval]
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)

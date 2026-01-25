@@ -1,25 +1,26 @@
 from contextlib import asynccontextmanager
+
+from arq import ArqRedis, create_pool
+from arq.connections import RedisSettings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
+from sqlalchemy import text
 
-from arq import create_pool, ArqRedis
-from arq.connections import RedisSettings
-
-from src.core.config import settings
-from src.core.logging import setup_logging, logger
 from src.agents.commitment_extractor import CommitmentExtractor
 from src.agents.performance import SlippageAnalyst, TruthGapDetector
-from src.core.reporting import AuditReportGenerator
+from src.core.config import settings
 from src.core.database import (
-    init_db,
-    set_slack_id,
-    set_git_email,
+    engine,
     get_user_by_git_email,
     get_user_reliability,
-    engine,
+    init_db,
+    set_git_email,
+    set_slack_id,
 )
-from src.schemas.agents import UserHistory, CommitmentUpdate
+from src.core.logging import logger, setup_logging
+from src.core.reporting import AuditReportGenerator
+from src.schemas.agents import CommitmentUpdate, UserHistory
 
 # State storage for shared resources
 state: dict[str, ArqRedis | None] = {"redis": None}
@@ -78,8 +79,6 @@ async def health_check():
 
     # Check Database
     try:
-        from sqlalchemy import text
-
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         health["dependencies"]["database"] = "healthy"
@@ -106,9 +105,8 @@ async def health_check():
 
 @app.get("/")
 async def root():
-    return {
-        "message": f"Welcome to {settings.PROJECT_NAME}. Visit /docs for API documentation."
-    }
+    msg = f"Welcome to {settings.PROJECT_NAME}. Visit /docs for API documentation."
+    return {"message": msg}
 
 
 @app.post("/evaluate")
@@ -230,6 +228,4 @@ async def get_performance_audit(user_id: str):
         user_id=user_id, reliability_score=score, total_commitments=10
     )
 
-    report = AuditReportGenerator.generate_audit_summary(user_mock, slippage, gap)
-
-    return report
+    return AuditReportGenerator.generate_audit_summary(user_mock, slippage, gap)

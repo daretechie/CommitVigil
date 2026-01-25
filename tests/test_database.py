@@ -1,22 +1,24 @@
-import pytest
 import os
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
-from src.core.database import (
-    init_db,
-    get_user_reliability,
-    update_user_reliability,
-    set_slack_id,
-    set_git_email,
-    get_user_by_git_email,
-)
+
 from src.core.config import settings
+from src.core.database import (
+    get_user_by_git_email,
+    get_user_reliability,
+    init_db,
+    set_git_email,
+    set_slack_id,
+    update_user_reliability,
+)
 
 # Test Database URL
 TEST_DATABASE_URL = "sqlite+aiosqlite:///test_commitguard.db"
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True)
 async def setup_test_db():
     # Override settings for testing
     original_url = settings.DATABASE_URL
@@ -62,9 +64,8 @@ async def test_user_reliability_flow():
     user_id = "u1"
 
     # 1. Initial
-    score, slack_id, consecutive_firm = await get_user_reliability(user_id)
+    score, _slack_id, consecutive_firm = await get_user_reliability(user_id)
     assert score == 100.0
-
 
     # 2. Add as new user with failure (covers line 56)
     await update_user_reliability(user_id, was_failure=True, tone_used="firm")
@@ -72,20 +73,17 @@ async def test_user_reliability_flow():
     assert score == 0.0
     assert consecutive_firm == 1
 
-
     # 3. Success for existing user (covers line 60)
     await update_user_reliability(user_id, was_failure=False, tone_used="supportive")
     score, _, consecutive_firm = await get_user_reliability(user_id)
     assert score == 50.0
     assert consecutive_firm == 0
 
-
     # 4. Failure for existing user (covers line 62)
     await update_user_reliability(user_id, was_failure=True, tone_used="firm")
     score, _, _ = await get_user_reliability(user_id)
     # 2 failures, 1 success -> 1/3 * 100 = 33.33
     assert 33.3 <= score <= 33.4
-
 
 
 @pytest.mark.asyncio
@@ -96,12 +94,10 @@ async def test_set_slack_id():
     _, s_id, _ = await get_user_reliability(user_id)
     assert s_id == "s1"
 
-
     # Update existing
     await set_slack_id(user_id, "s2")
     _, s_id, _ = await get_user_reliability(user_id)
     assert s_id == "s2"
-
 
 
 @pytest.mark.asyncio

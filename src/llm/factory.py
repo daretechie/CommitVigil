@@ -1,9 +1,9 @@
 from src.core.config import settings
 from src.core.logging import logger
 from src.llm.base import LLMProvider
-from src.llm.openai import OpenAIProvider
 from src.llm.groq import GroqProvider
 from src.llm.mock import MockProvider
+from src.llm.openai import OpenAIProvider
 
 
 class LLMFactory:
@@ -12,7 +12,7 @@ class LLMFactory:
     """
 
     @staticmethod
-    def get_provider(provider_name: str = None) -> LLMProvider:
+    def get_provider(provider_name: str | None = None) -> LLMProvider:
         # 1. Respect explicit steering if set
         active_provider = provider_name or settings.LLM_PROVIDER
         if active_provider:

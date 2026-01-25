@@ -1,17 +1,20 @@
+import asyncio
+
+from src.agents.safety import SafetySupervisor
 from src.core.config import settings
 from src.core.logging import logger
-
 from src.llm.factory import LLMFactory
 from src.schemas.agents import (
-    ExcuseAnalysis,
-    RiskAssessment,
-    ExcuseCategory,
-    RiskLevel,
-    BurnoutDetection,
-    ToneType,
     AgentDecision,
+    BurnoutDetection,
+    ExcuseAnalysis,
+    ExcuseCategory,
     ExtractedCommitment,
     PipelineEvaluation,
+    RiskAssessment,
+    RiskLevel,
+    SafetyIntervention,
+    ToneType,
 )
 
 
@@ -72,11 +75,15 @@ class CommitGuardBrain:
             messages=[
                 {
                     "role": "system",
-                    "content": "Assess the risk of commitment failure based on history.",
+                    "content": (
+                        "Assess the risk of commitment failure based on history."
+                    ),
                 },
                 {
                     "role": "user",
-                    "content": f"History: {historical_context}\nStatus: {current_status}",
+                    "content": (
+                        f"History: {historical_context}\nStatus: {current_status}"
+                    ),
                 },
             ],
         )
@@ -101,7 +108,9 @@ class CommitGuardBrain:
             messages=[
                 {
                     "role": "system",
-                    "content": "Detect signs of professional burnout in the user input.",
+                    "content": (
+                        "Detect signs of professional burnout in the user input."
+                    ),
                 },
                 {"role": "user", "content": user_input},
             ],
@@ -121,7 +130,10 @@ class CommitGuardBrain:
             messages=[
                 {
                     "role": "system",
-                    "content": "Extract a task and deadline from the user's natural language promise.",
+                    "content": (
+                        "Extract a task and deadline from the user's "
+                        "natural language promise."
+                    ),
                 },
                 {"role": "user", "content": raw_input},
             ],
@@ -139,7 +151,6 @@ class CommitGuardBrain:
         The Orchestration Pipeline: Decoupled and high-fidelity evaluation.
         """
         # 1. Parallel Analysis Phase (High Velocity)
-        import asyncio
 
         excuse_task = self.analyze_excuse(check_in)
         burnout_task = self.detect_burnout(check_in)
@@ -161,11 +172,11 @@ class CommitGuardBrain:
         )
 
         # 3. Final Ethical Supervision (Elite Guardrail)
-        from src.agents.safety import SafetySupervisor
-        from src.schemas.agents import SafetyIntervention
-
         supervisor = SafetySupervisor()
-        context = f"User: {user_id}. Reliability: {reliability_score}%. Consecutive firm: {consecutive_firm}."
+        context = (
+            f"User: {user_id}. Reliability: {reliability_score}%. "
+            f"Consecutive firm: {consecutive_firm}."
+        )
 
         audit = await supervisor.audit_message(decision.message, decision.tone, context)
         intervention = None
@@ -176,7 +187,10 @@ class CommitGuardBrain:
                 "hr_legal_boundary_detected", user_id=user_id, message=decision.message
             )
             decision.action = "escalate_to_manager"
-            decision.message = "This follow-up contains sensitive HR-related topics and has been blocked for manual manager review."
+            decision.message = (
+                "This follow-up contains sensitive HR-related topics "
+                "and has been blocked for manual manager review."
+            )
             intervention = SafetyIntervention(
                 original_message=decision.message,
                 corrected_message=None,
@@ -227,50 +241,70 @@ class CommitGuardBrain:
         reliability_score: float = 100.0,
         consecutive_firm_calls: int = 0,
     ) -> AgentDecision:
+        RELIABILITY_THRESHOLD = 50.0
+        CRITICAL_THRESHOLD = 20.0
+        CONSECUTIVE_LIMIT = 3
+
         if self.provider.is_mock:
             tone = ToneType.SUPPORTIVE
 
             # 1. THE BURNOUT SAFETY VALVE (Mandatory)
             if burnout.is_at_risk:
                 tone = ToneType.SUPPORTIVE
-                msg = f"I hear you. It sounds like you're reaching your limit. {burnout.recommendation}."
+                msg = (
+                    f"I hear you. It sounds like you're reaching your limit. "
+                    f"{burnout.recommendation}."
+                )
 
             # 2. TONE-DAMPING (Ethical Cooling-off)
-            elif consecutive_firm_calls >= 3:
+            elif consecutive_firm_calls >= CONSECUTIVE_LIMIT:
                 tone = ToneType.NEUTRAL
-                msg = "Let's reset and focus on a small, achievable win today. No pressure."
+                msg = (
+                    "Let's reset and focus on a small, achievable win today. "
+                    "No pressure."
+                )
 
             # 3. RELIABILITY SCALING
-            elif reliability_score < 50.0:
+            elif reliability_score < RELIABILITY_THRESHOLD:
                 tone = (
                     ToneType.CONFRONTATIONAL
-                    if reliability_score < 20
+                    if reliability_score < CRITICAL_THRESHOLD
                     else ToneType.FIRM
                 )
-                msg = "This is your third delay this month. We need an immediate recovery plan."
+                msg = (
+                    "This is your third delay this month. "
+                    "We need an immediate recovery plan."
+                )
 
             # 4. DEFAULT
             else:
-                msg = f"Thank you for the update. [Context: {settings.CULTURAL_DIRECTNESS_LEVEL} directness enabled]"
+                msg = (
+                    f"Thank you for the update. [Context: "
+                    f"{settings.CULTURAL_DIRECTNESS_LEVEL} directness enabled]"
+                )
 
             return AgentDecision(
                 action="none"
-                if not (burnout.is_at_risk or reliability_score < 50)
+                if not (burnout.is_at_risk or reliability_score < RELIABILITY_THRESHOLD)
                 else "escalate_to_manager",
                 tone=tone,
                 message=msg,
-                analysis_summary=f"Mock: Decision based on reliability of {reliability_score}% and {consecutive_firm_calls} firm calls.",
+                analysis_summary=(
+                    f"Mock: Decision based on reliability of {reliability_score}% "
+                    f"and {consecutive_firm_calls} firm calls."
+                ),
             )
 
         # 5. ENTERPRISE LLM PROMPT (Self-Correction / Sensitivity)
         prompt = f"""
-        Determine action and tone. 
+        Determine action and tone.
         User Reliability: {reliability_score}%
         Consecutive Strict Interventions: {consecutive_firm_calls}
         Manager's Cultural Directness Setting: {settings.CULTURAL_DIRECTNESS_LEVEL}
-        
+
         RULES:
-        - If Consecutive Strict >= 3, you MUST use SUPPORTIVE/NEUTRAL tone to avoid morale burnout.
+        - If Consecutive Strict >= 3, you MUST use SUPPORTIVE/NEUTRAL tone
+          to avoid morale burnout.
         - Respect the Cultural Directness: if 'low', soften all firm feedback.
         """
 

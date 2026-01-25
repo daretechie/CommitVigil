@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Type, TypeVar
+from typing import TypeVar
+
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
@@ -19,6 +20,6 @@ class LLMProvider(ABC):
 
     @abstractmethod
     async def chat_completion(
-        self, response_model: Type[T], messages: list[dict[str, str]], model: str
+        self, response_model: type[T], messages: list[dict[str, str]], model: str
     ) -> T:
         pass

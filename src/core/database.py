@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlmodel import select, SQLModel
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlmodel import SQLModel, select
+
 from src.core.config import settings
 from src.core.logging import logger
 from src.schemas.agents import UserHistory
@@ -76,7 +76,8 @@ async def update_user_reliability(
             user.consecutive_firm_interventions += 1
             user.last_intervention_at = datetime.now().isoformat()
         else:
-            # Cooling-off logic: Reset counter if a supportive/neutral tone is successfuly used
+            # Cooling-off logic: Reset counter if a supportive/neutral
+            # tone is successfully used
             user.consecutive_firm_interventions = 0
 
         # Calculate new score
@@ -131,7 +132,7 @@ async def set_git_email(user_id: str, git_email: str):
     logger.info("git_email_mapped", user_id=user_id, git_email=git_email)
 
 
-async def get_user_by_git_email(git_email: str) -> Optional[UserHistory]:
+async def get_user_by_git_email(git_email: str) -> UserHistory | None:
     """
     Look up a UserHistory record by Git email.
     """

@@ -24,7 +24,11 @@ class CommitmentExtractor:
             messages=[
                 {
                     "role": "system",
-                    "content": "Extract the primary promise. Identify WHO made the promise. Output: {who, what, when}.",
+                    "content": (
+                        "Extract the primary promise. "
+                        "Identify WHO made the promise. "
+                        "Output: {who, what, when}."
+                    ),
                 },
                 {"role": "user", "content": thread_text},
             ],

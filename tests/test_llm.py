@@ -1,9 +1,11 @@
 import pytest
+
+from src.core.config import settings
 from src.llm.factory import LLMFactory
-from src.llm.openai import OpenAIProvider
 from src.llm.groq import GroqProvider
 from src.llm.mock import MockProvider
-from src.core.config import settings
+from src.schemas.agents import ExcuseAnalysis
+from src.llm.openai import OpenAIProvider
 
 
 def test_llm_factory_mock():
@@ -35,8 +37,6 @@ def test_llm_factory_groq_steering():
 
 @pytest.mark.asyncio
 async def test_mock_provider_chat_completion():
-    from src.schemas.agents import ExcuseAnalysis
-
     provider = MockProvider()
     response = await provider.chat_completion(
         response_model=ExcuseAnalysis, messages=[], model="any-model"
