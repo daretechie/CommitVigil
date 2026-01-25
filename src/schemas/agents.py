@@ -81,5 +81,10 @@ class UserHistory(SQLModel, table=True):
     total_commitments: int = Field(default=0)
     failed_commitments: int = Field(default=0)
     reliability_score: float = Field(default=100.0)
+    
+    # Ethical Tracking
+    consecutive_firm_interventions: int = Field(default=0)
+    last_intervention_at: Optional[str] = Field(default=None)
+
 
 

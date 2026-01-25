@@ -130,45 +130,55 @@ class CommitGuardBrain:
         risk: RiskAssessment,
         burnout: BurnoutDetection,
         reliability_score: float = 100.0,
+        consecutive_firm_calls: int = 0
     ) -> AgentDecision:
         if self.provider.is_mock:
             tone = ToneType.SUPPORTIVE
+            
+            # 1. THE BURNOUT SAFETY VALVE (Mandatory)
             if burnout.is_at_risk:
                 tone = ToneType.SUPPORTIVE
                 msg = f"I hear you. It sounds like you're reaching your limit. {burnout.recommendation}."
+            
+            # 2. TONE-DAMPING (Ethical Cooling-off)
+            elif consecutive_firm_calls >= 3:
+                tone = ToneType.NEUTRAL
+                msg = "Let's reset and focus on a small, achievable win today. No pressure."
+            
+            # 3. RELIABILITY SCALING
             elif reliability_score < 50.0:
-                tone = (
-                    ToneType.CONFRONTATIONAL
-                    if reliability_score < 20
-                    else ToneType.FIRM
-                )
+                tone = ToneType.CONFRONTATIONAL if reliability_score < 20 else ToneType.FIRM
                 msg = "This is your third delay this month. We need an immediate recovery plan."
-            elif excuse.category == ExcuseCategory.DEFLECTION:
-                tone = ToneType.FIRM
-                msg = "We need to stay focused on the commitment. How can we get back on track?"
+            
+            # 4. DEFAULT
             else:
-                msg = "Thank you for the update. Let's adjust the timeline accordingly."
+                msg = f"Thank you for the update. [Context: {settings.CULTURAL_DIRECTNESS_LEVEL} directness enabled]"
 
             return AgentDecision(
-                action="none"
-                if not (burnout.is_at_risk or reliability_score < 50)
-                else "escalate_to_manager",
+                action="none" if not (burnout.is_at_risk or reliability_score < 50) else "escalate_to_manager",
                 tone=tone,
                 message=msg,
-                analysis_summary=f"Mock: Decision based on reliability of {reliability_score}%",
+                analysis_summary=f"Mock: Decision based on reliability of {reliability_score}% and {consecutive_firm_calls} firm calls."
             )
+
+        # 5. ENTERPRISE LLM PROMPT (Self-Correction / Sensitivity)
+        prompt = f"""
+        Determine action and tone. 
+        User Reliability: {reliability_score}%
+        Consecutive Strict Interventions: {consecutive_firm_calls}
+        Manager's Cultural Directness Setting: {settings.CULTURAL_DIRECTNESS_LEVEL}
+        
+        RULES:
+        - If Consecutive Strict >= 3, you MUST use SUPPORTIVE/NEUTRAL tone to avoid morale burnout.
+        - Respect the Cultural Directness: if 'low', soften all firm feedback.
+        """
 
         return await self.provider.chat_completion(
             response_model=AgentDecision,
             model=self.model,
             messages=[
-                {
-                    "role": "system",
-                    "content": f"Determine action and tone. User Reliability: {reliability_score}%",
-                },
-                {
-                    "role": "user",
-                    "content": f"Excuse: {excuse}\nRisk: {risk}\nBurnout: {burnout}",
-                },
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": f"Excuse: {excuse}\nRisk: {risk}\nBurnout: {burnout}"},
             ],
         )
+
