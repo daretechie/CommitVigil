@@ -70,7 +70,7 @@ async def process_commitment_eval(
 
     # 7. Accountability Logic: Proactive Follow-up
     # Triggered based on calculated risk thresholds
-    if risk.level in [RiskLevel.HIGH, RiskLevel.CRITICAL]:
+    if evaluation.risk.level in [RiskLevel.HIGH, RiskLevel.CRITICAL]:
         run_time = datetime.now() + timedelta(seconds=settings.FOLLOW_UP_DELAY_SECONDS)
         scheduler.add_job(
             send_follow_up,
@@ -78,6 +78,7 @@ async def process_commitment_eval(
             run_date=run_time,
             args=[user_id, f"🔔 *CommitGuard Alert:* Checking in on commitment: {commitment}", slack_id],
         )
+
         logger.info("follow_up_scheduled", user_id=user_id, time=run_time.isoformat())
 
     logger.info("processing_commitment_eval", user_id=user_id, status="completed")
