@@ -18,19 +18,6 @@ class CommitmentExtractor:
         Extracts {who, what, when} from a raw conversation.
         Now includes 'Identity Attribution' logic.
         """
-        if self.provider.is_mock:
-            # Elite Identity Attribution Mock
-            # If the text mentions a name or 'I am X', we attribute it.
-            who = "John"
-            if "I am" in thread_text:
-                who = thread_text.split("I am")[1].split()[0].strip(",. ")
-            elif "promised" in thread_text:
-                parts = thread_text.split()
-                if parts:
-                    who = parts[0]  # Assume the first word for mock
-
-            return SlackCommitmentRecord(who=who, what="Fix API bug", when="Friday")
-
         return await self.provider.chat_completion(
             response_model=SlackCommitmentRecord,
             model=self.model,

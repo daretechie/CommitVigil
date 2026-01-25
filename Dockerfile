@@ -1,22 +1,36 @@
-# Use a slim Python 3.12 image
-FROM python:3.12-slim
+# Build stage
+FROM python:3.12-slim AS builder
 
-# Set environment variables
+WORKDIR /app
+
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Set work directory
+RUN pip install --no-cache-dir poetry
+
+COPY pyproject.toml poetry.lock ./
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-root --no-interaction --no-ansi
+
+# Final stage
+FROM python:3.12-slim
+
 WORKDIR /app
 
-# Install dependencies
-RUN pip install poetry
-COPY pyproject.toml .
-RUN poetry config virtualenvs.create false && poetry install --no-root
+# Create a non-root user
+RUN groupadd -r commitguard && useradd -r -g commitguard commitguard
 
-# Copy project
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
 COPY . .
 
-# Exposure (FastAPI default)
+# Ensure the database file is writable by the non-root user if using SQLite
+RUN touch commitguard.db && chown commitguard:commitguard commitguard.db && chmod 666 commitguard.db
+RUN chown -R commitguard:commitguard /app
+
+USER commitguard
+
 EXPOSE 8000
 
 # We use docker-compose to decide whether to run 'uvicorn' or 'arq'

@@ -63,5 +63,12 @@ curl -X 'POST' \
 }'
 ```
 
+### Performance Integrity Audit (The Deliverable)
+Generate a high-value summary of a developer's communication-vs-technical reality.
+```bash
+curl -X 'GET' 'http://localhost:8000/reports/audit/dev_alpha'
+```
+
+
 ---
 *Built for High-Performance Teams and Elite Portfolios.*

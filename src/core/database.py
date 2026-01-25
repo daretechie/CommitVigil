@@ -1,4 +1,5 @@
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import select, SQLModel
 from src.core.config import settings
@@ -7,6 +8,14 @@ from src.schemas.agents import UserHistory
 
 # Async Engine for PostgreSQL
 engine = create_async_engine(settings.DATABASE_URL, echo=False, future=True)
+
+# Async Session Factory (Singleton-like)
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autoflush=False,
+)
 
 async def init_db():
     """
@@ -22,8 +31,7 @@ async def get_user_reliability(user_id: str) -> tuple[float, str | None]:
     """
     Fetch the reliability score and slack_id for a given user using SQLModel.
     """
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    async with async_session() as session:
+    async with AsyncSessionLocal() as session:
         statement = select(UserHistory).where(UserHistory.user_id == user_id)
         results = await session.execute(statement)
         user = results.scalar_one_or_none()
@@ -36,8 +44,7 @@ async def update_user_reliability(user_id: str, was_failure: bool):
     """
     Update historical stats using SQLModel/SQLAlchemy.
     """
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    async with async_session() as session:
+    async with AsyncSessionLocal() as session:
         statement = select(UserHistory).where(UserHistory.user_id == user_id)
         results = await session.execute(statement)
         user = results.scalar_one_or_none()
@@ -64,8 +71,7 @@ async def set_slack_id(user_id: str, slack_id: str):
     """
     Maps an internal user_id to a Slack Member ID using SQLModel.
     """
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    async with async_session() as session:
+    async with AsyncSessionLocal() as session:
         statement = select(UserHistory).where(UserHistory.user_id == user_id)
         results = await session.execute(statement)
         user = results.scalar_one_or_none()
@@ -83,8 +89,7 @@ async def set_git_email(user_id: str, git_email: str):
     """
     Maps an internal user_id to a Git Email using SQLModel.
     """
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    async with async_session() as session:
+    async with AsyncSessionLocal() as session:
         statement = select(UserHistory).where(UserHistory.user_id == user_id)
         results = await session.execute(statement)
         user = results.scalar_one_or_none()
@@ -102,8 +107,7 @@ async def get_user_by_git_email(git_email: str) -> Optional[UserHistory]:
     """
     Look up a UserHistory record by Git email.
     """
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    async with async_session() as session:
+    async with AsyncSessionLocal() as session:
         statement = select(UserHistory).where(UserHistory.git_email == git_email)
         results = await session.execute(statement)
         return results.scalar_one_or_none()

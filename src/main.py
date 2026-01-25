@@ -1,17 +1,28 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-
-
 from prometheus_fastapi_instrumentator import Instrumentator
+
+from arq import create_pool, ArqRedis
+from arq.connections import RedisSettings
+
 from src.core.config import settings
 from src.core.logging import setup_logging, logger
-from src.core.database import init_db, set_slack_id
-from src.schemas.agents import CommitmentUpdate
+from src.agents.commitment_extractor import CommitmentExtractor
+from src.agents.performance import SlippageAnalyst, TruthGapDetector
+from src.core.reporting import AuditReportGenerator
+from src.core.database import (
+    init_db, 
+    set_slack_id, 
+    set_git_email, 
+    get_user_by_git_email, 
+    get_user_reliability,
+    engine
+)
+from src.schemas.agents import UserHistory, CommitmentUpdate
 
-
-from arq import create_pool
-from arq.connections import RedisSettings
+# State storage for shared resources
+state: dict[str, ArqRedis | None] = {"redis": None}
 
 # Initialize Logging
 setup_logging()
@@ -24,8 +35,18 @@ async def lifespan(fastapi_app: FastAPI):
     Handles startup and shutdown logic.
     """
     logger.info("application_startup", status="initializing_resources")
+    
+    # Initialize DB
     await init_db()
+    
+    # Initialize Redis Pool
+    state["redis"] = await create_pool(RedisSettings.from_dsn(settings.REDIS_URL))
+    
     yield
+    
+    # Cleanup
+    if state["redis"]:
+        await state["redis"].close()
     logger.info("application_shutdown", status="cleaning_up")
 
 
@@ -54,8 +75,33 @@ Instrumentator().instrument(app).expose(app)
 
 @app.get("/health")
 async def health_check():
-    logger.info("health_check_triggered", status="ok")
-    return {"status": "ok", "app": settings.PROJECT_NAME}
+    health = {"status": "ok", "app": settings.PROJECT_NAME, "dependencies": {}}
+    
+    # Check Database
+    try:
+        from sqlalchemy import text
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        health["dependencies"]["database"] = "healthy"
+    except Exception as e:
+        logger.error("health_check_failed", dependency="database", error=str(e))
+        health["dependencies"]["database"] = "unhealthy"
+        health["status"] = "degraded"
+
+    # Check Redis
+    if state["redis"]:
+        try:
+            await state["redis"].ping()
+            health["dependencies"]["redis"] = "healthy"
+        except Exception as e:
+            logger.error("health_check_failed", dependency="redis", error=str(e))
+            health["dependencies"]["redis"] = "unhealthy"
+            health["status"] = "degraded"
+    else:
+        health["dependencies"]["redis"] = "not_initialized"
+        health["status"] = "degraded"
+
+    return health
 
 
 @app.get("/")
@@ -70,11 +116,11 @@ async def evaluate_commitment(update: CommitmentUpdate):
     """
     Main ingestion gateway for commitment evaluations.
     """
-    # Connect to Redis
-    redis = await create_pool(RedisSettings.from_dsn(settings.REDIS_URL))
+    if not state["redis"]:
+        return {"status": "error", "message": "Redis pool not initialized"}
 
     # Offload the Agentic work to the background worker
-    await redis.enqueue_job(
+    await state["redis"].enqueue_job(
         "process_commitment_eval",
         user_id=update.user_id,
         commitment=update.commitment,
@@ -93,8 +139,6 @@ async def ingest_raw_commitment(user_id: str, raw_text: str):
     """
     Elite Feature: Extract structured commitment record from raw Slack/Discord text.
     """
-    from src.agents.commitment_extractor import CommitmentExtractor
-
     extractor = CommitmentExtractor()
 
     extracted = await extractor.parse_conversation(raw_text)
@@ -129,7 +173,6 @@ async def map_git_user(user_id: str, git_email: str):
     """
     Elite Config Feature: Map an internal user reference to a Git Email.
     """
-    from src.core.database import set_git_email
     await set_git_email(user_id, git_email)
     return {"status": "success", "message": f"Mapped {user_id} to Git Email {git_email}"}
 
@@ -138,9 +181,6 @@ async def ingest_git_commitment(commit_data: dict):
     """
     Advanced GitOps Feature: Extract commitments directly from Git Commit Messages.
     """
-    from src.agents.commitment_extractor import CommitmentExtractor
-    from src.core.database import get_user_by_git_email
-    
     extractor = CommitmentExtractor()
     author_email = commit_data.get("author_email")
     message = commit_data.get("message")
@@ -164,12 +204,8 @@ async def get_performance_audit(user_id: str):
     CASH-GENERATION ENDPOINT: Generates a professional Performance Integrity Audit.
     This is the deliverable you sell to Engineering Managers.
     """
-    from src.core.database import get_user_reliability
-    from src.agents.performance import SlippageAnalyst, TruthGapDetector
-    from src.core.reporting import AuditReportGenerator
-    
     # 1. Gather Data
-    score, slack_id = await get_user_reliability(user_id)
+    score, _ = await get_user_reliability(user_id)
     # Mocking historical evidence for the audit report demo
     promised = ["Refactor API", "Fix CSS", "Update Docs"]
     reality = "Only updated some typos in README. No major code changes detected."
@@ -182,7 +218,6 @@ async def get_performance_audit(user_id: str):
     gap = await detector.detect_gap("I am 90% done with the refactor", reality)
     
     # 3. Compile Report
-    from src.schemas.agents import UserHistory
     user_mock = UserHistory(user_id=user_id, reliability_score=score, total_commitments=10)
     
     report = AuditReportGenerator.generate_audit_summary(user_mock, slippage, gap)
