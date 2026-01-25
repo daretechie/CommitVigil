@@ -40,37 +40,26 @@ async def process_commitment_eval(
 
     brain = CommitGuardBrain()
 
-    # 1. Analyze the Excuse (Semantic intent detection)
-    excuse = await brain.analyze_excuse(check_in)
-    logger.info("excuse_analyzed", user_id=user_id, category=excuse.category)
-
-    # 2. Assess the Risk (Predictive failure logic)
-    risk = await brain.assess_risk(historical_context="N/A", current_status=check_in)
-    logger.info("risk_assessed", user_id=user_id, score=risk.risk_score)
-
-    # 3. Detect Burnout (Fatigue signaling)
-    burnout = await brain.detect_burnout(check_in)
-    logger.info("burnout_detected", user_id=user_id, risk=burnout.is_at_risk)
-
-    # 4. Fetch Historical Reliability & Ethical Tracking status
+    # 1. Parallel Analysis Phase (High Velocity)
     reliability, slack_id, consecutive_firm = await get_user_reliability(user_id)
-
-    # 5. Final Decision & Tone Adaptation (Behavioral + Ethical calibration)
-    decision = await brain.adapt_tone(
-        excuse, 
-        risk, 
-        burnout, 
+    
+    # 2. Executing the Orchestrated Pipeline (The Brain)
+    decision = await brain.evaluate_participation(
+        user_id=user_id,
+        commitment=commitment,
+        check_in=check_in,
         reliability_score=reliability,
-        consecutive_firm_calls=consecutive_firm
+        consecutive_firm=consecutive_firm
     )
 
     logger.info(
-        "agent_decision",
+        "agent_pipeline_completed",
         user_id=user_id,
         action=decision.action,
         tone=decision.tone,
-        message=decision.message,
+        final_message_preview=decision.message[:50] + "..."
     )
+
 
     # 6. Persist results for Heatmap tracking & Ethical Cooling-off state
     is_failure = excuse.category != ExcuseCategory.LEGITIMATE
