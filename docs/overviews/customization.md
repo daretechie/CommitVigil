@@ -13,11 +13,20 @@ You can customize the system's "Strictness" and "Caution" via environment variab
 *   **`COOLING_OFF_PERIOD_HOURS`**: (Default: `48`) 
     *   Controls how long the system dampens pressure after a period of high-stakes interventions.
 
+### Example: Tuning for Cultural Context
+| Setting | Agent Output (Reliability 40%) | Cultural Vibe |
+| :--- | :--- | :--- |
+| **High** | "Refactor is overdue. Confirm delivery by 5 PM." | Direct, task-oriented. |
+| **Medium** | "The refactor is lagging. Can we prioritize this?" | Professional, collaborative. |
+| **Low** | "I noticed the refactor—is there any way I can help?" | Indirect, supportive. |
+
+
 ## 2. Model Configs & Context Injection
 The "Secret Sauce" of CommitGuard is in the **System Prompts**. You can find and modify the decision-making logic in the following locations:
 
-*   **Behavioral Reasoning**: Located in `src/agents/brain.py`. This is where the `Tone-Damping` and `Cultural Sensitivity` rules are defined.
-*   **Safety Supervision**: Located in `src/agents/safety.py`. This houses the "Ethics Auditor" instructions.
+*   **Behavioral Reasoning**: Located in [src/agents/brain.py](https://github.com/daretechie/CommitGuard-AI/blob/main/src/agents/brain.py).
+*   **Safety Supervision**: Located in [src/agents/safety.py](https://github.com/daretechie/CommitGuard-AI/blob/main/src/agents/safety.py).
+
 
 ## 3. Training Data & Fine-Tuning
 While the core logic uses Zero-Shot and Few-Shot reasoning via Pydantic/Instructor:
@@ -58,6 +67,24 @@ System Target Confidence: {settings.MIN_AI_CONFIDENCE_THRESHOLD}
 If the message is too harsh (Tone Drift) or culturally insensitive, flag it as unsafe.
 If the internal confidence in the current analysis is likely below the threshold, flag 'requires_human_review'.
 ```
+
+### Safety Supervisor Decision Tree
+| Input Tone | Message Analysis | Decision | Action |
+| :--- | :--- | :--- | :--- |
+| **FIRM** | "Delivery is missed. Fix now." | **Unsafe** | Rewrite to: "We missed the delivery. Can you update the team on the blockers?" |
+| **BURN** | "You look busy, take a day off." | **Safe** | Proceed. |
+| **N/A** | Confidence in extraction is <75%. | **HITL** | Flag for `requires_human_review`. |
+
+---
+
+## 4. Validation Guide: Testing Your Tuning 🧪
+When you modify prompts, use the following manual verification flow:
+
+1.  **Unit Tests**: Run `pytest tests/test_brain.py` to ensure core logic isn't broken.
+2.  **Scenario Probing**: Use the `/evaluate` endpoint with a known "Ambiguous" message (e.g., *"Maybe I'll finish if I feel better"*).
+3.  **Audit Check**: Verify the `Safety Supervisor` flags the output correctly for your new settings.
+4.  **Morale Metric**: After 1 week of deployment, check the `consecutive_firm_interventions` count in your database to ensure the "Cooling-off" logic is triggering.
+
 
 ---
 
