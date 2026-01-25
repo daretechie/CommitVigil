@@ -15,7 +15,6 @@ from src.schemas.agents import (
 )
 
 
-
 class CommitGuardBrain:
     """
     Elite Agent Brain: Decoupled from LLM Providers via LLMFactory.
@@ -129,57 +128,67 @@ class CommitGuardBrain:
         )
 
     async def evaluate_participation(
-        self, 
-        user_id: str, 
-        commitment: str, 
+        self,
+        user_id: str,
+        commitment: str,
         check_in: str,
         reliability_score: float,
-        consecutive_firm: int
+        consecutive_firm: int,
     ) -> PipelineEvaluation:
         """
         The Orchestration Pipeline: Decoupled and high-fidelity evaluation.
         """
         # 1. Parallel Analysis Phase (High Velocity)
         import asyncio
+
         excuse_task = self.analyze_excuse(check_in)
         burnout_task = self.detect_burnout(check_in)
-        risk_task = self.assess_risk(historical_context=str(reliability_score), current_status=check_in)
-        
-        excuse, burnout, risk = await asyncio.gather(excuse_task, burnout_task, risk_task)
-        
+        risk_task = self.assess_risk(
+            historical_context=str(reliability_score), current_status=check_in
+        )
+
+        excuse, burnout, risk = await asyncio.gather(
+            excuse_task, burnout_task, risk_task
+        )
+
         # 2. Decision Synthesis
         decision = await self.adapt_tone(
-            excuse, 
-            risk, 
-            burnout, 
-            reliability_score=reliability_score, 
-            consecutive_firm_calls=consecutive_firm
+            excuse,
+            risk,
+            burnout,
+            reliability_score=reliability_score,
+            consecutive_firm_calls=consecutive_firm,
         )
-        
+
         # 3. Final Ethical Supervision (Elite Guardrail)
         from src.agents.safety import SafetySupervisor
         from src.schemas.agents import SafetyIntervention
+
         supervisor = SafetySupervisor()
         context = f"User: {user_id}. Reliability: {reliability_score}%. Consecutive firm: {consecutive_firm}."
-        
+
         audit = await supervisor.audit_message(decision.message, decision.tone, context)
         intervention = None
 
         # A. HARD BLOCK (HR Territory) - Immediate Escalation, No Retry
         if audit.is_hard_blocked:
-            logger.critical("hr_legal_boundary_detected", user_id=user_id, message=decision.message)
+            logger.critical(
+                "hr_legal_boundary_detected", user_id=user_id, message=decision.message
+            )
             decision.action = "escalate_to_manager"
             decision.message = "This follow-up contains sensitive HR-related topics and has been blocked for manual manager review."
             intervention = SafetyIntervention(
                 original_message=decision.message,
                 corrected_message=None,
                 reasoning="HR/Legal Boundary Violation",
-                intervention_type="block"
+                intervention_type="block",
             )
 
         # B. SOFT CORRECTION (Tone/Cultural) - Injection Mechanism
         elif not audit.is_safe:
-            logger.warning("safety_correction_injected", user_id=user_id, reason=audit.reasoning)
+            logger.warning(
+                "safety_correction_injected", user_id=user_id, reason=audit.reasoning
+            )
             original = decision.message
             decision.message = audit.suggested_correction or decision.message
             decision.analysis_summary += f" | Safety Correction: {audit.reasoning}"
@@ -187,9 +196,9 @@ class CommitGuardBrain:
                 original_message=original,
                 corrected_message=decision.message,
                 reasoning=audit.reasoning,
-                intervention_type="correction"
+                intervention_type="correction",
             )
-        
+
         # C. AMBIGUITY (Low Confidence) - Human-in-the-Loop
         elif audit.requires_human_review:
             logger.info("human_review_requested", user_id=user_id)
@@ -199,18 +208,16 @@ class CommitGuardBrain:
                 original_message=decision.message,
                 corrected_message=None,
                 reasoning="Confidence below threshold",
-                intervention_type="review"
+                intervention_type="review",
             )
-            
+
         return PipelineEvaluation(
             decision=decision,
             excuse=excuse,
             risk=risk,
             burnout=burnout,
-            safety_audit=intervention
+            safety_audit=intervention,
         )
-
-
 
     async def adapt_tone(
         self,
@@ -218,35 +225,41 @@ class CommitGuardBrain:
         risk: RiskAssessment,
         burnout: BurnoutDetection,
         reliability_score: float = 100.0,
-        consecutive_firm_calls: int = 0
+        consecutive_firm_calls: int = 0,
     ) -> AgentDecision:
         if self.provider.is_mock:
             tone = ToneType.SUPPORTIVE
-            
+
             # 1. THE BURNOUT SAFETY VALVE (Mandatory)
             if burnout.is_at_risk:
                 tone = ToneType.SUPPORTIVE
                 msg = f"I hear you. It sounds like you're reaching your limit. {burnout.recommendation}."
-            
+
             # 2. TONE-DAMPING (Ethical Cooling-off)
             elif consecutive_firm_calls >= 3:
                 tone = ToneType.NEUTRAL
                 msg = "Let's reset and focus on a small, achievable win today. No pressure."
-            
+
             # 3. RELIABILITY SCALING
             elif reliability_score < 50.0:
-                tone = ToneType.CONFRONTATIONAL if reliability_score < 20 else ToneType.FIRM
+                tone = (
+                    ToneType.CONFRONTATIONAL
+                    if reliability_score < 20
+                    else ToneType.FIRM
+                )
                 msg = "This is your third delay this month. We need an immediate recovery plan."
-            
+
             # 4. DEFAULT
             else:
                 msg = f"Thank you for the update. [Context: {settings.CULTURAL_DIRECTNESS_LEVEL} directness enabled]"
 
             return AgentDecision(
-                action="none" if not (burnout.is_at_risk or reliability_score < 50) else "escalate_to_manager",
+                action="none"
+                if not (burnout.is_at_risk or reliability_score < 50)
+                else "escalate_to_manager",
                 tone=tone,
                 message=msg,
-                analysis_summary=f"Mock: Decision based on reliability of {reliability_score}% and {consecutive_firm_calls} firm calls."
+                analysis_summary=f"Mock: Decision based on reliability of {reliability_score}% and {consecutive_firm_calls} firm calls.",
             )
 
         # 5. ENTERPRISE LLM PROMPT (Self-Correction / Sensitivity)
@@ -266,9 +279,9 @@ class CommitGuardBrain:
             model=self.model,
             messages=[
                 {"role": "system", "content": prompt},
-                {"role": "user", "content": f"Excuse: {excuse}\nRisk: {risk}\nBurnout: {burnout}"},
+                {
+                    "role": "user",
+                    "content": f"Excuse: {excuse}\nRisk: {risk}\nBurnout: {burnout}",
+                },
             ],
         )
-
-
-

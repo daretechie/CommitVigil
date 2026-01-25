@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Optional
 
 
-
 class SlippageStatus(str, Enum):
     ON_TRACK = "on_track"
     SLIPPING = "slipping"
@@ -21,10 +20,11 @@ class SlippageAnalysis(BaseModel):
 
 class TruthGapAnalysis(BaseModel):
     gap_detected: bool
-    truth_score: float = Field(..., ge=0, le=1, description="1.0 means perfect alignment.")
+    truth_score: float = Field(
+        ..., ge=0, le=1, description="1.0 means perfect alignment."
+    )
     explanation: str
     recommended_tone: str
-
 
 
 class GitCommitPromise(BaseModel):

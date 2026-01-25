@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
 from src.core.slack import SlackConnector
 
+
 @pytest.mark.asyncio
 async def test_slack_no_webhook_url():
     """Test that SlackConnector skips notification if webhook URL is not set."""
@@ -13,6 +14,7 @@ async def test_slack_no_webhook_url():
                 "slack_notification_skipped", reason="NO_WEBHOOK_CONFIGURED"
             )
 
+
 @pytest.mark.asyncio
 async def test_slack_success():
     """Test successful Slack notification."""
@@ -22,14 +24,14 @@ async def test_slack_success():
             mock_response = MagicMock()
             mock_response.raise_for_status = MagicMock()
             mock_post.return_value = mock_response
-            
+
             await SlackConnector.send_notification("test message", slack_id="U123")
-            
+
             mock_post.assert_called_once_with(
-                "http://fake-webhook.com",
-                json={"text": "<@U123> test message"}
+                "http://fake-webhook.com", json={"text": "<@U123> test message"}
             )
             mock_response.raise_for_status.assert_called_once()
+
 
 @pytest.mark.asyncio
 async def test_slack_failure():

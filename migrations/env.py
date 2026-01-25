@@ -16,11 +16,13 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 target_metadata = SQLModel.metadata
 
+
 def _get_sync_url() -> str:
     url = settings.DATABASE_URL
     if "sqlite+aiosqlite" in url:
         return url.replace("sqlite+aiosqlite", "sqlite")
     return url.replace("asyncpg", "psycopg2")
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
@@ -39,12 +41,11 @@ def run_migrations_offline() -> None:
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     from sqlalchemy import create_engine
+
     connectable = create_engine(_get_sync_url())
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

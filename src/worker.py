@@ -9,7 +9,6 @@ from src.core.slack import SlackConnector
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
-
 from datetime import datetime, timedelta
 
 # Initialize Logging for the Worker
@@ -28,7 +27,6 @@ async def send_follow_up(user_id: str, message: str, slack_id: str | None = None
     await SlackConnector.send_notification(message, slack_id=slack_id)
 
 
-
 async def process_commitment_eval(
     _ctx: dict, user_id: str, commitment: str, check_in: str
 ):
@@ -39,7 +37,7 @@ async def process_commitment_eval(
     logger.info("processing_commitment_eval", user_id=user_id, status="started")
 
     brain = CommitGuardBrain()
-    
+
     # 1. Fetch Historical Reliability & Ethical Tracking status
     reliability, slack_id, consecutive_firm = await get_user_reliability(user_id)
 
@@ -50,9 +48,9 @@ async def process_commitment_eval(
         commitment=commitment,
         check_in=check_in,
         reliability_score=reliability,
-        consecutive_firm=consecutive_firm
+        consecutive_firm=consecutive_firm,
     )
-    
+
     decision = evaluation.decision
     risk = evaluation.risk
 
@@ -61,27 +59,28 @@ async def process_commitment_eval(
         user_id=user_id,
         action=decision.action,
         tone=decision.tone,
-        final_message_preview=decision.message[:50] + "..."
+        final_message_preview=decision.message[:50] + "...",
     )
-
-
 
     # 6. Persist results for Heatmap tracking & Ethical Cooling-off state
     is_failure = evaluation.excuse.category != ExcuseCategory.LEGITIMATE
-    await update_user_reliability(user_id, was_failure=is_failure, tone_used=decision.tone)
-
-
+    await update_user_reliability(
+        user_id, was_failure=is_failure, tone_used=decision.tone
+    )
 
     # 7. Accountability Logic: Proactive Follow-up
     # Triggered based on calculated risk thresholds
     if risk.level in [RiskLevel.HIGH, RiskLevel.CRITICAL]:
-
         run_time = datetime.now() + timedelta(seconds=settings.FOLLOW_UP_DELAY_SECONDS)
         scheduler.add_job(
             send_follow_up,
             "date",
             run_date=run_time,
-            args=[user_id, f"🔔 *CommitGuard Alert:* Checking in on commitment: {commitment}", slack_id],
+            args=[
+                user_id,
+                f"🔔 *CommitGuard Alert:* Checking in on commitment: {commitment}",
+                slack_id,
+            ],
         )
 
         logger.info("follow_up_scheduled", user_id=user_id, time=run_time.isoformat())

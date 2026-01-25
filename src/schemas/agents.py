@@ -4,7 +4,6 @@ from typing import Optional
 from enum import Enum
 
 
-
 class ExcuseCategory(str, Enum):
     LEGITIMATE = "legitimate"  # e.g., Family emergency, health
     DEFLECTION = "deflection"  # e.g., "I forgot," "Too busy"
@@ -68,8 +67,6 @@ class PipelineEvaluation(BaseModel):
     safety_audit: Optional[SafetyIntervention] = None
 
 
-
-
 class ExtractedCommitment(BaseModel):
     task: str = Field(..., description="The task the user committed to.")
     deadline: str = Field(
@@ -89,19 +86,17 @@ class CommitmentUpdate(BaseModel):
     commitment: str
     check_in: str
 
+
 class UserHistory(SQLModel, table=True):
     __tablename__ = "user_history"
-    
+
     user_id: str = Field(primary_key=True, index=True)
     slack_id: Optional[str] = Field(default=None)
     git_email: Optional[str] = Field(default=None)
     total_commitments: int = Field(default=0)
     failed_commitments: int = Field(default=0)
     reliability_score: float = Field(default=100.0)
-    
+
     # Ethical Tracking
     consecutive_firm_interventions: int = Field(default=0)
     last_intervention_at: Optional[str] = Field(default=None)
-
-
-

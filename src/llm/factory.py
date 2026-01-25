@@ -23,7 +23,6 @@ class LLMFactory:
             if active_provider == "mock":
                 return MockProvider()
 
-
         # 2. Automatic Detection (Heuristic Discovery)
         if settings.OPENAI_API_KEY:
             logger.info("llm_factory_auto_detect", provider="OpenAI")

@@ -11,19 +11,18 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str | None = None
     MODEL_NAME: str = "gpt-4o"
     LLM_PROVIDER: str = "openai"  # Options: openai, groq, mock
-    
+
     # Ethical & Sensitivity Settings
-    CULTURAL_DIRECTNESS_LEVEL: str = "high" # Options: low, medium, high
+    CULTURAL_DIRECTNESS_LEVEL: str = "high"  # Options: low, medium, high
     COOLING_OFF_PERIOD_HOURS: int = 48
     MIN_AI_CONFIDENCE_THRESHOLD: float = 0.75
 
-
-
     # Infrastructure
     REDIS_URL: str = "redis://localhost:6380"
-    DB_PATH: str = "commitguard.db" # Legacy support
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/commitguard"
-
+    DB_PATH: str = "commitguard.db"  # Legacy support
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/commitguard"
+    )
 
     # Integrations
     SLACK_WEBHOOK_URL: str | None = None

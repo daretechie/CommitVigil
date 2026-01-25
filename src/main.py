@@ -12,12 +12,12 @@ from src.agents.commitment_extractor import CommitmentExtractor
 from src.agents.performance import SlippageAnalyst, TruthGapDetector
 from src.core.reporting import AuditReportGenerator
 from src.core.database import (
-    init_db, 
-    set_slack_id, 
-    set_git_email, 
-    get_user_by_git_email, 
+    init_db,
+    set_slack_id,
+    set_git_email,
+    get_user_by_git_email,
     get_user_reliability,
-    engine
+    engine,
 )
 from src.schemas.agents import UserHistory, CommitmentUpdate
 
@@ -35,20 +35,19 @@ async def lifespan(fastapi_app: FastAPI):
     Handles startup and shutdown logic.
     """
     logger.info("application_startup", status="initializing_resources")
-    
+
     # Initialize DB
     await init_db()
-    
+
     # Initialize Redis Pool
     state["redis"] = await create_pool(RedisSettings.from_dsn(settings.REDIS_URL))
-    
+
     yield
-    
+
     # Cleanup
     if state["redis"]:
         await state["redis"].close()
     logger.info("application_shutdown", status="cleaning_up")
-
 
 
 app = FastAPI(
@@ -76,10 +75,11 @@ Instrumentator().instrument(app).expose(app)
 @app.get("/health")
 async def health_check():
     health = {"status": "ok", "app": settings.PROJECT_NAME, "dependencies": {}}
-    
+
     # Check Database
     try:
         from sqlalchemy import text
+
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         health["dependencies"]["database"] = "healthy"
@@ -156,8 +156,9 @@ async def ingest_raw_commitment(user_id: str, raw_text: str):
         "owner": extracted.who,
         "task": extracted.what,
         "deadline": extracted.when,
-        "message": f"Successfully parsed promise from {extracted.who}"
+        "message": f"Successfully parsed promise from {extracted.who}",
     }
+
 
 @app.post("/users/config/slack")
 async def map_slack_user(user_id: str, slack_id: str):
@@ -168,13 +169,18 @@ async def map_slack_user(user_id: str, slack_id: str):
     await set_slack_id(user_id, slack_id)
     return {"status": "success", "message": f"Mapped {user_id} to Slack ID {slack_id}"}
 
+
 @app.post("/users/config/git")
 async def map_git_user(user_id: str, git_email: str):
     """
     Elite Config Feature: Map an internal user reference to a Git Email.
     """
     await set_git_email(user_id, git_email)
-    return {"status": "success", "message": f"Mapped {user_id} to Git Email {git_email}"}
+    return {
+        "status": "success",
+        "message": f"Mapped {user_id} to Git Email {git_email}",
+    }
+
 
 @app.post("/ingest/git")
 async def ingest_git_commitment(commit_data: dict):
@@ -184,19 +190,20 @@ async def ingest_git_commitment(commit_data: dict):
     extractor = CommitmentExtractor()
     author_email = commit_data.get("author_email")
     message = commit_data.get("message")
-    
+
     user = await get_user_by_git_email(author_email)
     user_id = user.user_id if user else "unknown_git_user"
-    
+
     extracted = await extractor.parse_conversation(message)
     logger.info("git_commitment_extracted", user_id=user_id, task=extracted.what)
-    
+
     return {
         "status": "extracted",
         "owner": extracted.who,
         "task": extracted.what,
-        "identity_matched": user_id != "unknown_git_user"
+        "identity_matched": user_id != "unknown_git_user",
     }
+
 
 @app.get("/reports/audit/{user_id}")
 async def get_performance_audit(user_id: str):
@@ -210,18 +217,19 @@ async def get_performance_audit(user_id: str):
     # Mocking historical evidence for the audit report demo
     promised = ["Refactor API", "Fix CSS", "Update Docs"]
     reality = "Only updated some typos in README. No major code changes detected."
-    
+
     # 2. Run Agents
     analyst = SlippageAnalyst()
     detector = TruthGapDetector()
-    
+
     slippage = await analyst.analyze_performance_gap(promised, reality)
     gap = await detector.detect_gap("I am 90% done with the refactor", reality)
-    
-    # 3. Compile Report
-    user_mock = UserHistory(user_id=user_id, reliability_score=score, total_commitments=10)
-    
-    report = AuditReportGenerator.generate_audit_summary(user_mock, slippage, gap)
-    
-    return report
 
+    # 3. Compile Report
+    user_mock = UserHistory(
+        user_id=user_id, reliability_score=score, total_commitments=10
+    )
+
+    report = AuditReportGenerator.generate_audit_summary(user_mock, slippage, gap)
+
+    return report
