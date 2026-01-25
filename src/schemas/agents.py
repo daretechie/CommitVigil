@@ -53,11 +53,20 @@ class AgentDecision(BaseModel):
     analysis_summary: str
 
 
+class SafetyIntervention(BaseModel):
+    original_message: str
+    corrected_message: str | None
+    reasoning: str
+    intervention_type: str  # 'correction', 'block', 'review'
+
+
 class PipelineEvaluation(BaseModel):
     decision: AgentDecision
     excuse: ExcuseAnalysis
     risk: RiskAssessment
     burnout: BurnoutDetection
+    safety_audit: Optional[SafetyIntervention] = None
+
 
 
 

@@ -158,28 +158,58 @@ class CommitGuardBrain:
         
         # 3. Final Ethical Supervision (Elite Guardrail)
         from src.agents.safety import SafetySupervisor
+        from src.schemas.agents import SafetyIntervention
         supervisor = SafetySupervisor()
         context = f"User: {user_id}. Reliability: {reliability_score}%. Consecutive firm: {consecutive_firm}."
         
         audit = await supervisor.audit_message(decision.message, decision.tone, context)
-        
-        if not audit.is_safe:
-            logger.warning("safety_override_triggered", user_id=user_id, reason=audit.reasoning)
+        intervention = None
+
+        # A. HARD BLOCK (HR Territory) - Immediate Escalation, No Retry
+        if audit.is_hard_blocked:
+            logger.critical("hr_legal_boundary_detected", user_id=user_id, message=decision.message)
+            decision.action = "escalate_to_manager"
+            decision.message = "This follow-up contains sensitive HR-related topics and has been blocked for manual manager review."
+            intervention = SafetyIntervention(
+                original_message=decision.message,
+                corrected_message=None,
+                reasoning="HR/Legal Boundary Violation",
+                intervention_type="block"
+            )
+
+        # B. SOFT CORRECTION (Tone/Cultural) - Injection Mechanism
+        elif not audit.is_safe:
+            logger.warning("safety_correction_injected", user_id=user_id, reason=audit.reasoning)
+            original = decision.message
             decision.message = audit.suggested_correction or decision.message
-            decision.analysis_summary += f" | Safety Override: {audit.reasoning}"
+            decision.analysis_summary += f" | Safety Correction: {audit.reasoning}"
+            intervention = SafetyIntervention(
+                original_message=original,
+                corrected_message=decision.message,
+                reasoning=audit.reasoning,
+                intervention_type="correction"
+            )
         
-        if audit.requires_human_review:
+        # C. AMBIGUITY (Low Confidence) - Human-in-the-Loop
+        elif audit.requires_human_review:
             logger.info("human_review_requested", user_id=user_id)
             decision.action = "escalate_to_manager"
             decision.analysis_summary += " | Requires Human-in-the-Loop Review"
-
+            intervention = SafetyIntervention(
+                original_message=decision.message,
+                corrected_message=None,
+                reasoning="Confidence below threshold",
+                intervention_type="review"
+            )
             
         return PipelineEvaluation(
             decision=decision,
             excuse=excuse,
             risk=risk,
-            burnout=burnout
+            burnout=burnout,
+            safety_audit=intervention
         )
+
 
 
     async def adapt_tone(

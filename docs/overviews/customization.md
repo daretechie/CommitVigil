@@ -27,6 +27,35 @@ The "Secret Sauce" of CommitGuard is in the **System Prompts**. You can find and
 *   **Behavioral Reasoning**: Located in [src/agents/brain.py](https://github.com/daretechie/CommitGuard-AI/blob/main/src/agents/brain.py).
 *   **Safety Supervision**: Located in [src/agents/safety.py](https://github.com/daretechie/CommitGuard-AI/blob/main/src/agents/safety.py).
 
+---
+
+## 3. Message Lifecycle & "Overwatch" Architecture 🛰️
+The Safety Supervisor follows a **Post-Generation Overwatch** pattern. This ensures that the system is self-healing without entering infinite regeneration loops.
+
+```mermaid
+graph TD
+    A[User Action / Git Event] --> B[Behavioral Brain]
+    B --> C[Candidate Message Generated]
+    C --> D[Safety Supervisor Audit]
+    D --> E{Decision Tree}
+    
+    E -- PASS --> F[Dispatch to Slack]
+    E -- CORRECTION --> G[Inject Fix / Rewrite]
+    G --> F
+    E -- BLOCK / HITL --> H[Escalate to Manager]
+    H --> I[Manual Intervention]
+```
+
+### The Injection Mechanism
+When the Supervisor triggers a correction, it **completes a full rewrite** of the message rather than simple appending. This maintains a natural, professional voice. To avoid infinite loops, the Supervisor has **Terminal Authority**: if it rejections a message, the Brain does not retry; it immediately escalates to a Human-in-the-Loop (HITL).
+
+### Audit Trail & Governance
+Every intervention is logged with the following metadata for team-level analytics:
+*   **Correction Rate**: % of messages modified by the Supervisor.
+*   **Hard-Block Trigger**: Messages touching HR/Legal boundaries (salary, performance reviews) are blocked and logged.
+*   **Reasoning Map**: The specific "Morale Risk" analysis that triggered the correction.
+
+
 
 ## 3. Training Data & Fine-Tuning
 While the core logic uses Zero-Shot and Few-Shot reasoning via Pydantic/Instructor:
