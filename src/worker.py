@@ -39,8 +39,12 @@ async def process_commitment_eval(
     logger.info("processing_commitment_eval", user_id=user_id, status="started")
 
     brain = CommitGuardBrain()
+    
+    # 1. Fetch Historical Reliability & Ethical Tracking status
+    reliability, slack_id, consecutive_firm = await get_user_reliability(user_id)
 
     # 2. Executing the Orchestrated Pipeline (The Brain)
+
     evaluation = await brain.evaluate_participation(
         user_id=user_id,
         commitment=commitment,
