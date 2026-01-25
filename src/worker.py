@@ -40,17 +40,17 @@ async def process_commitment_eval(
 
     brain = CommitGuardBrain()
 
-    # 1. Parallel Analysis Phase (High Velocity)
-    reliability, slack_id, consecutive_firm = await get_user_reliability(user_id)
-    
     # 2. Executing the Orchestrated Pipeline (The Brain)
-    decision = await brain.evaluate_participation(
+    evaluation = await brain.evaluate_participation(
         user_id=user_id,
         commitment=commitment,
         check_in=check_in,
         reliability_score=reliability,
         consecutive_firm=consecutive_firm
     )
+    
+    decision = evaluation.decision
+    risk = evaluation.risk
 
     logger.info(
         "agent_pipeline_completed",
@@ -61,9 +61,11 @@ async def process_commitment_eval(
     )
 
 
+
     # 6. Persist results for Heatmap tracking & Ethical Cooling-off state
-    is_failure = excuse.category != ExcuseCategory.LEGITIMATE
+    is_failure = evaluation.excuse.category != ExcuseCategory.LEGITIMATE
     await update_user_reliability(user_id, was_failure=is_failure, tone_used=decision.tone)
+
 
 
     # 7. Accountability Logic: Proactive Follow-up

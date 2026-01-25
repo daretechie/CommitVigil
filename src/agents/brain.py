@@ -1,4 +1,6 @@
 from src.core.config import settings
+from src.core.logging import logger
+
 from src.llm.factory import LLMFactory
 from src.schemas.agents import (
     ExcuseAnalysis,
@@ -131,7 +133,7 @@ class CommitGuardBrain:
         check_in: str,
         reliability_score: float,
         consecutive_firm: int
-    ) -> AgentDecision:
+    ) -> PipelineEvaluation:
         """
         The Orchestration Pipeline: Decoupled and high-fidelity evaluation.
         """
@@ -155,16 +157,22 @@ class CommitGuardBrain:
         # 3. Final Ethical Supervision (Elite Guardrail)
         from src.agents.safety import SafetySupervisor
         supervisor = SafetySupervisor()
-        context = f"Internal reliability: {reliability_score}%. Consecutive firm interventions: {consecutive_firm}."
+        context = f"User: {user_id}. Reliability: {reliability_score}%. Consecutive firm: {consecutive_firm}."
         
         audit = await supervisor.audit_message(decision.message, decision.tone, context)
         
         if not audit.is_safe:
-            logger.warning("safety_override_triggered", reason=audit.reasoning)
+            logger.warning("safety_override_triggered", user_id=user_id, reason=audit.reasoning)
             decision.message = audit.suggested_correction or decision.message
             decision.analysis_summary += f" | Safety Override: {audit.reasoning}"
             
-        return decision
+        return PipelineEvaluation(
+            decision=decision,
+            excuse=excuse,
+            risk=risk,
+            burnout=burnout
+        )
+
 
     async def adapt_tone(
         self,
@@ -174,8 +182,55 @@ class CommitGuardBrain:
         reliability_score: float = 100.0,
         consecutive_firm_calls: int = 0
     ) -> AgentDecision:
-        # Implementation remains similar but now handles input for the supervisor
-        # (Content as implemented in previous turn but more robust)
-        ...
+        if self.provider.is_mock:
+            tone = ToneType.SUPPORTIVE
+            
+            # 1. THE BURNOUT SAFETY VALVE (Mandatory)
+            if burnout.is_at_risk:
+                tone = ToneType.SUPPORTIVE
+                msg = f"I hear you. It sounds like you're reaching your limit. {burnout.recommendation}."
+            
+            # 2. TONE-DAMPING (Ethical Cooling-off)
+            elif consecutive_firm_calls >= 3:
+                tone = ToneType.NEUTRAL
+                msg = "Let's reset and focus on a small, achievable win today. No pressure."
+            
+            # 3. RELIABILITY SCALING
+            elif reliability_score < 50.0:
+                tone = ToneType.CONFRONTATIONAL if reliability_score < 20 else ToneType.FIRM
+                msg = "This is your third delay this month. We need an immediate recovery plan."
+            
+            # 4. DEFAULT
+            else:
+                msg = f"Thank you for the update. [Context: {settings.CULTURAL_DIRECTNESS_LEVEL} directness enabled]"
+
+            return AgentDecision(
+                action="none" if not (burnout.is_at_risk or reliability_score < 50) else "escalate_to_manager",
+                tone=tone,
+                message=msg,
+                analysis_summary=f"Mock: Decision based on reliability of {reliability_score}% and {consecutive_firm_calls} firm calls."
+            )
+
+        # 5. ENTERPRISE LLM PROMPT (Self-Correction / Sensitivity)
+        prompt = f"""
+        Determine action and tone. 
+        User Reliability: {reliability_score}%
+        Consecutive Strict Interventions: {consecutive_firm_calls}
+        Manager's Cultural Directness Setting: {settings.CULTURAL_DIRECTNESS_LEVEL}
+        
+        RULES:
+        - If Consecutive Strict >= 3, you MUST use SUPPORTIVE/NEUTRAL tone to avoid morale burnout.
+        - Respect the Cultural Directness: if 'low', soften all firm feedback.
+        """
+
+        return await self.provider.chat_completion(
+            response_model=AgentDecision,
+            model=self.model,
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": f"Excuse: {excuse}\nRisk: {risk}\nBurnout: {burnout}"},
+            ],
+        )
+
 
 

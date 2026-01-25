@@ -53,6 +53,14 @@ class AgentDecision(BaseModel):
     analysis_summary: str
 
 
+class PipelineEvaluation(BaseModel):
+    decision: AgentDecision
+    excuse: ExcuseAnalysis
+    risk: RiskAssessment
+    burnout: BurnoutDetection
+
+
+
 class ExtractedCommitment(BaseModel):
     task: str = Field(..., description="The task the user committed to.")
     deadline: str = Field(
