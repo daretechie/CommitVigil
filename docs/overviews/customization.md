@@ -58,7 +58,7 @@ Every intervention is logged with the following metadata for team-level analytic
 
 
 
-## 3. Training Data & Fine-Tuning
+## 4. Training Data & Fine-Tuning
 While the core logic uses Zero-Shot and Few-Shot reasoning via Pydantic/Instructor:
 
 *   **Custom Schemas**: You can modify `src/schemas/agents.py` to add new fields (e.g., tracking specific project jargon or regional communication styles).
@@ -66,7 +66,7 @@ While the core logic uses Zero-Shot and Few-Shot reasoning via Pydantic/Instruct
 
 ---
 
-## 3. Prompt Templates for Forking 🔱
+## 5. Prompt Templates for Forking 🔱
 To help teams customize the "Agentic Personality," here are the core system prompts used in CommitGuard. You can "fork" these by modifying the code in the respective files.
 
 ### A. The Behavioral Brain (`src/agents/brain.py`)
@@ -107,7 +107,7 @@ If the internal confidence in the current analysis is likely below the threshold
 
 ---
 
-## 4. Validation Guide: Testing Your Tuning 🧪
+## 6. Validation Guide: Testing Your Tuning 🧪
 When you modify prompts, use the following manual verification flow:
 
 1.  **Unit Tests**: Run `pytest tests/test_brain.py` to ensure core logic isn't broken.
@@ -118,6 +118,6 @@ When you modify prompts, use the following manual verification flow:
 
 ---
 
-## 4. Open Source Strategy
+## 7. Open Source Strategy
 
 We plan to release **Anonymized Scenario Sets**—a dataset of human-labeled engineering commitments—to help the community build more empathetic and accurate accountability agents.
