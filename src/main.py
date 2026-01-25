@@ -123,3 +123,40 @@ async def map_slack_user(user_id: str, slack_id: str):
     """
     await set_slack_id(user_id, slack_id)
     return {"status": "success", "message": f"Mapped {user_id} to Slack ID {slack_id}"}
+
+@app.post("/users/config/git")
+async def map_git_user(user_id: str, git_email: str):
+    """
+    Elite Config Feature: Map an internal user reference to a Git Email.
+    """
+    from src.core.database import set_git_email
+    await set_git_email(user_id, git_email)
+    return {"status": "success", "message": f"Mapped {user_id} to Git Email {git_email}"}
+
+@app.post("/ingest/git")
+async def ingest_git_commitment(commit_data: dict):
+    """
+    Advanced GitOps Feature: Extract commitments directly from Git Commit Messages.
+    """
+    from src.agents.commitment_extractor import CommitmentExtractor
+    from src.core.database import get_user_by_git_email
+    
+    extractor = CommitmentExtractor()
+    # Simplified Git payload handling for demo purposes
+    author_email = commit_data.get("author_email")
+    message = commit_data.get("message")
+    
+    user = await get_user_by_git_email(author_email)
+    user_id = user.user_id if user else "unknown_git_user"
+    
+    extracted = await extractor.parse_conversation(message)
+    
+    # In a full system, we would enqueue this for monitoring
+    logger.info("git_commitment_extracted", user_id=user_id, task=extracted.what)
+    
+    return {
+        "status": "extracted",
+        "owner": extracted.who,
+        "task": extracted.what,
+        "identity_matched": user_id != "unknown_git_user"
+    }

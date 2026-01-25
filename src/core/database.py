@@ -78,3 +78,33 @@ async def set_slack_id(user_id: str, slack_id: str):
             
         await session.commit()
     logger.info("slack_id_mapped", user_id=user_id, slack_id=slack_id)
+
+async def set_git_email(user_id: str, git_email: str):
+    """
+    Maps an internal user_id to a Git Email using SQLModel.
+    """
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with async_session() as session:
+        statement = select(UserHistory).where(UserHistory.user_id == user_id)
+        results = await session.execute(statement)
+        user = results.scalar_one_or_none()
+
+        if not user:
+            user = UserHistory(user_id=user_id, git_email=git_email)
+            session.add(user)
+        else:
+            user.git_email = git_email
+            
+        await session.commit()
+    logger.info("git_email_mapped", user_id=user_id, git_email=git_email)
+
+async def get_user_by_git_email(git_email: str) -> Optional[UserHistory]:
+    """
+    Look up a UserHistory record by Git email.
+    """
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with async_session() as session:
+        statement = select(UserHistory).where(UserHistory.git_email == git_email)
+        results = await session.execute(statement)
+        return results.scalar_one_or_none()
+

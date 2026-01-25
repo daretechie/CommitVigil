@@ -77,7 +77,9 @@ class UserHistory(SQLModel, table=True):
     
     user_id: str = Field(primary_key=True, index=True)
     slack_id: Optional[str] = Field(default=None)
+    git_email: Optional[str] = Field(default=None)
     total_commitments: int = Field(default=0)
     failed_commitments: int = Field(default=0)
     reliability_score: float = Field(default=100.0)
+
 
