@@ -1,8 +1,7 @@
 from pydantic import BaseModel, Field
-from src.llm.factory import LLMProvider, LLMFactory
+from src.llm.factory import LLMFactory
 from src.core.config import settings
 from src.schemas.agents import ToneType
-from src.core.logging import logger
 
 class SafetyAudit(BaseModel):
     is_safe: bool

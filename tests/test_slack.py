@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
 from src.core.slack import SlackConnector
-from src.core.config import settings
 
 @pytest.mark.asyncio
 async def test_slack_no_webhook_url():

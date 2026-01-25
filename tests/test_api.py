@@ -2,7 +2,6 @@ from unittest.mock import patch, AsyncMock, MagicMock
 from fastapi.testclient import TestClient
 import pytest
 from src.main import app
-from src.schemas.agents import UserHistory
 
 client = TestClient(app)
 

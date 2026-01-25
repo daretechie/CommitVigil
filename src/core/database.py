@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import sessionmaker
 from sqlmodel import select, SQLModel
 from src.core.config import settings
 from src.core.logging import logger

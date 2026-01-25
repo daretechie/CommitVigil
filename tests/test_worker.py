@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
-from datetime import datetime
 from src.worker import process_commitment_eval, send_follow_up, startup, shutdown
 from src.schemas.agents import ExcuseAnalysis, ExcuseCategory, RiskAssessment, RiskLevel, BurnoutDetection, AgentDecision
 

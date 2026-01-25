@@ -74,7 +74,8 @@ async def process_commitment_eval(
 
     # 7. Accountability Logic: Proactive Follow-up
     # Triggered based on calculated risk thresholds
-    if evaluation.risk.level in [RiskLevel.HIGH, RiskLevel.CRITICAL]:
+    if risk.level in [RiskLevel.HIGH, RiskLevel.CRITICAL]:
+
         run_time = datetime.now() + timedelta(seconds=settings.FOLLOW_UP_DELAY_SECONDS)
         scheduler.add_job(
             send_follow_up,

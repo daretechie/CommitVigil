@@ -10,7 +10,6 @@ from src.core.database import (
     set_git_email, 
     get_user_by_git_email
 )
-from src.schemas.agents import UserHistory
 from src.core.config import settings
 
 # Test Database URL
