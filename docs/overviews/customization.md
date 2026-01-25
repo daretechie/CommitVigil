@@ -34,17 +34,18 @@ The Safety Supervisor follows a **Post-Generation Overwatch** pattern. This ensu
 
 ```mermaid
 graph TD
-    A[User Action / Git Event] --> B[Behavioral Brain]
-    B --> C[Candidate Message Generated]
-    C --> D[Safety Supervisor Audit]
+    A["User Action / Git Event"] --> B["Behavioral Brain"]
+    B --> C["Candidate Message Generated"]
+    C --> D["Safety Supervisor Audit"]
     D --> E{Decision Tree}
     
-    E -- PASS --> F[Dispatch to Slack]
-    E -- CORRECTION --> G[Inject Fix / Rewrite]
+    E -- "PASS" --> F["Dispatch to Slack"]
+    E -- "CORRECTION" --> G["Inject Fix / Rewrite"]
     G --> F
-    E -- BLOCK / HITL --> H[Escalate to Manager]
-    H --> I[Manual Intervention]
+    E -- "BLOCK / HITL" --> H["Escalate to Manager"]
+    H --> I["Manual Intervention"]
 ```
+
 
 ### The Injection Mechanism
 When the Supervisor triggers a correction, it **completes a full rewrite** of the message rather than simple appending. This maintains a natural, professional voice. To avoid infinite loops, the Supervisor has **Terminal Authority**: if it rejections a message, the Brain does not retry; it immediately escalates to a Human-in-the-Loop (HITL).
