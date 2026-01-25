@@ -31,3 +31,8 @@ High-stakes interventions should never be 100% autonomous.
 ## 3. Best Practices for Professionalism
 *   **Public vs. Private**: CommitGuard monitors public channels, but follow-up interventions for **high-risk signals** should often be moved to a 1-on-1 private DM thread once the manager is alerted.
 *   **Celebrate the Reliability**: When someone consistently hits 100% on their Reliability Score, use the report as a basis for formal recognition. Accountability is as much about **Praise** as it is about Progress.
+## 4. Configuring Your Team's Voice 🎚️
+Managers can adjust the system's "psychological pressure" via environment variables:
+
+*   **`CULTURAL_DIRECTNESS_LEVEL`**: Set to `low` for high-context or sensitive teams. This forces the LLM to use more indirect, softer language even when flagging risks.
+*   **`COOLING_OFF_PERIOD_HOURS`**: Adjust the duration of the "Tone Damping" state (Default: 48 hours).

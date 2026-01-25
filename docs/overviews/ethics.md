@@ -9,7 +9,8 @@ One of our most discussed features is the **"Confrontational"** tone. Here is ho
 
 *   **The Empathy Buffer**: The system is hardcoded to prioritize `SUPPORTIVE` tones if anything resembling burnout or personal distress is detected.
 *   **The Burnout Safety Valve**: If the `ExcuseDetector` identifies signs of fatigue, the system **blocks** confrontational escalation and triggers a "Burnout Alert" for the manager instead. 
-*   **Tone Drift & Cooling-off**: To prevent morale fatigue, the system implements **tone-damping**. If a user has received multiple "Firm" follow-ups, the system enters a 48-hour "Cooling-off" state where only supportive or neutral tones are permitted to avoid wearing down the individual.
+*   **Tone Drift & Cooling-off**: To prevent morale fatigue, the system implements **mathematical tone-damping**. If a user receives **3 consecutive "Firm" or "Confrontational" follow-ups**, the logic automatically locks the agent into a `NEUTRAL` or `SUPPORTIVE` state for 48 hours (configurable via `COOLING_OFF_PERIOD_HOURS`).
+
 
 ## 2. Cultural & Contextual Sensitivity
 "Deflection" is relative. What is seen as blunt in one culture is polite in another:
