@@ -6,9 +6,11 @@ from src.core.logging import logger
 
 class SafetyAudit(BaseModel):
     is_safe: bool
+    requires_human_review: bool = False
     risk_of_morale_damage: float = Field(..., ge=0, le=1)
     suggested_correction: str | None = None
     reasoning: str
+
 
 class SafetySupervisor:
     """
@@ -43,8 +45,12 @@ class SafetySupervisor:
         
         CRITICAL TASK:
         Analyze if this message is likely to cause long-term resentment or morale damage.
-        If it is too harsh for the given context, flag it as unsafe and provide a correction.
+        System Target Confidence: {settings.MIN_AI_CONFIDENCE_THRESHOLD}
+        
+        If the message is too harsh (Tone Drift) or culturally insensitive, flag it as unsafe.
+        If the internal confidence in the current analysis is likely below the threshold, flag 'requires_human_review'.
         """
+
 
         return await self.provider.chat_completion(
             response_model=SafetyAudit,

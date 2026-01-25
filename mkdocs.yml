@@ -54,6 +54,8 @@ nav:
       - Behavioral vs GitOps Personas: overviews/personas.md
       - Agentic Reasoning Logic: overviews/agents.md
       - Ethics & Privacy: overviews/ethics.md
+      - Customization & Tuning: overviews/customization.md
+
 
 
   - Usage Guides:

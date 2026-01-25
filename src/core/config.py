@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     # Ethical & Sensitivity Settings
     CULTURAL_DIRECTNESS_LEVEL: str = "high" # Options: low, medium, high
     COOLING_OFF_PERIOD_HOURS: int = 48
+    MIN_AI_CONFIDENCE_THRESHOLD: float = 0.75
+
 
 
     # Infrastructure
