@@ -62,24 +62,30 @@ async def test_user_reliability_flow():
     user_id = "u1"
 
     # 1. Initial
-    score, slack_id = await get_user_reliability(user_id)
+    score, slack_id, consecutive_firm = await get_user_reliability(user_id)
     assert score == 100.0
 
+
     # 2. Add as new user with failure (covers line 56)
-    await update_user_reliability(user_id, was_failure=True)
-    score, _ = await get_user_reliability(user_id)
+    await update_user_reliability(user_id, was_failure=True, tone_used="firm")
+    score, _, consecutive_firm = await get_user_reliability(user_id)
     assert score == 0.0
+    assert consecutive_firm == 1
+
 
     # 3. Success for existing user (covers line 60)
-    await update_user_reliability(user_id, was_failure=False)
-    score, _ = await get_user_reliability(user_id)
+    await update_user_reliability(user_id, was_failure=False, tone_used="supportive")
+    score, _, consecutive_firm = await get_user_reliability(user_id)
     assert score == 50.0
+    assert consecutive_firm == 0
+
 
     # 4. Failure for existing user (covers line 62)
-    await update_user_reliability(user_id, was_failure=True)
-    score, _ = await get_user_reliability(user_id)
+    await update_user_reliability(user_id, was_failure=True, tone_used="firm")
+    score, _, _ = await get_user_reliability(user_id)
     # 2 failures, 1 success -> 1/3 * 100 = 33.33
     assert 33.3 <= score <= 33.4
+
 
 
 @pytest.mark.asyncio
@@ -87,13 +93,15 @@ async def test_set_slack_id():
     user_id = "u1"
     # Set for new user
     await set_slack_id(user_id, "s1")
-    _, s_id = await get_user_reliability(user_id)
+    _, s_id, _ = await get_user_reliability(user_id)
     assert s_id == "s1"
+
 
     # Update existing
     await set_slack_id(user_id, "s2")
-    _, s_id = await get_user_reliability(user_id)
+    _, s_id, _ = await get_user_reliability(user_id)
     assert s_id == "s2"
+
 
 
 @pytest.mark.asyncio

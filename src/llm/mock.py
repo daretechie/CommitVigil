@@ -18,7 +18,27 @@ class MockProvider(LLMProvider):
     ) -> T:
         logger.warning("llm_mock_completion_triggered", provider="Mock", model=model)
 
-        # Logic to return a generic instance of the response_model
-        # In a real elite system, you'd use factory_boy or similar
-        # For now, we rely on the Pydantic model's ability to be instantiated with dummy data
-        return response_model.model_construct()
+        # Better Mocking: Try to find a way to instantiate the model with dummy data
+        # Mapping model fields to dummy values
+        dummy_data = {}
+        for name, field in response_model.model_fields.items():
+            if field.annotation == str:
+                dummy_data[name] = f"mock_{name}"
+            elif field.annotation == float:
+                dummy_data[name] = 0.95
+            elif field.annotation == bool:
+                dummy_data[name] = True
+            elif field.annotation == int:
+                dummy_data[name] = 1
+            elif hasattr(field.annotation, "__name__") and field.annotation.__name__ == "list":
+                dummy_data[name] = []
+            else:
+                # For Enums or other complex types, we take the first value if it's an Enum
+                from enum import Enum
+                if isinstance(field.annotation, type) and issubclass(field.annotation, Enum):
+                    dummy_data[name] = list(field.annotation)[0]
+                else:
+                    dummy_data[name] = None
+
+        return response_model(**dummy_data)
+

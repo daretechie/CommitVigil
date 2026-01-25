@@ -136,7 +136,8 @@ def test_ingest_git_commitment_unmatched(mock_get_user):
 @patch("src.main.TruthGapDetector")
 @patch("src.main.AuditReportGenerator")
 def test_reports_audit(mock_gen, mock_det, mock_ana, mock_get_rel):
-    mock_get_rel.return_value = (90.0, "s1")
+    mock_get_rel.return_value = (90.0, "s1", 0)
+
     mock_ana_inst = mock_ana.return_value
     mock_ana_inst.analyze_performance_gap = AsyncMock(return_value={})
     mock_det_inst = mock_det.return_value
