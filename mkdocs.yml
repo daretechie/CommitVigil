@@ -53,6 +53,8 @@ nav:
       - The Accountability Specialist: overviews/concept.md
       - Behavioral vs GitOps Personas: overviews/personas.md
       - Agentic Reasoning Logic: overviews/agents.md
+      - Ethics & Privacy: overviews/ethics.md
+
 
   - Usage Guides:
       - Quick Start: guides/quickstart.md
