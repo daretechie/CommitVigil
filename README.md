@@ -1,7 +1,8 @@
 # CommitGuard AI: The Accountability Specialist 🛡️
 > **Automation Specialist Angle:** Automating the hardest part of human management using sentiment-aware AI agents.
 
-[**Full Documentation 📚**](file:///home/daretechie/DevProject/GitHub/CommitGuard-AI/DOCUMENTATION.md)
+[**Full Documentation 📚**](https://daretechie.github.io/CommitGuard-AI/)
+
 
 
 **"CommitGuard AI provide 'Accountability as a Service.' CommitGuard predicts when a team member is likely to fail *before* the deadline and intervenes with the right behavioral tone to ensure delivery."**
