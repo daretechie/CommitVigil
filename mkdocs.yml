@@ -57,6 +57,8 @@ nav:
   - Usage Guides:
       - Quick Start: guides/quickstart.md
       - Slack Integration: guides/slack.md
+      - GitOps Accountability: guides/gitops.md
+
   - API Reference:
       - Endpoint Specs: reference/api.md
 
