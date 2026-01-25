@@ -1,4 +1,7 @@
 # CommitGuard AI: The Accountability Specialist 🛡️
+
+![CommitGuard AI Hero](docs/assets/hero.jpg)
+
 > **Automation Specialist Angle:** Automating the hardest part of human management using sentiment-aware AI agents.
 
 [**Full Documentation 📚**](https://daretechie.github.io/CommitGuard-AI/)

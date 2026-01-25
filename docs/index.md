@@ -1,5 +1,8 @@
 # CommitGuard AI: The Accountability Specialist 🛡️
 
+![CommitGuard AI Hero](assets/hero.jpg)
+
+
 > **"I provide 'Accountability as a Service.' My agent predicts when a team member is likely to fail *before* the deadline and intervenes with the right behavioral tone to ensure delivery."**
 
 ## 🆘 The Problem
