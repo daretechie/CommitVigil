@@ -4,7 +4,8 @@
 
 > **"One Engine. Two Worlds. Total Accountability."**
 
-[**Full Documentation 📚**](https://daretechie.github.io/CommitGuard-AI/)
+[**Full Documentation 📚**](https://daretechie.github.io/CommitGuard-AI/) | [**Commercial Strategy 💰**](COMMERCIAL.md)
+
 
 ---
 
