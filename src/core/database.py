@@ -27,9 +27,9 @@ async def init_db():
         await conn.run_sync(SQLModel.metadata.create_all)
     logger.info("database_initialized", url=settings.DATABASE_URL)
 
-async def get_user_reliability(user_id: str) -> tuple[float, str | None]:
+async def get_user_reliability(user_id: str) -> tuple[float, str | None, int]:
     """
-    Fetch the reliability score and slack_id for a given user using SQLModel.
+    Fetch the reliability score, slack_id, and consecutive firm intervetions.
     """
     async with AsyncSessionLocal() as session:
         statement = select(UserHistory).where(UserHistory.user_id == user_id)
@@ -37,12 +37,13 @@ async def get_user_reliability(user_id: str) -> tuple[float, str | None]:
         user = results.scalar_one_or_none()
         
         if user:
-            return user.reliability_score, user.slack_id
-        return 100.0, None
+            return user.reliability_score, user.slack_id, user.consecutive_firm_interventions
+        return 100.0, None, 0
 
-async def update_user_reliability(user_id: str, was_failure: bool):
+
+async def update_user_reliability(user_id: str, was_failure: bool, tone_used: str = "supportive"):
     """
-    Update historical stats using SQLModel/SQLAlchemy.
+    Update historical stats and track ethical Tone-Damping status.
     """
     async with AsyncSessionLocal() as session:
         statement = select(UserHistory).where(UserHistory.user_id == user_id)
@@ -61,11 +62,20 @@ async def update_user_reliability(user_id: str, was_failure: bool):
             if was_failure:
                 user.failed_commitments += 1
         
+        # Ethical Counter Management
+        if tone_used in ["firm", "confrontational"]:
+            user.consecutive_firm_interventions += 1
+            user.last_intervention_at = datetime.now().isoformat()
+        else:
+            # Cooling-off logic: Reset counter if a supportive/neutral tone is successfuly used
+            user.consecutive_firm_interventions = 0
+        
         # Calculate new score
         user.reliability_score = ((user.total_commitments - user.failed_commitments) / user.total_commitments) * 100
         
         await session.commit()
-        logger.info("reliability_updated", user_id=user_id, new_score=user.reliability_score)
+    logger.info("reliability_updated", user_id=user_id, new_score=user.reliability_score, consecutive_strict=user.consecutive_firm_interventions)
+
 
 async def set_slack_id(user_id: str, slack_id: str):
     """

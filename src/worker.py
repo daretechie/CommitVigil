@@ -52,13 +52,18 @@ async def process_commitment_eval(
     burnout = await brain.detect_burnout(check_in)
     logger.info("burnout_detected", user_id=user_id, risk=burnout.is_at_risk)
 
-    # 4. Fetch Historical Reliability (State-aware context)
-    reliability, slack_id = await get_user_reliability(user_id)
+    # 4. Fetch Historical Reliability & Ethical Tracking status
+    reliability, slack_id, consecutive_firm = await get_user_reliability(user_id)
 
-    # 5. Final Decision & Tone Adaptation (Behavioral calibration)
+    # 5. Final Decision & Tone Adaptation (Behavioral + Ethical calibration)
     decision = await brain.adapt_tone(
-        excuse, risk, burnout, reliability_score=reliability
+        excuse, 
+        risk, 
+        burnout, 
+        reliability_score=reliability,
+        consecutive_firm_calls=consecutive_firm
     )
+
     logger.info(
         "agent_decision",
         user_id=user_id,
@@ -67,9 +72,10 @@ async def process_commitment_eval(
         message=decision.message,
     )
 
-    # 6. Persist results for Heatmap tracking
+    # 6. Persist results for Heatmap tracking & Ethical Cooling-off state
     is_failure = excuse.category != ExcuseCategory.LEGITIMATE
-    await update_user_reliability(user_id, was_failure=is_failure)
+    await update_user_reliability(user_id, was_failure=is_failure, tone_used=decision.tone)
+
 
     # 7. Accountability Logic: Proactive Follow-up
     # Triggered based on calculated risk thresholds
