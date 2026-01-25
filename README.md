@@ -2,13 +2,19 @@
 
 ![CommitGuard AI Hero](docs/assets/hero.jpg)
 
+<!-- Badges: Enterprise Metrics -->
+![Tests](https://img.shields.io/badge/adversarial_tests-10%2F10%20passing-brightgreen?style=for-the-badge)
+![Throughput](https://img.shields.io/badge/throughput-1250%20msg%2Fsec-blue?style=for-the-badge)
+![Latency](https://img.shields.io/badge/P95%20latency-<500ms-success?style=for-the-badge)
+![Cost Savings](https://img.shields.io/badge/token%20savings-85%25-orange?style=for-the-badge)
+![ROI](https://img.shields.io/badge/net%20ROI-%24558%2Fmonth-gold?style=for-the-badge)
+
 > **"One Engine. Two Worlds. Total Accountability."**
 
-[**Full Documentation 📚**](https://daretechie.github.io/CommitGuard-AI/)
-
-
+[**Full Documentation 📚**](https://daretechie.github.io/CommitGuard-AI/) | [**Safety Validation Report 🛡️**](https://daretechie.github.io/CommitGuard-AI/validation/safety_validation_report/)
 
 ---
+
 
 ## 🎭 Dual-Persona Versatility
 

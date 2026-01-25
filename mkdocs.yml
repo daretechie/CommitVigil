@@ -61,7 +61,10 @@ nav:
       - Customization & Tuning: overviews/customization.md
 
   - Validation & Safety:
-      - Safety Validation Report: validation/safety_report.md
+      - Safety Report: validation/safety_validation_report.md
+      - Test Results: validation/adversarial_test_results.md
+      - Benchmarks: validation/performance_benchmarks.md
+
 
 
 

@@ -3,7 +3,11 @@ import asyncio
 from src.agents.safety import SafetySupervisor
 from src.core.config import settings
 from src.core.logging import logger
+from src.core.config import settings
+from src.core.logging import logger
+from src.core.monitoring import LatencyMonitor
 from src.llm.factory import LLMFactory
+
 from src.schemas.agents import (
     AgentDecision,
     BurnoutDetection,
@@ -163,13 +167,14 @@ class CommitGuardBrain:
         )
 
         # 2. Decision Synthesis
-        decision = await self.adapt_tone(
-            excuse,
-            risk,
-            burnout,
-            reliability_score=reliability_score,
-            consecutive_firm_calls=consecutive_firm,
-        )
+        with LatencyMonitor("decision_synthesis_latency", user_id):
+            decision = await self.adapt_tone(
+                excuse,
+                risk,
+                burnout,
+                reliability_score=reliability_score,
+                consecutive_firm_calls=consecutive_firm,
+            )
 
         # 3. Final Ethical Supervision (Elite Guardrail)
         supervisor = SafetySupervisor()
@@ -178,7 +183,9 @@ class CommitGuardBrain:
             f"Consecutive firm: {consecutive_firm}."
         )
 
-        audit = await supervisor.audit_message(decision.message, decision.tone, context)
+        with LatencyMonitor("safety_supervisor_latency", user_id):
+            audit = await supervisor.audit_message(decision.message, decision.tone, context)
+
         intervention = None
 
         # A. HARD BLOCK (HR Territory) - Immediate Escalation, No Retry
@@ -204,26 +211,51 @@ class CommitGuardBrain:
                 "safety_correction_injected", user_id=user_id, reason=audit.reasoning
             )
             original = decision.message
-            decision.message = audit.suggested_correction or decision.message
+            # Capitalization Hook: Ensure correction starts with uppercase
+            raw_correction = audit.suggested_correction or decision.message
+            if raw_correction and len(raw_correction) > 0:
+                raw_correction = raw_correction[0].upper() + raw_correction[1:]
+                
+            decision.message = raw_correction
             decision.analysis_summary += f" | Safety Correction: {audit.reasoning}"
-            intervention = SafetyIntervention(
-                original_message=original,
-                corrected_message=decision.message,
-                reasoning=audit.reasoning,
-                intervention_type="correction",
-            )
+
+            
+            # --- SAFETY VALVE: RE-VALIDATION (Tier 4 Humility) ---
+            # Verify the correction itself is not unsafe (e.g., hallucinated threat).
+            # This doubles latency but ensures zero-trust safety.
+            re_audit = await supervisor.audit_message(decision.message, decision.tone, context)
+            if not re_audit.is_safe:
+                logger.critical("unsafe_correction_caught", user_id=user_id, bad_fix=decision.message)
+                # Fallback to HITL if the AI failed to fix it safely
+                decision.action = "escalate_to_manager"
+                decision.message = "Automated correction failed safety check. Manual review required."
+                intervention = SafetyIntervention(
+                    original_message=original,
+                    corrected_message=None, # Discard unsafe fix
+                    reasoning="Safety Valve Triggered: Correction was still unsafe.",
+                    intervention_type="review",
+                )
+            else:
+                intervention = SafetyIntervention(
+                    original_message=original,
+                    corrected_message=decision.message,
+                    reasoning=audit.reasoning,
+                    intervention_type="correction",
+                )
+
 
         # C. AMBIGUITY (Low Confidence) - Human-in-the-Loop
-        elif audit.requires_human_review:
+        elif audit.requires_human_review or audit.supervisor_confidence < 0.8:
             logger.info("human_review_requested", user_id=user_id)
             decision.action = "escalate_to_manager"
             decision.analysis_summary += " | Requires Human-in-the-Loop Review"
             intervention = SafetyIntervention(
                 original_message=decision.message,
                 corrected_message=None,
-                reasoning="Confidence below threshold",
+                reasoning=f"Confidence below threshold ({audit.supervisor_confidence})",
                 intervention_type="review",
             )
+
 
         return PipelineEvaluation(
             decision=decision,
