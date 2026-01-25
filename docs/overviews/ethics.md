@@ -9,9 +9,16 @@ One of our most discussed features is the **"Confrontational"** tone. Here is ho
 
 *   **The Empathy Buffer**: The system is hardcoded to prioritize `SUPPORTIVE` tones if anything resembling burnout or personal distress is detected.
 *   **The Burnout Safety Valve**: If the `ExcuseDetector` identifies signs of fatigue, the system **blocks** confrontational escalation and triggers a "Burnout Alert" for the manager instead. 
-*   **Tone as Calibration, Not Punishment**: The objective isn't to "scold" but to match the professional urgency required by the deadline.
+*   **Tone Drift & Cooling-off**: To prevent morale fatigue, the system implements **tone-damping**. If a user has received multiple "Firm" follow-ups, the system enters a 48-hour "Cooling-off" state where only supportive or neutral tones are permitted to avoid wearing down the individual.
 
-## 2. Privacy & Data Integrity
+## 2. Cultural & Contextual Sensitivity
+"Deflection" is relative. What is seen as blunt in one culture is polite in another:
+
+*   **Sensitivity Calibration**: CommitGuard supports **Cultural Tone Profiles**. Managers can calibrate the "Pressure Sensitivity" of the agents to match their specific team norms (e.g., High-Directness vs. High-Context locales).
+*   **Domain-Specific Jargon**: The NLP models are refined to recognize that certain industry vernacular (e.g., *"I'm swamped"*) may be a routine status update rather than an excuse in specific high-velocity teams.
+
+## 3. Privacy & Data Integrity
+
 Monitoring at the granularity of Slack threads and Git commits requires a strict privacy stance:
 
 *   **Scoped Monitoring**: CommitGuard is designed to monitor designated `#project` channels, not private DMs or unrelated chatter.
