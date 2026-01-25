@@ -34,27 +34,34 @@ The Safety Supervisor follows a **Post-Generation Overwatch** pattern. This ensu
 
 ```mermaid
 graph TD
-    A["User Action / Git Event"] --> B["Behavioral Brain"]
-    B --> C["Candidate Message Generated"]
-    C --> D["Safety Supervisor Audit"]
-    D --> E{Decision Tree}
-    
-    E -- "PASS" --> F["Dispatch to Slack"]
-    E -- "CORRECTION" --> G["Inject Fix / Rewrite"]
-    G --> F
-    E -- "BLOCK / HITL" --> H["Escalate to Manager"]
-    H --> I["Manual Intervention"]
+    A[User Action/Commitment] --> B[Behavioral Brain]
+    B --> C{Safety Supervisor Audit}
+    C -->|Pass| D[Send Message]
+    C -->|Soft Correction| E[Inject Rewrite]
+    E --> D
+    C -->|Hard Block| F[Log + HITL Escalation]
+    C -->|Low Confidence| F
+
+    style F fill:#ff6b6b
+    style D fill:#51cf66
+    style E fill:#ffd43b
 ```
 
 
-### The Injection Mechanism
-When the Supervisor triggers a correction, it **completes a full rewrite** of the message rather than simple appending. This maintains a natural, professional voice. To avoid infinite loops, the Supervisor has **Terminal Authority**: if it rejections a message, the Brain does not retry; it immediately escalates to a Human-in-the-Loop (HITL).
+### The Injection Mechanism (Hybrid Corrections)
+The Supervisor now employs a **Cost-Optimized Hybrid Strategy**:
+- **Surgical Replace**: For minor tone issues, it swaps specific phrases (e.g., "Fix this now" -> "Can we address this?"), saving token costs.
+- **Full Rewrite**: For major toxicity or clarity issues, it regenerates the entire message to ensure semantic coherence.
+
+### Supervisor-Aware Confidence
+To prevent "hallucinated safety," the Supervisor has its own self-doubt mechanic. If its internal confidence score drops below **0.8** (e.g., confusing idioms or ambiguous sarcasm), it will **refuse to correct** the message and instead flag it for `requires_human_review`.
 
 ### Audit Trail & Governance
 Every intervention is logged with the following metadata for team-level analytics:
 *   **Correction Rate**: % of messages modified by the Supervisor.
 *   **Hard-Block Trigger**: Messages touching HR/Legal boundaries (salary, performance reviews) are blocked and logged.
 *   **Reasoning Map**: The specific "Morale Risk" analysis that triggered the correction.
+
 
 
 
