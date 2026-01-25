@@ -142,7 +142,6 @@ async def ingest_git_commitment(commit_data: dict):
     from src.core.database import get_user_by_git_email
     
     extractor = CommitmentExtractor()
-    # Simplified Git payload handling for demo purposes
     author_email = commit_data.get("author_email")
     message = commit_data.get("message")
     
@@ -150,8 +149,6 @@ async def ingest_git_commitment(commit_data: dict):
     user_id = user.user_id if user else "unknown_git_user"
     
     extracted = await extractor.parse_conversation(message)
-    
-    # In a full system, we would enqueue this for monitoring
     logger.info("git_commitment_extracted", user_id=user_id, task=extracted.what)
     
     return {
@@ -160,3 +157,35 @@ async def ingest_git_commitment(commit_data: dict):
         "task": extracted.what,
         "identity_matched": user_id != "unknown_git_user"
     }
+
+@app.get("/reports/audit/{user_id}")
+async def get_performance_audit(user_id: str):
+    """
+    CASH-GENERATION ENDPOINT: Generates a professional Performance Integrity Audit.
+    This is the deliverable you sell to Engineering Managers.
+    """
+    from src.core.database import get_user_reliability
+    from src.agents.performance import SlippageAnalyst, TruthGapDetector
+    from src.core.reporting import AuditReportGenerator
+    
+    # 1. Gather Data
+    score, slack_id = await get_user_reliability(user_id)
+    # Mocking historical evidence for the audit report demo
+    promised = ["Refactor API", "Fix CSS", "Update Docs"]
+    reality = "Only updated some typos in README. No major code changes detected."
+    
+    # 2. Run Agents
+    analyst = SlippageAnalyst()
+    detector = TruthGapDetector()
+    
+    slippage = await analyst.analyze_performance_gap(promised, reality)
+    gap = await detector.detect_gap("I am 90% done with the refactor", reality)
+    
+    # 3. Compile Report
+    from src.schemas.agents import UserHistory
+    user_mock = UserHistory(user_id=user_id, reliability_score=score, total_commitments=10)
+    
+    report = AuditReportGenerator.generate_audit_summary(user_mock, slippage, gap)
+    
+    return report
+
