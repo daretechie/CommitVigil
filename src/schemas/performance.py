@@ -19,6 +19,14 @@ class SlippageAnalysis(BaseModel):
     intervention_required: bool
 
 
+class TruthGapAnalysis(BaseModel):
+    gap_detected: bool
+    truth_score: float = Field(..., ge=0, le=1, description="1.0 means perfect alignment.")
+    explanation: str
+    recommended_tone: str
+
+
+
 class GitCommitPromise(BaseModel):
     commit_hash: str
     author_email: str
