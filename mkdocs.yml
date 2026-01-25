@@ -60,6 +60,10 @@ nav:
       - Ethics & Privacy: overviews/ethics.md
       - Customization & Tuning: overviews/customization.md
 
+  - Validation & Safety:
+      - Safety Validation Report: validation/safety_report.md
+
+
 
 
   - Usage Guides:
