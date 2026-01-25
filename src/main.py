@@ -205,7 +205,8 @@ async def get_performance_audit(user_id: str):
     This is the deliverable you sell to Engineering Managers.
     """
     # 1. Gather Data
-    score, _ = await get_user_reliability(user_id)
+    score, _, _ = await get_user_reliability(user_id)
+
     # Mocking historical evidence for the audit report demo
     promised = ["Refactor API", "Fix CSS", "Update Docs"]
     reality = "Only updated some typos in README. No major code changes detected."
