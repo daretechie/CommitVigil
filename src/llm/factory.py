@@ -12,15 +12,17 @@ class LLMFactory:
     """
 
     @staticmethod
-    def get_provider() -> LLMProvider:
+    def get_provider(provider_name: str = None) -> LLMProvider:
         # 1. Respect explicit steering if set
-        if settings.LLM_PROVIDER:
-            if settings.LLM_PROVIDER == "openai" and settings.OPENAI_API_KEY:
+        active_provider = provider_name or settings.LLM_PROVIDER
+        if active_provider:
+            if active_provider == "openai" and settings.OPENAI_API_KEY:
                 return OpenAIProvider(api_key=settings.OPENAI_API_KEY)
-            if settings.LLM_PROVIDER == "groq" and settings.GROQ_API_KEY:
+            if active_provider == "groq" and settings.GROQ_API_KEY:
                 return GroqProvider(api_key=settings.GROQ_API_KEY)
-            if settings.LLM_PROVIDER == "mock":
+            if active_provider == "mock":
                 return MockProvider()
+
 
         # 2. Automatic Detection (Heuristic Discovery)
         if settings.OPENAI_API_KEY:
