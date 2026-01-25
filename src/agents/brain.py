@@ -167,6 +167,12 @@ class CommitGuardBrain:
             logger.warning("safety_override_triggered", user_id=user_id, reason=audit.reasoning)
             decision.message = audit.suggested_correction or decision.message
             decision.analysis_summary += f" | Safety Override: {audit.reasoning}"
+        
+        if audit.requires_human_review:
+            logger.info("human_review_requested", user_id=user_id)
+            decision.action = "escalate_to_manager"
+            decision.analysis_summary += " | Requires Human-in-the-Loop Review"
+
             
         return PipelineEvaluation(
             decision=decision,
