@@ -4,6 +4,7 @@ from httpx import AsyncClient, ASGITransport
 from src.api.routes import router
 from fastapi import FastAPI
 from src.schemas.performance import SlippageAnalysis, TruthGapAnalysis
+from src.core.config import settings
 
 # Setup a minimal test app
 app = FastAPI()
@@ -52,7 +53,7 @@ async def test_get_performance_audit_json(mock_dependencies):
     ) as ac:
         response = await ac.get(
             "/api/v1/reports/audit/test_user",
-            headers={"X-API-Key": "my-secure-api-key-12345"},
+            headers={"X-API-Key": settings.API_KEY_SECRET},
         )
     assert response.status_code == 200
     data = response.json()
@@ -67,7 +68,7 @@ async def test_get_performance_audit_markdown(mock_dependencies):
     ) as ac:
         response = await ac.get(
             "/api/v1/reports/audit/test_user?report_format=markdown",
-            headers={"X-API-Key": "my-secure-api-key-12345"},
+            headers={"X-API-Key": settings.API_KEY_SECRET},
         )
     assert response.status_code == 200
     data = response.json()
