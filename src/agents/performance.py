@@ -1,4 +1,3 @@
-
 from src.core.config import settings
 from src.core.logging import logger
 from src.core.utils import truncate_text
@@ -54,8 +53,6 @@ class SlippageAnalyst:
                 {"role": "user", "content": prompt},
             ],
         )
-
-
 
 
 class TruthGapDetector:

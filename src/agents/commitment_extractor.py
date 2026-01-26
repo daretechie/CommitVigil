@@ -34,12 +34,12 @@ class CommitmentExtractor:
                     ),
                 },
                 {
-                    "role": "user", 
+                    "role": "user",
                     "content": (
                         f"<conversation_log>\n"
                         f"{truncate_text(thread_text, settings.MAX_INPUT_CHARS)}\n"
                         f"</conversation_log>"
-                    )
+                    ),
                 },
             ],
         )

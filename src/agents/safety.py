@@ -3,7 +3,6 @@ from src.llm.factory import LLMFactory
 from src.schemas.agents import SafetyAudit, ToneType
 
 
-
 class SafetySupervisor:
     """
     The 'Overwatch' Layer: An autonomous agent that audits outgoing communications.

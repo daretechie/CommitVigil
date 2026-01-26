@@ -63,9 +63,7 @@ async def update_user_reliability(
     async with AsyncSessionLocal() as session:
         # 1. Lock the row for update to ensure atomicity
         statement = (
-            select(UserHistory)
-            .where(UserHistory.user_id == user_id)
-            .with_for_update()
+            select(UserHistory).where(UserHistory.user_id == user_id).with_for_update()
         )
         results = await session.execute(statement)
         user = results.scalar_one_or_none()

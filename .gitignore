@@ -156,3 +156,5 @@ commitguard.db
 *.db
 .ruff_cache/
 brain/
+docs/reference/prospecting_log.md
+docs/reference/demo_script.md

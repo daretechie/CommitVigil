@@ -170,7 +170,7 @@ async def test_lifespan():
     """Test lifespan events explicitly."""
     from src.main import lifespan
     from src.core.state import state
-    
+
     mock_app = MagicMock()
     with (
         patch("src.main.init_db", new_callable=AsyncMock) as mock_db,
@@ -194,7 +194,7 @@ def test_auth_bypass_when_disabled(mock_settings):
     """Verify requests pass through when AUTH_ENABLED=False."""
     mock_settings.AUTH_ENABLED = False
     mock_settings.API_KEY_SECRET = "dev-secret-key"
-    
+
     no_auth_client = TestClient(app)
     # Health endpoint should always work
     response = no_auth_client.get("/health")
@@ -215,14 +215,14 @@ async def test_safety_supervisor_audit():
     """Test SafetySupervisor audit_message function."""
     from src.agents.safety import SafetySupervisor
     from src.schemas.agents import ToneType
-    
+
     supervisor = SafetySupervisor()
     result = await supervisor.audit_message(
         message="Please complete the task by Friday.",
         tone=ToneType.NEUTRAL,
-        user_context="Reliability: 85%, Consecutive firm: 1"
+        user_context="Reliability: 85%, Consecutive firm: 1",
     )
-    
+
     # The mock provider should return a SafetyAudit
-    assert hasattr(result, 'is_safe')
-    assert hasattr(result, 'is_hard_blocked')
+    assert hasattr(result, "is_safe")
+    assert hasattr(result, "is_hard_blocked")

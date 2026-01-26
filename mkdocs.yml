@@ -54,8 +54,6 @@ markdown_extensions:
 nav:
   - Introduction: index.md
   - Operational Overviews:
-      - The Accountability Specialist: overviews/concept.md
-      - Behavioral vs GitOps Personas: overviews/personas.md
       - Agentic Reasoning Logic: overviews/agents.md
       - Ethics & Privacy: overviews/ethics.md
       - Customization & Tuning: overviews/customization.md
@@ -65,15 +63,12 @@ nav:
       - Test Results: validation/adversarial_test_results.md
       - Benchmarks: validation/performance_benchmarks.md
 
-
-
-
-
   - Usage Guides:
       - Quick Start: guides/quickstart.md
       - Slack Integration: guides/slack.md
       - GitOps Accountability: guides/gitops.md
       - The Accountability Handbook: guides/managers.md
+      - Production Deployment: guides/production.md
 
 
   - API Reference:

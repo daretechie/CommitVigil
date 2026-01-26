@@ -23,9 +23,7 @@ class Settings(BaseSettings):
     # Infrastructure
     REDIS_URL: str = "redis://localhost:6380"
     DB_PATH: str = "commitguard.db"  # Legacy support
-    DATABASE_URL: str = (
-        "postgresql+asyncpg://user:password@localhost:5432/commitguard"
-    )
+    DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/commitguard"
 
     # Integrations
     SLACK_WEBHOOK_URL: str | None = None
@@ -34,7 +32,7 @@ class Settings(BaseSettings):
 
     # Security
     API_KEY_SECRET: str = "dev-secret-key"  # Default for dev; Override in Prod!
-    AUTH_ENABLED: bool = True               # Feature Flag for Dev Mode
+    AUTH_ENABLED: bool = True  # Feature Flag for Dev Mode
 
     # Default to localhost only for development; Production MUST override this via env var
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]

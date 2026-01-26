@@ -96,10 +96,16 @@ class ExtractedCommitment(BaseModel):
 
 
 class SlackCommitmentRecord(BaseModel):
-    commitment_found: bool = Field(..., description="True if a promise was actually found.")
-    who: str | None = Field(default=None, description="The person who made the promise.")
+    commitment_found: bool = Field(
+        ..., description="True if a promise was actually found."
+    )
+    who: str | None = Field(
+        default=None, description="The person who made the promise."
+    )
     what: str | None = Field(default=None, description="The action or task promised.")
-    when: str | None = Field(default=None, description="The deadline or time frame promised.")
+    when: str | None = Field(
+        default=None, description="The deadline or time frame promised."
+    )
 
 
 class CommitmentUpdate(BaseModel):
@@ -123,7 +129,6 @@ class UserHistory(SQLModel, table=True):
     last_intervention_at: datetime | None = Field(default=None)
 
 
-
 class ReportSummary(BaseModel):
     report_id: str
     generated_at: str
@@ -139,4 +144,3 @@ class CorrectionFeedback(BaseModel):
     action_taken: str = Field(..., description="'accepted', 'rejected', 'modified'")
     final_message_sent: str
     comments: str | None = None
-

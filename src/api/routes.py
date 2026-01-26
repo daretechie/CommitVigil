@@ -19,6 +19,7 @@ from src.core.state import state
 
 router = APIRouter()
 
+
 @router.post("/evaluate", dependencies=[Depends(get_api_key)])
 async def evaluate_commitment(update: CommitmentUpdate):
     """
@@ -106,7 +107,7 @@ async def ingest_git_commitment(commit_data: dict):
     if not isinstance(author_email, str) or not isinstance(message, str):
         return {
             "status": "error",
-            "message": "Invalid input: author_email and message must be strings."
+            "message": "Invalid input: author_email and message must be strings.",
         }
 
     # Explicit cast for MyPy (redundant at runtime but needed for strict static analysis)
@@ -158,6 +159,7 @@ async def get_performance_audit(user_id: str, report_format: str = "json"):
         return {"content": AuditReportGenerator.generate_markdown_audit(summary)}
     elif report_format == "html":
         from fastapi.responses import HTMLResponse
+
         return HTMLResponse(content=AuditReportGenerator.generate_html_audit(summary))
 
     return summary

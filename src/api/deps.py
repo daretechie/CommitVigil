@@ -6,14 +6,19 @@ from src.core.logging import logger
 # Define the scheme but don't auto-error yet, we handle logic manually
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
-async def get_api_key(api_key_header: str | None = Security(api_key_header)) -> str | None:
+
+async def get_api_key(
+    api_key_header: str | None = Security(api_key_header),
+) -> str | None:
     """
     Enforces API Key Authentication based on settings.
     PROD: Mandatory.
     DEV: Configurable via AUTH_ENABLED.
     """
     if not settings.AUTH_ENABLED:
-        logger.warning("authentication_bypass", status="disabled_in_config", mode="dev_unsafe")
+        logger.warning(
+            "authentication_bypass", status="disabled_in_config", mode="dev_unsafe"
+        )
         return None
 
     if not api_key_header:

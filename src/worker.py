@@ -18,9 +18,7 @@ setup_logging()
 # Configure Job Store
 # SQLAlchemyJobStore requires a sync connection string
 sync_db_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
-job_stores = {
-    "default": SQLAlchemyJobStore(url=sync_db_url)
-}
+job_stores = {"default": SQLAlchemyJobStore(url=sync_db_url)}
 
 # Initialize a persistent scheduler
 scheduler = AsyncIOScheduler(jobstores=job_stores)
