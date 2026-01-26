@@ -15,13 +15,18 @@ class SafetySupervisor:
             "semantic_rules": "Redact any patient identifiers. Block messages mentioning medical charts or specific treatments.",
         },
         "finance": {
-            "hr_keywords": ["insider trading", "SEC compliance", "FINRA", "market manipulation"],
+            "hr_keywords": [
+                "insider trading",
+                "SEC compliance",
+                "FINRA",
+                "market manipulation",
+            ],
             "semantic_rules": "Block any phrasing that could be interpreted as financial advice or market manipulation.",
         },
         "generic": {
             "hr_keywords": ["Salary", "PIP", "Firing", "Legal Threats"],
             "semantic_rules": "Enforce standard professional conduct and HR boundaries.",
-        }
+        },
     }
 
     def __init__(self, provider_name: str | None = None):
@@ -29,11 +34,7 @@ class SafetySupervisor:
         self.model = settings.MODEL_NAME
 
     async def audit_message(
-        self,
-        message: str,
-        tone: ToneType,
-        user_context: str,
-        industry: str = "generic"
+        self, message: str, tone: ToneType, user_context: str, industry: str = "generic"
     ) -> SafetyAudit:
         """
         Performs a final safety check on the proposed message.

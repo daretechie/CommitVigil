@@ -292,8 +292,10 @@ class CommitGuardBrain:
         industry: str = "generic",
     ) -> AgentDecision:
         # 2026 Cultural Persona Logic
-        cultural_instruction = self.CULTURAL_PROMPTS.get(lang, self.CULTURAL_PROMPTS["en"])
-        
+        cultural_instruction = self.CULTURAL_PROMPTS.get(
+            lang, self.CULTURAL_PROMPTS["en"]
+        )
+
         prompt = f"""
         Role: CommitGuard Decision Agent
         Focus Industry: {industry}
