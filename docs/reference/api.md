@@ -35,3 +35,12 @@ The audit endpoint supports three formats via the `report_format` query paramete
 - **`json`** (Default): Standard API response for integration.
 - **`markdown`**: A structured document ready for GitHub or Jira.
 - **`html`**: A premium, "PDF-ready" glassmorphic design for professional delivery.
+
+## 🔄 Continuous Learning
+::: src.api.routes.log_safety_feedback
+    options:
+      show_root_heading: true
+      show_source: false
+
+---
+*Built for High-Performance Teams and Elite Portfolios. 🛡️🚀*

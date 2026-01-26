@@ -39,6 +39,30 @@ async def test_japanese_cultural_routing():
             assert "harmony (wa)" in called_prompt
 
 @pytest.mark.asyncio
+async def test_french_cultural_routing():
+    """Verify that French language triggers the correct cultural persona."""
+    brain = CommitGuardBrain()
+    with patch.object(brain, "detect_language", return_value="fr"):
+        with patch.object(brain.provider, "chat_completion", new_callable=AsyncMock) as mock_chat:
+            mock_chat.return_value = AsyncMock()
+            await brain.adapt_tone(excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="fr")
+            called_prompt = mock_chat.call_args[1]["messages"][0]["content"]
+            assert "French professional tone" in called_prompt
+            assert "eloquence" in called_prompt
+
+@pytest.mark.asyncio
+async def test_british_english_routing():
+    """Verify that UK English triggers polite understatements."""
+    brain = CommitGuardBrain()
+    # Explicitly asking for en-UK
+    with patch.object(brain.provider, "chat_completion", new_callable=AsyncMock) as mock_chat:
+        mock_chat.return_value = AsyncMock()
+        await brain.adapt_tone(excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="en-UK")
+        called_prompt = mock_chat.call_args[1]["messages"][0]["content"]
+        assert "British professional tone" in called_prompt
+        assert "understatements" in called_prompt
+
+@pytest.mark.asyncio
 async def test_hipaa_semantic_firewall_blocking():
     """Verify that HIPAA rules block PHI/PII semantically."""
     supervisor = SafetySupervisor()

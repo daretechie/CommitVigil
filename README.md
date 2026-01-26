@@ -34,13 +34,19 @@ CommitGuard AI is a multi-agent system designed for high-stakes enforcement. It 
 
 ---
 
+### 🛡️ 2026 Enterprise Upgrade: Elite Guardrails
+The system now includes research-backed advanced features for global operations:
+- **Continuous Learning Pipeline**: Persists manager decisions to calculate **Intervention Acceptance Rates** and refine AI strategies.
+- **Cultural Persona Routing**: Automatically adapts tone for **Japanese (*Wa*)**, **German (*Sachlichkeit*)**, **French (Eloquence)**, and **British English**.
+- **Industry Semantic Firewall**: Intent-based security for **Healthcare (HIPAA)** and **Finance (SEC)** compliance.
+
 ## 🏗️ The Four-Stage Autonomous Pipeline
 Every commitment—whether from Slack or a Git Commit—passes through a deterministic reasoning loop:
 
 1.  **Excuse Detection (`ExcuseDetector`)**: Classifies sentiment (Legitimate vs. Deflection vs. Burnout).
 2.  **Predictive Risk Assessment (`RiskScorer`)**: Quantifies failure probability based on historical reliability.
-3.  **Safety Supervisor (`Overwatch`)**: Audits final communications for HR/Legal ethics and tone drift.
-4.  **Adaptive Pressure (`ToneAdapter`)**: Selects the psychological tone to ensure delivery.
+3.  **Language & Culture Router**: Identifies the primary language and selects the appropriate cultural persona.
+4.  **Safety Supervisor (`Overwatch`)**: Audits final communications for HR/Legal ethics and **Industry-Specific Semantic Compliance**.
 
 ---
 

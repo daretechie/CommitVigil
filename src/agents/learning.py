@@ -46,7 +46,7 @@ class SupervisorFeedbackLoop:
         """
         ROI Metric: Calculates the percentage of AI corrections accepted by managers.
         """
-        since = datetime.utcnow() - timedelta(days=days)
+        since = datetime.now(timezone.utc) - timedelta(days=days)
         async with AsyncSessionLocal() as session:
             # Total count
             statement_total = select(func.count(SafetyFeedback.id)).where(SafetyFeedback.created_at >= since)

@@ -27,10 +27,11 @@ class CommitGuardBrain:
     """
 
     CULTURAL_PROMPTS = {
-        "en": "Standard professional tone. Focus on clarity and deadline accountability.",
-        "en-UK": "British professional tone. Use polite understatements and avoid over-assertiveness.",
+        "en": "Standard global professional tone. Clear and direct.",
+        "en-UK": "British professional tone. Use polite understatements, 'please/thank you' frequency, and avoid over-assertiveness.",
         "ja": "High-context Japanese tone. Prioritize harmony (wa). Use indirect observations and soft suggestions instead of direct demands.",
-        "de": "Direct German Sachlichkeit. Focus on objective facts, precision, and straightforward feedback. No fluff.",
+        "de": "Direct German Sachlichkeit. Focus on objective facts, precision, and substantive feedback.",
+        "fr": "French professional tone. Value eloquence and formal structure. Maintain a balance between directness and professional courtesy.",
     }
 
     def __init__(self):
@@ -39,10 +40,9 @@ class CommitGuardBrain:
 
     async def detect_language(self, text: str) -> str:
         """
-        2026 Agentic Language Detection: Uses semantic intent to identify cultural context.
+        2026 Agentic Language & Culture Detection.
+        Identifies the primary language and mapping it to our cultural archetypes.
         """
-        # In a real 2026 deployment, we might use a dedicated lightweight model.
-        # Here we use the main provider with a strict routing prompt.
         try:
             detected = await self.provider.chat_completion(
                 response_model=str,
@@ -50,14 +50,16 @@ class CommitGuardBrain:
                 messages=[
                     {
                         "role": "system",
-                        "content": "Detect the language and cultural nuance of the following text. Return only the code: 'en', 'ja', or 'de'.",
+                        "content": "Detect the language of the following text. Return only the 2-letter ISO code (e.g., 'en', 'ja', 'de', 'fr', 'es').",
                     },
                     {"role": "user", "content": text},
                 ],
             )
-            return str(detected).strip().lower() if detected in ["en", "ja", "de"] else "en"
+            # Normalize and map to supported types
+            code = str(detected).strip().lower()
+            return code if code in self.CULTURAL_PROMPTS else "en"
         except Exception:
-            return "en"  # Fallback to English
+            return "en"
 
     async def analyze_excuse(self, user_input: str) -> ExcuseAnalysis:
         return await self.provider.chat_completion(
