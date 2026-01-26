@@ -19,6 +19,13 @@ The final decision is a personalized intervention:
 - **Tone: Supportive** - If risk is high but burnout is detected.
 - **Tone: Firm** - If risk is high and the user has a history of deflection.
 - **Tone: Neutral** - For standard updates.
+- **Tone: Confrontational** - For repeat deflection.
+
+## 4. Safety Audit (`SafetySupervisor`)
+The "Overwatch" layer acts as a final sanity check before any intervention is sent. It prevents:
+- **HR Violations**: Blocking discussions on salary or firing.
+- **Tone Drift**: Catching if an agent accidentally becomes too aggressive.
+- **Ambiguity**: Flagging if the agent's confidence in its own verdict is low.
 
 ---
 

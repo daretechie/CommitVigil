@@ -1,4 +1,5 @@
 from src.core.config import settings
+from src.core.utils import truncate_text
 from src.llm.factory import LLMFactory
 from src.schemas.agents import SlackCommitmentRecord
 
@@ -25,11 +26,20 @@ class CommitmentExtractor:
                 {
                     "role": "system",
                     "content": (
-                        "Extract the primary promise. "
+                        "Extract the primary promise from the conversation log provided within <conversation_log> tags. "
                         "Identify WHO made the promise. "
-                        "Output: {who, what, when}."
+                        "If NO clear commitment or task is found, set 'commitment_found': False. "
+                        "Otherwise, set 'commitment_found': True and fill fields. "
+                        "Output: {commitment_found, who, what, when}."
                     ),
                 },
-                {"role": "user", "content": thread_text},
+                {
+                    "role": "user", 
+                    "content": (
+                        f"<conversation_log>\n"
+                        f"{truncate_text(thread_text, settings.MAX_INPUT_CHARS)}\n"
+                        f"</conversation_log>"
+                    )
+                },
             ],
         )

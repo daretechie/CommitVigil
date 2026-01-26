@@ -4,14 +4,25 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.main import app
+from src.core.config import settings
 
+# Inject Auth Header Globally for Tests
 client = TestClient(app)
+client.headers = {"X-API-Key": settings.API_KEY_SECRET}
 
 
 def test_read_root():
     response = client.get("/")
     assert response.status_code == 200
     assert "Welcome" in response.json()["message"]
+
+
+def test_auth_enforcement():
+    """Verify that missing auth token results in 403."""
+    no_auth_client = TestClient(app)
+    # Try a protected endpoint
+    response = no_auth_client.post("/api/v1/evaluate", json={})
+    assert response.status_code == 403
 
 
 def test_read_health_healthy():
@@ -66,23 +77,26 @@ def test_read_health_redis_not_initialized():
         assert data["dependencies"]["redis"] == "not_initialized"
 
 
-@patch("src.main.state")
+@patch("src.api.routes.state")
 def test_evaluate_commitment_redis_not_initialized(mock_state):
     # Ensure state["redis"] returns None
     mock_state.__getitem__.return_value = None
     payload = {"user_id": "u1", "commitment": "c", "check_in": "ok"}
-    response = client.post("/evaluate", json=payload)
+    response = client.post("/api/v1/evaluate", json=payload)
     assert response.status_code == 200
     assert response.json()["status"] == "error"
 
 
-@patch("src.main.state")
+@patch("src.api.routes.state")
 def test_evaluate_commitment_success(mock_state):
     mock_redis = AsyncMock()
+    mock_job = MagicMock()
+    mock_job.job_id = "test-job-id"
+    mock_redis.enqueue_job.return_value = mock_job
     # Ensure state["redis"] returns our mock
     mock_state.__getitem__.return_value = mock_redis
     payload = {"user_id": "u1", "commitment": "c", "check_in": "ok"}
-    response = client.post("/evaluate", json=payload)
+    response = client.post("/api/v1/evaluate", json=payload)
     assert response.status_code == 200
     assert response.json()["status"] == "enqueued"
     mock_redis.enqueue_job.assert_called_once()
@@ -90,53 +104,53 @@ def test_evaluate_commitment_success(mock_state):
 
 def test_ingest_raw_commitment():
     response = client.post(
-        "/ingest/raw", params={"user_id": "u1", "raw_text": "I will fix it"}
+        "/api/v1/ingest/raw", params={"user_id": "u1", "raw_text": "I will fix it"}
     )
     assert response.status_code == 200
     assert response.json()["status"] == "extracted"
 
 
-@patch("src.main.set_slack_id", new_callable=AsyncMock)
+@patch("src.api.routes.set_slack_id", new_callable=AsyncMock)
 def test_map_slack_user(mock_set):
     response = client.post(
-        "/users/config/slack", params={"user_id": "u1", "slack_id": "s1"}
+        "/api/v1/users/config/slack", params={"user_id": "u1", "slack_id": "s1"}
     )
     assert response.status_code == 200
     mock_set.assert_called_once_with("u1", "s1")
 
 
-@patch("src.main.set_git_email", new_callable=AsyncMock)
+@patch("src.api.routes.set_git_email", new_callable=AsyncMock)
 def test_map_git_user(mock_set):
     response = client.post(
-        "/users/config/git", params={"user_id": "u1", "git_email": "e1"}
+        "/api/v1/users/config/git", params={"user_id": "u1", "git_email": "e1"}
     )
     assert response.status_code == 200
     mock_set.assert_called_once_with("u1", "e1")
 
 
-@patch("src.main.get_user_by_git_email", new_callable=AsyncMock)
+@patch("src.api.routes.get_user_by_git_email", new_callable=AsyncMock)
 def test_ingest_git_commitment_matched(mock_get_user):
     mock_get_user.return_value = MagicMock(user_id="u1")
     payload = {"author_email": "e1", "message": "fixed bug"}
-    response = client.post("/ingest/git", json=payload)
+    response = client.post("/api/v1/ingest/git", json=payload)
     assert response.status_code == 200
     assert response.json()["status"] == "extracted"
     assert response.json()["identity_matched"] is True
 
 
-@patch("src.main.get_user_by_git_email", new_callable=AsyncMock)
+@patch("src.api.routes.get_user_by_git_email", new_callable=AsyncMock)
 def test_ingest_git_commitment_unmatched(mock_get_user):
     mock_get_user.return_value = None
     payload = {"author_email": "unknown", "message": "hello"}
-    response = client.post("/ingest/git", json=payload)
+    response = client.post("/api/v1/ingest/git", json=payload)
     assert response.status_code == 200
     assert response.json()["identity_matched"] is False
 
 
-@patch("src.main.get_user_reliability", new_callable=AsyncMock)
-@patch("src.main.SlippageAnalyst")
-@patch("src.main.TruthGapDetector")
-@patch("src.main.AuditReportGenerator")
+@patch("src.api.routes.get_user_reliability", new_callable=AsyncMock)
+@patch("src.api.routes.SlippageAnalyst")
+@patch("src.api.routes.TruthGapDetector")
+@patch("src.api.routes.AuditReportGenerator")
 def test_reports_audit(mock_gen, mock_det, mock_ana, mock_get_rel):
     mock_get_rel.return_value = (90.0, "s1", 0)
 
@@ -146,7 +160,7 @@ def test_reports_audit(mock_gen, mock_det, mock_ana, mock_get_rel):
     mock_det_inst.detect_gap = AsyncMock(return_value={})
     mock_gen.generate_audit_summary.return_value = {"report": "content"}
 
-    response = client.get("/reports/audit/u1")
+    response = client.get("/api/v1/reports/audit/u1")
     assert response.status_code == 200
     assert response.json() == {"report": "content"}
 
@@ -154,8 +168,9 @@ def test_reports_audit(mock_gen, mock_det, mock_ana, mock_get_rel):
 @pytest.mark.asyncio
 async def test_lifespan():
     """Test lifespan events explicitly."""
-    from src.main import lifespan, state
-
+    from src.main import lifespan
+    from src.core.state import state
+    
     mock_app = MagicMock()
     with (
         patch("src.main.init_db", new_callable=AsyncMock) as mock_db,

@@ -71,7 +71,7 @@ async def test_concurrent_safety_checks(mock_brain_components):
         start_time = time.perf_counter()
         
         tasks = [
-            brain.evaluate_participation("u1", "task", "status", 100.0, 0)
+            brain.evaluate_participation("u1", "status", 100.0, 0)
             for _ in range(50)
         ]
         

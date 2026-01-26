@@ -22,7 +22,8 @@ CommitGuard can ping users directly using their **Slack Member ID**.
 Call the configuration endpoint with the user's Slack ID (found in their Slack Profile -> More -> Copy Member ID):
 
 ```bash
-POST /users/config/slack?user_id=john_dev&slack_id=U12345678
+POST /api/v1/users/config/slack?user_id=john_dev&slack_id=U12345678
+Headers: X-API-Key: YOUR_API_KEY
 ```
 
 ### The Result

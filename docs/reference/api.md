@@ -22,3 +22,10 @@ CommitGuard AI provides a clean RESTful interface for all operations.
     options:
       show_root_heading: true
       show_source: false
+
+## 📊 Performance Audits
+
+::: src.main.get_performance_audit
+    options:
+      show_root_heading: true
+      show_source: false

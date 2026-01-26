@@ -58,7 +58,7 @@ async def test_adversarial_hard_block_salary(mock_brain_components):
 
 
         print(f"\n[Test Output] Input Message: '{bad_decision.message}'")
-        result = await brain.evaluate_participation("u1", "task", "status", 100.0, 0)
+        result = await brain.evaluate_participation("u1", "status", 100.0, 0)
         print(f"[Test Output] Final Decision: Action='{result.decision.action}', Message='{result.decision.message}'")
         
         assert result.decision.action == "escalate_to_manager"
@@ -89,7 +89,7 @@ async def test_adversarial_low_confidence_idiom(mock_brain_components):
         ))
 
         print(f"\n[Test Output] Input Message: '{idiom_decision.message}'")
-        result = await brain.evaluate_participation("u1", "task", "status", 100.0, 0)
+        result = await brain.evaluate_participation("u1", "status", 100.0, 0)
         print(f"[Test Output] Final Decision: Action='{result.decision.action}', Intervention='{result.safety_audit.intervention_type}'")
         
         assert result.decision.action == "escalate_to_manager"
@@ -121,7 +121,7 @@ async def test_adversarial_allowed_pricing(mock_brain_components):
         ))
 
         print(f"\n[Test Output] Input Message: '{pricing_decision.message}'")
-        result = await brain.evaluate_participation("u1", "task", "status", 100.0, 0)
+        result = await brain.evaluate_participation("u1", "status", 100.0, 0)
         print(f"[Test Output] Final Decision: Action='{result.decision.action}', Message='{result.decision.message}'")
         
         assert result.decision.action == "notified" # Assuming default action mapped nicely
@@ -173,7 +173,7 @@ async def test_hybrid_correction_injection(mock_brain_components):
         print(f"\n[Test Output] Input Message: '{harsh_decision.message}'")
         # Simulate logic for hybrid vs rewrite based on length or other heuristic if implemented
         # For now, just confirming replacement
-        result = await brain.evaluate_participation("u1", "task", "status", 100.0, 0)
+        result = await brain.evaluate_participation("u1", "status", 100.0, 0)
         print(f"[Test Output] Final Decision: Message='{result.decision.message}' (Original: '{harsh_decision.message}')")
         
         # KEY: Capitalization Hook should have run ('could' -> 'Could')
@@ -209,7 +209,7 @@ async def test_nested_hr_context(mock_brain_components):
         ))
 
         print(f"\n[Test Output] Input Message: '{nested_hr_msg.message}'")
-        result = await brain.evaluate_participation("u1", "task", "status", 100.0, 0)
+        result = await brain.evaluate_participation("u1", "status", 100.0, 0)
         print(f"[Test Output] Safety Reasoning: '{result.decision.analysis_summary}'") # Should not have intervention text
         print(f"[Test Output] Final Status: Hard Blocked? {False}")
 
@@ -243,7 +243,7 @@ async def test_multiple_issues_dual_violation(mock_brain_components):
         ))
 
         print(f"\n[Test Output] Input Message: '{dual_msg.message}'")
-        result = await brain.evaluate_participation("u1", "task", "status", 100.0, 0)
+        result = await brain.evaluate_participation("u1", "status", 100.0, 0)
         print(f"[Test Output] Final Action: '{result.decision.action}'")
         
         # Verify Hard Block precedence
@@ -295,7 +295,7 @@ async def test_cultural_idiom_sensitivity(mock_brain_components):
 
 
         print(f"\n[Test Output] Input Message: '{direct_msg.message}'")
-        result = await brain.evaluate_participation("u1", "task", "status", 100.0, 0)
+        result = await brain.evaluate_participation("u1", "status", 100.0, 0)
         print(f"[Test Output] Correction: '{result.decision.message}' (Reason: {result.safety_audit.reasoning})")
         
         assert result.decision.message == "Perhaps we could reflect on this together?"
@@ -344,7 +344,7 @@ async def test_no_infinite_corrections(mock_brain_components):
 
         print("\n[Test Output] Verifying Single-Pass Architecture...")
 
-        result = await brain.evaluate_participation("u1", "task", "status", 100.0, 0)
+        result = await brain.evaluate_participation("u1", "status", 100.0, 0)
         
         # KEY ASSERTION: audit_message called exactly TWICE (Initial + Re-Validation)
 
@@ -382,7 +382,7 @@ async def test_uk_idioms(mock_brain_components):
         ))
 
         print(f"\n[Test Output] Input Message: '{uk_msg.message}'")
-        result = await brain.evaluate_participation("u1", "task", "status", 100.0, 0)
+        result = await brain.evaluate_participation("u1", "status", 100.0, 0)
         print(f"[Test Output] Action: '{result.decision.action}' (Reason: {result.safety_audit.reasoning})")
         
         assert result.decision.action == "escalate_to_manager"
@@ -443,7 +443,7 @@ async def test_supervisor_catches_bad_correction(mock_brain_components):
 
         print("\n[Test Output] Verifying Safety Valve (Re-Audit)...")
 
-        result = await brain.evaluate_participation("u1", "task", "status", 100.0, 0)
+        result = await brain.evaluate_participation("u1", "status", 100.0, 0)
         print(f"[Test Output] Final Action: '{result.decision.action}'")
         print(f"[Test Output] Reasoning: '{result.safety_audit.reasoning}'")
         

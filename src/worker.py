@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from typing import ClassVar
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from arq.connections import RedisSettings
 
 from src.agents.brain import CommitGuardBrain
@@ -14,8 +15,15 @@ from src.schemas.agents import ExcuseCategory, RiskLevel
 # Initialize Logging for the Worker
 setup_logging()
 
+# Configure Job Store
+# SQLAlchemyJobStore requires a sync connection string
+sync_db_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+job_stores = {
+    "default": SQLAlchemyJobStore(url=sync_db_url)
+}
+
 # Initialize a persistent scheduler
-scheduler = AsyncIOScheduler()
+scheduler = AsyncIOScheduler(jobstores=job_stores)
 
 
 async def send_follow_up(user_id: str, message: str, slack_id: str | None = None):
@@ -45,7 +53,6 @@ async def process_commitment_eval(
 
     evaluation = await brain.evaluate_participation(
         user_id=user_id,
-        commitment=commitment,
         check_in=check_in,
         reliability_score=reliability,
         consecutive_firm=consecutive_firm,
@@ -103,6 +110,7 @@ async def shutdown(_ctx):
     """
     logger.info("worker_shutdown", status="stopping_scheduler")
     scheduler.shutdown()
+    await SlackConnector.close()
 
 
 class WorkerSettings:

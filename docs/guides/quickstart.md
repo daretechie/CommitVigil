@@ -9,26 +9,32 @@ The fastest way to spin up the full stack (API + Worker + Redis + Postgres):
 docker-compose up --build
 ```
 
-## 🏗️ Local Poetry Setup
+## 🏗️ Local Setup
 1.  **Install dependencies**:
     ```bash
-    poetry install
+    uv sync
     ```
 2.  **Configure Environment**:
-    Create a `.env` file based on `.env.example`.
+    Create a `.env` file based on `.env.example`. 
+    > **Important**: Set `API_KEY_SECRET` to a secure value for production. Set `AUTH_ENABLED=False` for local testing without auth.
 3.  **Run the API**:
     ```bash
-    poetry run uvicorn src.main:app --reload
+    uv run uvicorn src.main:app --reload
     ```
 4.  **Run the Worker**:
     ```bash
-    poetry run arq src.worker.WorkerSettings
+    uv run arq src.worker.WorkerSettings
     ```
 
 ---
 
-## 🧪 Running the Test Suite
-Standardized tests are enforced with 90%+ coverage.
+## 🧪 Quality and Stability
+CommitGuard AI enforces military-grade engineering standards:
+- **Mock Mode**: Set `LLM_PROVIDER="mock"` in `.env` to run the entire system with zero token cost.
+- **Strict Typing**: The system is fully compliant with `mypy` strict type checking. Run `poetry run mypy src/` to verify correctness.
+- **Coverage**: All critical agents maintain a high test coverage threshold.
+
 ```bash
-poetry run pytest
+# Run tests with clean output
+uv run pytest
 ```

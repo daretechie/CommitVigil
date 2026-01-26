@@ -29,8 +29,8 @@ The "Secret Sauce" of CommitGuard is in the **System Prompts**. You can find and
 
 ---
 
-## 3. Message Lifecycle & "Overwatch" Architecture 🛰️
-The Safety Supervisor follows a **Post-Generation Overwatch** pattern. This ensures that the system is self-healing without entering infinite regeneration loops.
+## 3. Message Lifecycle & "Safety Overwatch" 🛰️
+The **Safety Supervisor** follows a **Post-Generation Overwatch** pattern. This ensures that the system is self-healing without entering infinite regeneration loops.
 
 ```mermaid
 graph TD

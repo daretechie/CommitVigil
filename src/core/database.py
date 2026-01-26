@@ -53,9 +53,15 @@ async def update_user_reliability(
 ):
     """
     Update historical stats and track ethical Tone-Damping status.
+    Uses 'with_for_update' to ensure atomicity during multi-read-write operations.
     """
     async with AsyncSessionLocal() as session:
-        statement = select(UserHistory).where(UserHistory.user_id == user_id)
+        # 1. Lock the row for update to ensure atomicity
+        statement = (
+            select(UserHistory)
+            .where(UserHistory.user_id == user_id)
+            .with_for_update()
+        )
         results = await session.execute(statement)
         user = results.scalar_one_or_none()
 
@@ -71,16 +77,16 @@ async def update_user_reliability(
             if was_failure:
                 user.failed_commitments += 1
 
-        # Ethical Counter Management
+        # 2. Ethical Counter Management
         if tone_used in ["firm", "confrontational"]:
             user.consecutive_firm_interventions += 1
-            user.last_intervention_at = datetime.now().isoformat()
+            user.last_intervention_at = datetime.now()
         else:
             # Cooling-off logic: Reset counter if a supportive/neutral
             # tone is successfully used
             user.consecutive_firm_interventions = 0
 
-        # Calculate new score
+        # 3. Calculate new score (Safely handled within the lock)
         user.reliability_score = (
             (user.total_commitments - user.failed_commitments) / user.total_commitments
         ) * 100

@@ -9,17 +9,18 @@
 In modern distributed teams, the **"Slack Stall"** is the #1 drain on project velocity. Project Managers are overwhelmed by vague promises like *"I'll get to it soon,"* which are often forgotten, leading to missed sprints and "bad guy" escalations.
 
 ## ✅ The Solution
-CommitGuard AI is a standalone, agentic service designed to monitor and enforce professional commitments. It doesn't just "track tasks"; it acts as a proactive collaborator that:
+CommitGuard AI is a standalone, agentic service designed to monitor and enforce professional commitments. Every commitment passes through a **4-Stage Reasoning Pipeline**:
 
-1.  **Extracts Vague Promises**: Automatically parses Slack threads to create structured commitment records.
-2.  **Predicts Failure**: Uses behavioral sentiment to flag burnout or deflection *before* the deadline passes.
-3.  **Automates Calibration**: Adjusts its tone—Supportive for burnout, Firm for repeat offenders—saving the PM from having to chase updates.
+1.  **Extraction**: Automatically parses Slack threads or Git commits to identify {who, what, when}.
+2.  **Excuse Analysis**: Categorizes sentiment (Legitimate vs. Deflection vs. Burnout).
+3.  **Risk Scoring**: Quantifies failure probability based on historical reliability.
+4.  **Safety Overwatch**: Audits interventions for ethics, tone drift, and HR compliance.
 
 ---
 
 ## 🏗️ Architecture at a Glance
 CommitGuard AI is built on a **Decoupled Event-Driven Architecture**:
-- **FastAPI Entrypoint**: High-speed ingestion.
-- **Redis & ARQ**: Distributed background processing.
-- **The Brain**: Pluggable LLM reasoning loop.
-- **PostgreSQL**: Industrial-grade persistence.
+- **FastAPI Entrypoint**: High-speed ingestion for Slack and Git webhooks.
+- **Redis & ARQ**: Distributed background processing for high-volume orchestration.
+- **The Brain**: Multi-agent LLM reasoning loop.
+- **PostgreSQL**: Industrial-grade persistence with atomic row-locking for score integrity.

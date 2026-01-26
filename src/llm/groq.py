@@ -6,7 +6,7 @@ from src.llm.base import LLMProvider, T
 
 class GroqProvider(LLMProvider):
     def __init__(self, api_key: str):
-        self.client = instructor.patch(AsyncGroq(api_key=api_key))
+        self.client = instructor.patch(AsyncGroq(api_key=api_key))  # type: ignore
 
     @property
     def is_mock(self) -> bool:

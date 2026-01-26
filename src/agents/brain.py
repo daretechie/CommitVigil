@@ -31,24 +31,6 @@ class CommitGuardBrain:
         self.model = settings.MODEL_NAME
 
     async def analyze_excuse(self, user_input: str) -> ExcuseAnalysis:
-        # Behavioral Heuristics for Mock Mode
-        if self.provider.is_mock:
-            category = ExcuseCategory.DEFLECTION
-            if any(
-                word in user_input.lower() for word in ["sick", "hospital", "family"]
-            ):
-                category = ExcuseCategory.LEGITIMATE
-            elif any(
-                word in user_input.lower() for word in ["tired", "exhausted", "give up"]
-            ):
-                category = ExcuseCategory.BURNOUT_SIGNAL
-
-            return ExcuseAnalysis(
-                category=category,
-                confidence_score=0.95,
-                reasoning=f"Mock: Detected keywords in '{user_input}'",
-            )
-
         return await self.provider.chat_completion(
             response_model=ExcuseAnalysis,
             model=self.model,
@@ -64,14 +46,6 @@ class CommitGuardBrain:
     async def assess_risk(
         self, historical_context: str, current_status: str
     ) -> RiskAssessment:
-        if self.provider.is_mock:
-            return RiskAssessment(
-                risk_score=0.75,
-                level=RiskLevel.HIGH,
-                predicted_latency_days=3,
-                mitigation_strategy="Mock: Suggest immediate PM intervention.",
-            )
-
         return await self.provider.chat_completion(
             response_model=RiskAssessment,
             model=self.model,
@@ -92,19 +66,6 @@ class CommitGuardBrain:
         )
 
     async def detect_burnout(self, user_input: str) -> BurnoutDetection:
-        if self.provider.is_mock:
-            is_risk = any(
-                word in user_input.lower()
-                for word in ["exhausted", "cannot cope", "too much"]
-            )
-            return BurnoutDetection(
-                is_at_risk=is_risk,
-                sentiment_indicators=["high_fatigue"] if is_risk else [],
-                recommendation="Suggest time off"
-                if is_risk
-                else "Continues monitoring",
-            )
-
         return await self.provider.chat_completion(
             response_model=BurnoutDetection,
             model=self.model,
@@ -120,13 +81,6 @@ class CommitGuardBrain:
         )
 
     async def extract_commitment(self, raw_input: str) -> ExtractedCommitment:
-        if self.provider.is_mock:
-            return ExtractedCommitment(
-                task="Mock Task: " + raw_input[:20] + "...",
-                deadline="Friday 5 PM",
-                confidence_score=0.88,
-            )
-
         return await self.provider.chat_completion(
             response_model=ExtractedCommitment,
             model=self.model,
@@ -145,7 +99,6 @@ class CommitGuardBrain:
     async def evaluate_participation(
         self,
         user_id: str,
-        commitment: str,
         check_in: str,
         reliability_score: float,
         consecutive_firm: int,
@@ -153,17 +106,46 @@ class CommitGuardBrain:
         """
         The Orchestration Pipeline: Decoupled and high-fidelity evaluation.
         """
-        # 1. Parallel Analysis Phase (High Velocity)
-
-        excuse_task = self.analyze_excuse(check_in)
-        burnout_task = self.detect_burnout(check_in)
-        risk_task = self.assess_risk(
-            historical_context=str(reliability_score), current_status=check_in
-        )
-
-        excuse, burnout, risk = await asyncio.gather(
-            excuse_task, burnout_task, risk_task
-        )
+        try:
+            # 1. Parallel Analysis Phase (High Velocity) with Safety Timeout
+            # We enforce a 30s SLA for the initial heuristic/LLM sweep.
+            excuse, burnout, risk = await asyncio.wait_for(
+                asyncio.gather(
+                    self.analyze_excuse(check_in),
+                    self.detect_burnout(check_in),
+                    self.assess_risk(
+                        historical_context=str(reliability_score), current_status=check_in
+                    ),
+                ),
+                timeout=30.0,
+            )
+        except asyncio.TimeoutError:
+            logger.error("orchestration_timeout", user_id=user_id, status="aborting_pipeline")
+            # Fallback for critical failure: supportive neutral message
+            return PipelineEvaluation(
+                decision=AgentDecision(
+                    action="escalate_to_manager",
+                    tone=ToneType.NEUTRAL,
+                    message="I'm experiencing a delay in analysis. Please maintain your commitments.",
+                    analysis_summary="Orchestration Timeout: AI Providers failed to respond within 30s."
+                ),
+                excuse=ExcuseAnalysis(
+                    category=ExcuseCategory.LEGITIMATE, # Benefit of the doubt
+                    confidence_score=0.0,
+                    reasoning="Timeout: Analysis incomplete."
+                ),
+                risk=RiskAssessment(
+                    risk_score=0.0,
+                    level=RiskLevel.LOW,
+                    predicted_latency_days=0,
+                    mitigation_strategy="None (Timeout)"
+                ),
+                burnout=BurnoutDetection(
+                    is_at_risk=False,
+                    sentiment_indicators=[],
+                    recommendation="Monitor manually (System Timeout)"
+                ),
+            )
 
         # 2. Decision Synthesis
         with LatencyMonitor("decision_synthesis_latency", user_id):
@@ -244,7 +226,7 @@ class CommitGuardBrain:
 
 
         # C. AMBIGUITY (Low Confidence) - Human-in-the-Loop
-        elif audit.requires_human_review or audit.supervisor_confidence < 0.8:
+        elif audit.requires_human_review or audit.supervisor_confidence < settings.SAFETY_CONFIDENCE_THRESHOLD:
             logger.info("human_review_requested", user_id=user_id)
             decision.action = "escalate_to_manager"
             decision.analysis_summary += " | Requires Human-in-the-Loop Review"
@@ -272,61 +254,7 @@ class CommitGuardBrain:
         reliability_score: float = 100.0,
         consecutive_firm_calls: int = 0,
     ) -> AgentDecision:
-        RELIABILITY_THRESHOLD = 50.0
-        CRITICAL_THRESHOLD = 20.0
-        CONSECUTIVE_LIMIT = 3
-
-        if self.provider.is_mock:
-            tone = ToneType.SUPPORTIVE
-
-            # 1. THE BURNOUT SAFETY VALVE (Mandatory)
-            if burnout.is_at_risk:
-                tone = ToneType.SUPPORTIVE
-                msg = (
-                    f"I hear you. It sounds like you're reaching your limit. "
-                    f"{burnout.recommendation}."
-                )
-
-            # 2. TONE-DAMPING (Ethical Cooling-off)
-            elif consecutive_firm_calls >= CONSECUTIVE_LIMIT:
-                tone = ToneType.NEUTRAL
-                msg = (
-                    "Let's reset and focus on a small, achievable win today. "
-                    "No pressure."
-                )
-
-            # 3. RELIABILITY SCALING
-            elif reliability_score < RELIABILITY_THRESHOLD:
-                tone = (
-                    ToneType.CONFRONTATIONAL
-                    if reliability_score < CRITICAL_THRESHOLD
-                    else ToneType.FIRM
-                )
-                msg = (
-                    "This is your third delay this month. "
-                    "We need an immediate recovery plan."
-                )
-
-            # 4. DEFAULT
-            else:
-                msg = (
-                    f"Thank you for the update. [Context: "
-                    f"{settings.CULTURAL_DIRECTNESS_LEVEL} directness enabled]"
-                )
-
-            return AgentDecision(
-                action="none"
-                if not (burnout.is_at_risk or reliability_score < RELIABILITY_THRESHOLD)
-                else "escalate_to_manager",
-                tone=tone,
-                message=msg,
-                analysis_summary=(
-                    f"Mock: Decision based on reliability of {reliability_score}% "
-                    f"and {consecutive_firm_calls} firm calls."
-                ),
-            )
-
-        # 5. ENTERPRISE LLM PROMPT (Self-Correction / Sensitivity)
+        # ENTERPRISE LLM PROMPT (Self-Correction / Sensitivity)
         prompt = f"""
         Determine action and tone.
         User Reliability: {reliability_score}%

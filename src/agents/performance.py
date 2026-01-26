@@ -1,9 +1,9 @@
-from pydantic import BaseModel, Field
 
 from src.core.config import settings
 from src.core.logging import logger
+from src.core.utils import truncate_text
 from src.llm.factory import LLMFactory
-from src.schemas.performance import SlippageAnalysis, SlippageStatus
+from src.schemas.performance import SlippageAnalysis, TruthGapAnalysis
 
 
 class SlippageAnalyst:
@@ -28,23 +28,15 @@ class SlippageAnalyst:
             tasks_count=len(promised_tasks),
         )
 
-        if self.provider.is_mock:
-            return SlippageAnalysis(
-                status=SlippageStatus.ON_TRACK,
-                fulfillment_ratio=0.9,
-                detected_gap="Mock: High alignment detected.",
-                risk_to_system_stability=0.1,
-                intervention_required=False,
-            )
-
         prompt = f"""
         Execute a high-stakes performance audit.
 
         PROMISED TASKS:
-        {promised_tasks}
+        {truncate_text(str(promised_tasks), settings.MAX_INPUT_CHARS // 2)}
 
         ACTUAL WORK DONE (Evidence):
-        {actual_work_done}
+        {truncate_text(actual_work_done, settings.MAX_INPUT_CHARS)}
+
 
         Analyze if the developer is 'slipping' or creating 'shadow debt'
         (promising refactors but only doing hotfixes).
@@ -63,13 +55,6 @@ class SlippageAnalyst:
         )
 
 
-class TruthGapAnalysis(BaseModel):
-    gap_detected: bool
-    truth_score: float = Field(
-        ..., ge=0, le=1, description="1.0 means perfect alignment."
-    )
-    explanation: str
-    recommended_tone: str
 
 
 class TruthGapDetector:
@@ -88,17 +73,10 @@ class TruthGapDetector:
         Calculates the delta between what a human claims and what the code shows.
         """
 
-        if self.provider.is_mock:
-            return TruthGapAnalysis(
-                gap_detected=False,
-                truth_score=0.95,
-                explanation="Mock: Claims match technical evidence.",
-                recommended_tone="neutral",
-            )
-
         prompt = f"""
-        Human Claims (Slack): "{check_in_text}"
-        Technical Evidence (Git Changes): {technical_evidence}
+        Human Claims (Slack): "{truncate_text(check_in_text, settings.MAX_INPUT_CHARS // 2)}"
+        Technical Evidence (Git Changes): {truncate_text(technical_evidence, settings.MAX_INPUT_CHARS)}
+
 
         Analyze the alignment. Is the user exaggerating progress? Are they being honest?
         Detect the 'Truth Gap'.

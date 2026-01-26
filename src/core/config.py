@@ -17,12 +17,14 @@ class Settings(BaseSettings):
     CULTURAL_DIRECTNESS_LEVEL: str = "high"  # Options: low, medium, high
     COOLING_OFF_PERIOD_HOURS: int = 48
     MIN_AI_CONFIDENCE_THRESHOLD: float = 0.75
+    SAFETY_CONFIDENCE_THRESHOLD: float = 0.8
+    MAX_INPUT_CHARS: int = 15000  # Token safety limit
 
     # Infrastructure
     REDIS_URL: str = "redis://localhost:6380"
     DB_PATH: str = "commitguard.db"  # Legacy support
     DATABASE_URL: str = (
-        "postgresql+asyncpg://postgres:postgres@localhost:5432/commitguard"
+        "postgresql+asyncpg://user:password@localhost:5432/commitguard"
     )
 
     # Integrations
@@ -30,10 +32,16 @@ class Settings(BaseSettings):
 
     # Security
 
-    BACKEND_CORS_ORIGINS: list[str] = ["*"]
+    # Security
+    API_KEY_SECRET: str = "dev-secret-key"  # Default for dev; Override in Prod!
+    AUTH_ENABLED: bool = True               # Feature Flag for Dev Mode
+
+    # Default to localhost only for development; Production MUST override this via env var
+    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
 
     # Operational Timings
     FOLLOW_UP_DELAY_SECONDS: int = 10
+    LATENCY_SLA_THRESHOLD_MS: int = 500
 
     # For local development
     model_config = SettingsConfigDict(env_file=".env")

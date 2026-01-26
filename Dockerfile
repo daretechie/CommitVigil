@@ -26,7 +26,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY . .
 
 # Ensure the database file is writable by the non-root user if using SQLite
-RUN touch commitguard.db && chown commitguard:commitguard commitguard.db && chmod 666 commitguard.db
+RUN touch commitguard.db && chown commitguard:commitguard commitguard.db && chmod 600 commitguard.db
 RUN chown -R commitguard:commitguard /app
 
 USER commitguard

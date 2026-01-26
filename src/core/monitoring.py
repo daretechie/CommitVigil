@@ -1,12 +1,14 @@
 import time
 from contextlib import contextmanager
 from src.core.logging import logger
+from src.core.config import settings
 
 @contextmanager
 def LatencyMonitor(operation_name: str, user_id: str):
     """
     Context manager to track latency of critical operations.
-    Logs warnings if SLA > 500ms is breached.
+    Context manager to track latency of critical operations.
+    Logs warnings if SLA > configured threshold is breached.
     """
     start_time = time.perf_counter()
     try:
@@ -22,11 +24,11 @@ def LatencyMonitor(operation_name: str, user_id: str):
             user_id=user_id
         )
 
-        if duration > 500:
+        if duration > settings.LATENCY_SLA_THRESHOLD_MS:
             logger.warning(
                 "sla_breach_detected",
                 operation=operation_name,
                 duration_ms=round(duration, 2),
-                threshold_ms=500,
+                threshold_ms=settings.LATENCY_SLA_THRESHOLD_MS,
                 user_id=user_id
             )

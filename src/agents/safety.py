@@ -1,26 +1,6 @@
-from pydantic import BaseModel, Field
-
 from src.core.config import settings
 from src.llm.factory import LLMFactory
-from src.schemas.agents import ToneType
-
-
-class SafetyAudit(BaseModel):
-    is_safe: bool
-    requires_human_review: bool = False
-    is_hard_blocked: bool = False  # For HR/Legal territory
-    risk_of_morale_damage: float = Field(..., ge=0, le=1)
-    supervisor_confidence: float = Field(
-        ...,
-        ge=0,
-        le=1,
-        description="Confidence in the audit verdict.",
-    )
-    suggested_correction: str | None = None
-    correction_type: str = Field(
-        default="none", description="'none', 'surgical', 'full_rewrite'"
-    )
-    reasoning: str
+from src.schemas.agents import SafetyAudit, ToneType
 
 
 
@@ -40,13 +20,6 @@ class SafetySupervisor:
         """
         Performs a final safety check on the proposed message.
         """
-        if self.provider.is_mock:
-            return SafetyAudit(
-                is_safe=True,
-                risk_of_morale_damage=0.05,
-                supervisor_confidence=0.98,
-                reasoning="Mock: Message appears professional and scoped correctly.",
-            )
 
         prompt = f"""
         AUDIT REQUEST:
@@ -66,7 +39,8 @@ class SafetySupervisor:
            - Major Toxic Issue -> Full professional rewrite. Set 'correction_type': 'full_rewrite'.
 
         4. CONFIDENCE:
-           - If unsure (e.g., ambiguous idioms), set 'supervisor_confidence' < 0.8
+        4. CONFIDENCE:
+           - If unsure (e.g., ambiguous idioms), set 'supervisor_confidence' < {settings.SAFETY_CONFIDENCE_THRESHOLD}
              and flag 'requires_human_review'.
         """
 

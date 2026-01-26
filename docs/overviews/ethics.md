@@ -11,10 +11,10 @@ One of our most discussed features is the **"Confrontational"** tone. Here is ho
 *   **The Burnout Safety Valve**: If the `ExcuseDetector` identifies signs of fatigue, the system **blocks** confrontational escalation and triggers a "Burnout Alert" for the manager instead. 
 *   **Tone Drift & Cooling-off**: To prevent morale fatigue, the system implements **mathematical tone-damping**. If a user receives **3 consecutive "Firm" or "Confrontational" follow-ups**, the logic automatically locks the agent into a `NEUTRAL` or `SUPPORTIVE` state for 48 hours (configurable via `COOLING_OFF_PERIOD_HOURS`).
 
-## 2. Nuanced Hard-Blocking (HR vs Business)
-We explicitly distinguish between "Business Aggression" and "HR Violations." The Safety Supervisor enforces a **Semantic Firewall**:
-*   **BLOCKED (HR Territory)**: Discussions involving `Salary`, `PIP` (Performance Improvement Plans), `Firing`, or `Legal Threats` are immediately blocked and escalated to a human manager.
-*   **ALLOWED (Business Territory)**: Aggressive discussions about `Pricing Models`, `Budgeting`, `Cost Cutting`, or `Resource Allocation` are permitted as valid professional discourse.
+## 2. Nuanced Hard-Blocking (The "Ethics Firewall")
+We explicitly distinguish between "Business Aggression" and "HR Violations." The **Safety Supervisor** enforces a **Semantic Firewall**:
+*   **BLOCKED (HR Territory)**: Discussions involving `Salary`, `PIP` (Performance Improvement Plans), `Firing`, or `Legal Threats` are immediately blocked. This is a hard-coded safety guarantee.
+*   **ALLOWED (Business Territory)**: Aggressive discussions about `Pricing Models`, `Budgeting`, or `Resource Allocation` are permitted as valid professional discourse.
 
 
 

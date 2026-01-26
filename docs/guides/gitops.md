@@ -14,9 +14,15 @@ These promises "vanish" because no project management tool monitors them.
 CommitGuard monitors your repository at the source level.
 
 ### 1. Extraction from Commits
-If a commit message contains a promise (Who/What/When), the **CommitmentExtractor** identifying it as a formal obligation.
+If a commit message contains a promise (Who/What/When), the **CommitmentExtractor** identifies it as a formal obligation. 
+
+> [!NOTE]
+> The extractor uses a `commitment_found` flag to identify messages with NO clear task, preventing the agent from hallucinating promises.
+
 ```bash
-POST /ingest/git
+POST /api/v1/ingest/git
+Headers: X-API-Key: YOUR_API_KEY
+Body:
 {
   "author_email": "dev@company.com",
   "message": "Fixing CSS. I promise to refactor the login logic by Friday."

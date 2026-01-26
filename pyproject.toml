@@ -36,6 +36,7 @@ ruff = "^0.14.14"
 pytest-cov = "^7.0.0"
 mkdocs-material = "^9.7.1"
 mkdocstrings = {extras = ["python"], version = "^1.0.2"}
+mypy = "^1.19.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -45,4 +46,13 @@ build-backend = "poetry.core.masonry.api"
 pythonpath = ["."]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning:pytest_asyncio.*:",
+    "ignore::DeprecationWarning:asyncio.*:",
+    "ignore::RuntimeWarning:fastapi.*:",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+check_untyped_defs = true
 
