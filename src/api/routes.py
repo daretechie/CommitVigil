@@ -174,7 +174,7 @@ async def log_safety_feedback(feedback: CorrectionFeedback):
 
     await SupervisorFeedbackLoop.log_manager_decision(
         intervention_id=feedback.intervention_id,
-        user_id="unknown",  # We'll need a way to link this to the user in the next iteration
+        user_id=feedback.user_id,
         manager_id=feedback.manager_id,
         action=feedback.action_taken,
         message=feedback.final_message_sent,

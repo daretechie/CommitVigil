@@ -161,6 +161,9 @@ class ReportSummary(BaseModel):
 
 class CorrectionFeedback(BaseModel):
     intervention_id: str
+    user_id: str = Field(
+        ..., description="The ID of the user whose commitment was corrected."
+    )
     manager_id: str
     action_taken: str = Field(..., description="'accepted', 'rejected', 'modified'")
     final_message_sent: str

@@ -59,6 +59,18 @@ async def test_french_cultural_routing():
 
 
 @pytest.mark.asyncio
+async def test_british_english_detection_heuristic():
+    """Verify that 'cheers mate' triggers en-UK even if standard en is detected."""
+    brain = CommitGuardBrain()
+    with patch.object(
+        brain.provider, "chat_completion", new_callable=AsyncMock
+    ) as mock_chat:
+        mock_chat.return_value = "en"  # Standard LLM result
+        lang = await brain.detect_language("Cheers mate, I'll have it sorted.")
+        assert lang == "en-UK"
+
+
+@pytest.mark.asyncio
 async def test_british_english_routing():
     """Verify that UK English triggers polite understatements."""
     brain = CommitGuardBrain()

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from src.schemas.agents import UserHistory, ReportSummary
 from src.schemas.performance import SlippageAnalysis, TruthGapAnalysis
 
@@ -17,8 +17,8 @@ class AuditReportGenerator:
         Creates a high-value 'Performance Integrity Audit' for a manager.
         """
         return ReportSummary(
-            report_id=f"AUDIT-{datetime.now().strftime('%Y%m%d%H%M%S')}-{user.user_id}",
-            generated_at=datetime.now().isoformat(),
+            report_id=f"AUDIT-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{user.user_id}",
+            generated_at=datetime.now(timezone.utc).isoformat(),
             subject={
                 "user_id": user.user_id,
                 "reliability_score": f"{user.reliability_score:.2f}%",

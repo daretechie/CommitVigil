@@ -58,6 +58,13 @@ class CommitGuardBrain:
             )
             # Normalize and map to supported types
             code = str(detected).strip().lower()
+
+            # Handle regional variations for English (Heuristic: Detect if 'UK/British' context exists)
+            if code == "en" and any(
+                word in text.lower() for word in ["cheers", "bloody", "quid", "mate"]
+            ):
+                return "en-UK"
+
             return code if code in self.CULTURAL_PROMPTS else "en"
         except Exception:
             return "en"
@@ -308,7 +315,7 @@ class CommitGuardBrain:
 
         Rules:
         - If Consecutive Strict >= 3, use SUPPORTIVE/NEUTRAL tone.
-        - Respect the Cultural Persona above above ALL else. 
+        - Respect the Cultural Persona above ALL else. 
         - If industry is 'healthcare' or 'finance', avoid any phrasing that implies legally binding commitments unless explicit.
         """
 

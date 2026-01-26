@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel, select
@@ -83,7 +83,7 @@ async def update_user_reliability(
         # 2. Ethical Counter Management
         if tone_used in ["firm", "confrontational"]:
             user.consecutive_firm_interventions += 1
-            user.last_intervention_at = datetime.now()
+            user.last_intervention_at = datetime.now(timezone.utc)
         else:
             # Cooling-off logic: Reset counter if a supportive/neutral
             # tone is successfully used
