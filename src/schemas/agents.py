@@ -99,8 +99,8 @@ class UserHistory(SQLModel, table=True):
 
     # Ethical Tracking
     consecutive_firm_interventions: int = Field(default=0)
-    consecutive_firm_interventions: int = Field(default=0)
     last_intervention_at: str | None = Field(default=None)
+
 
 
 class CorrectionFeedback(BaseModel):

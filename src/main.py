@@ -31,7 +31,7 @@ setup_logging()
 
 
 @asynccontextmanager
-async def lifespan(fastapi_app: FastAPI):
+async def lifespan(fastapi_app: FastAPI):  # noqa: ARG001
     """
     Modern lifespan management for Enterprise FastAPI apps.
     Handles startup and shutdown logic.
@@ -41,8 +41,13 @@ async def lifespan(fastapi_app: FastAPI):
     # Initialize DB
     await init_db()
 
-    # Initialize Redis Pool
-    state["redis"] = await create_pool(RedisSettings.from_dsn(settings.REDIS_URL))
+    # Initialize Redis Pool (Optional for local dev)
+    try:
+        state["redis"] = await create_pool(RedisSettings.from_dsn(settings.REDIS_URL))
+        logger.info("redis_connected", url=settings.REDIS_URL)
+    except Exception as e:
+        logger.warning("redis_connection_failed", error=str(e), mode="local_dev")
+        state["redis"] = None  # Continue without Redis
 
     yield
 
@@ -50,6 +55,7 @@ async def lifespan(fastapi_app: FastAPI):
     if state["redis"]:
         await state["redis"].close()
     logger.info("application_shutdown", status="cleaning_up")
+
 
 
 app = FastAPI(
