@@ -32,6 +32,7 @@ class CommitGuardBrain:
         "ja": "High-context Japanese tone. Prioritize harmony (wa). Use indirect observations and soft suggestions instead of direct demands.",
         "de": "Direct German Sachlichkeit. Focus on objective facts, precision, and substantive feedback.",
         "fr": "French professional tone. Value eloquence and formal structure. Maintain a balance between directness and professional courtesy.",
+        "es": "Spanish professional tone. Warm and engaging but maintain professional boundaries. Value personal connection while enforcing deadlines.",
     }
 
     def __init__(self):

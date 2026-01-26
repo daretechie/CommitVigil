@@ -37,7 +37,7 @@ CommitGuard AI is a multi-agent system designed for high-stakes enforcement. It 
 ### 🛡️ 2026 Enterprise Upgrade: Elite Guardrails
 The system now includes research-backed advanced features for global operations:
 - **Continuous Learning Pipeline**: Persists manager decisions to calculate **Intervention Acceptance Rates** and refine AI strategies.
-- **Cultural Persona Routing**: Automatically adapts tone for **Japanese (*Wa*)**, **German (*Sachlichkeit*)**, **French (Eloquence)**, and **British English**.
+- **Cultural Persona Routing**: Automatically adapts tone for **Japanese (*Wa*)**, **German (*Sachlichkeit*)**, **French (Eloquence)**, **British English**, and **Spanish**.
 - **Industry Semantic Firewall**: Intent-based security for **Healthcare (HIPAA)** and **Finance (SEC)** compliance.
 
 ## 🏗️ The Four-Stage Autonomous Pipeline

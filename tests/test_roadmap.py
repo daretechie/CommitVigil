@@ -63,6 +63,40 @@ async def test_british_english_routing():
         assert "understatements" in called_prompt
 
 @pytest.mark.asyncio
+async def test_spanish_cultural_routing():
+    """Verify that Spanish triggers warm but boundaried persona."""
+    brain = CommitGuardBrain()
+    with patch.object(brain.provider, "chat_completion", new_callable=AsyncMock) as mock_chat:
+        mock_chat.return_value = AsyncMock()
+        await brain.adapt_tone(excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="es")
+        called_prompt = mock_chat.call_args[1]["messages"][0]["content"]
+        assert "Spanish professional tone" in called_prompt
+        assert "Warm and engaging" in called_prompt
+
+@pytest.mark.asyncio
+async def test_finance_semantic_firewall():
+    """Verify that Finance rules block market manipulation content."""
+    supervisor = SafetySupervisor()
+    with patch.object(supervisor.provider, "chat_completion", new_callable=AsyncMock) as mock_chat:
+        mock_chat.return_value = SafetyAudit(
+            is_safe=False,
+            is_hard_blocked=True,
+            risk_of_morale_damage=0.3,
+            supervisor_confidence=0.95,
+            reasoning="Market manipulation alert",
+            correction_type="none"
+        )
+        audit = await supervisor.audit_message(
+            message="I'll pump the stock price if you finish this.",
+            tone=ToneType.FIRM,
+            user_context="finance_app",
+            industry="finance"
+        )
+        assert audit.is_hard_blocked is True
+        system_msg = mock_chat.call_args[1]["messages"][0]["content"]
+        assert "Finance Ethics" in system_msg
+
+@pytest.mark.asyncio
 async def test_hipaa_semantic_firewall_blocking():
     """Verify that HIPAA rules block PHI/PII semantically."""
     supervisor = SafetySupervisor()
