@@ -9,6 +9,7 @@ from src.core import database
 # Test Database URL
 TEST_DATABASE_URL = "sqlite+aiosqlite:///test_commitguard.db"
 
+
 @pytest.fixture(autouse=True, scope="session")
 def override_db_url():
     """Override database URL for the entire test session."""
@@ -16,6 +17,7 @@ def override_db_url():
     settings.DATABASE_URL = TEST_DATABASE_URL
     yield
     settings.DATABASE_URL = original_url
+
 
 @pytest.fixture(autouse=True)
 async def setup_test_db():
@@ -35,8 +37,10 @@ async def setup_test_db():
 
     # Patch src.agents.learning if it's already imported
     import sys
+
     if "src.agents.learning" in sys.modules:
         import src.agents.learning
+
         src.agents.learning.AsyncSessionLocal = new_session_local
 
     async with database.engine.begin() as conn:
@@ -50,9 +54,10 @@ async def setup_test_db():
     await database.engine.dispose()
     database.engine = original_engine
     database.AsyncSessionLocal = original_session_local
-    
+
     if "src.agents.learning" in sys.modules:
         import src.agents.learning
+
         src.agents.learning.AsyncSessionLocal = original_session_local
 
     if os.path.exists("test_commitguard.db"):
