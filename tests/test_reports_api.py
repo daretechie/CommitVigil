@@ -82,7 +82,7 @@ async def test_get_performance_audit_html(mock_dependencies):
     ) as ac:
         response = await ac.get(
             "/api/v1/reports/audit/test_user?report_format=html",
-            headers={"X-API-Key": "my-secure-api-key-12345"},
+            headers={"X-API-Key": settings.API_KEY_SECRET},
         )
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
