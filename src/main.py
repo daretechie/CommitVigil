@@ -20,7 +20,8 @@ from src.core.database import (
 )
 from src.core.logging import logger, setup_logging
 from src.core.reporting import AuditReportGenerator
-from src.schemas.agents import CommitmentUpdate, UserHistory
+from src.schemas.agents import CommitmentUpdate, UserHistory, CorrectionFeedback
+
 
 # State storage for shared resources
 state: dict[str, ArqRedis | None] = {"redis": None}
@@ -70,7 +71,13 @@ if settings.BACKEND_CORS_ORIGINS:
 
 
 # Instrument for Prometheus Metrics
-Instrumentator().instrument(app).expose(app)
+instrumentator = Instrumentator()
+instrumentator.instrument(app).expose(app)
+
+# Custom Safety Metrics
+# Note: In a real implementation, we would define specific Collectors here
+# For now, we rely on the standard HTTP metrics which will capture the /evaluate latency
+
 
 
 @app.get("/health")
@@ -229,3 +236,18 @@ async def get_performance_audit(user_id: str):
     )
 
     return AuditReportGenerator.generate_audit_summary(user_mock, slippage, gap)
+
+
+@app.post("/feedback/safety")
+async def log_safety_feedback(feedback: CorrectionFeedback):
+    """
+    Priority 1 Feature: Track manager acceptance of Safety Supervisor interventions.
+    """
+    logger.info(
+        "safety_feedback_received",
+        intervention_id=feedback.intervention_id,
+        action=feedback.action_taken,
+        manager=feedback.manager_id,
+    )
+    return {"status": "logged", "message": "Safety feedback recorded for model tuning."}
+

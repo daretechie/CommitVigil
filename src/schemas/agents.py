@@ -99,4 +99,14 @@ class UserHistory(SQLModel, table=True):
 
     # Ethical Tracking
     consecutive_firm_interventions: int = Field(default=0)
+    consecutive_firm_interventions: int = Field(default=0)
     last_intervention_at: str | None = Field(default=None)
+
+
+class CorrectionFeedback(BaseModel):
+    intervention_id: str
+    manager_id: str
+    action_taken: str = Field(..., description="'accepted', 'rejected', 'modified'")
+    final_message_sent: str
+    comments: str | None = None
+

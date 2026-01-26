@@ -10,8 +10,18 @@ class SafetyAudit(BaseModel):
     requires_human_review: bool = False
     is_hard_blocked: bool = False  # For HR/Legal territory
     risk_of_morale_damage: float = Field(..., ge=0, le=1)
+    supervisor_confidence: float = Field(
+        ...,
+        ge=0,
+        le=1,
+        description="Confidence in the audit verdict.",
+    )
     suggested_correction: str | None = None
+    correction_type: str = Field(
+        default="none", description="'none', 'surgical', 'full_rewrite'"
+    )
     reasoning: str
+
 
 
 class SafetySupervisor:
@@ -34,6 +44,7 @@ class SafetySupervisor:
             return SafetyAudit(
                 is_safe=True,
                 risk_of_morale_damage=0.05,
+                supervisor_confidence=0.98,
                 reasoning="Mock: Message appears professional and scoped correctly.",
             )
 
@@ -43,13 +54,20 @@ class SafetySupervisor:
         Intended Tone: {tone}
         User Context (Reliability/History): {user_context}
 
-        CRITICAL TASK:
-        Analyze: If the message is too harsh (Tone Drift) or culturally
-        insensitive, flag it as unsafe.
-        If the message touches HR territory (Performance reviews, salary,
-        firing), set 'is_hard_blocked': true.
-        If the internal confidence in the current analysis is likely below
-        the threshold, flag 'requires_human_review'.
+        CRITICAL TASKS:
+        1. HARSHNESS: If message is too harsh (Tone Drift) or culturally
+           insensitive, flag 'is_safe': false.
+        2. HR BOUNDARIES (Hard Block):
+           - Block Discussions on: Salary, Firing, PIPs, Legal Threats.
+           - ALLOW Discussions on: Project Pricing, Budgeting, Cost Optimization.
+           - If blocked, set 'is_hard_blocked': true.
+        3. CORRECTION STRATEGY (Hybrid):
+           - Minor Tone Issue -> Targeted phrase replacement. Set 'correction_type': 'surgical'.
+           - Major Toxic Issue -> Full professional rewrite. Set 'correction_type': 'full_rewrite'.
+
+        4. CONFIDENCE:
+           - If unsure (e.g., ambiguous idioms), set 'supervisor_confidence' < 0.8
+             and flag 'requires_human_review'.
         """
 
         return await self.provider.chat_completion(
