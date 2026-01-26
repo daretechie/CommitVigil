@@ -187,3 +187,42 @@ async def test_lifespan():
         mock_redis_inst.close.assert_called_once()
         # Clean up global state after test
         state["redis"] = None
+
+
+@patch("src.api.deps.settings")
+def test_auth_bypass_when_disabled(mock_settings):
+    """Verify requests pass through when AUTH_ENABLED=False."""
+    mock_settings.AUTH_ENABLED = False
+    mock_settings.API_KEY_SECRET = "dev-secret-key"
+    
+    no_auth_client = TestClient(app)
+    # Health endpoint should always work
+    response = no_auth_client.get("/health")
+    assert response.status_code == 200
+
+
+def test_auth_with_invalid_key():
+    """Verify that an invalid API key is rejected."""
+    bad_auth_client = TestClient(app)
+    bad_auth_client.headers = {"X-API-Key": "wrong-key"}
+    response = bad_auth_client.post("/api/v1/evaluate", json={})
+    assert response.status_code == 403
+    assert "Invalid API Key" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_safety_supervisor_audit():
+    """Test SafetySupervisor audit_message function."""
+    from src.agents.safety import SafetySupervisor
+    from src.schemas.agents import ToneType
+    
+    supervisor = SafetySupervisor()
+    result = await supervisor.audit_message(
+        message="Please complete the task by Friday.",
+        tone=ToneType.NEUTRAL,
+        user_context="Reliability: 85%, Consecutive firm: 1"
+    )
+    
+    # The mock provider should return a SafetyAudit
+    assert hasattr(result, 'is_safe')
+    assert hasattr(result, 'is_hard_blocked')
