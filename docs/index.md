@@ -15,6 +15,7 @@ CommitGuard AI is a standalone, agentic service designed to monitor and enforce 
 2.  **Excuse Analysis**: Categorizes sentiment (Legitimate vs. Deflection vs. Burnout).
 3.  **Risk Scoring**: Quantifies failure probability based on historical reliability.
 4.  **Safety Overwatch**: Audits interventions for ethics, tone drift, and HR compliance.
+5.  **Professional Reporting**: Generates high-impact "Integrity Audits" for management reviews.
 
 ---
 

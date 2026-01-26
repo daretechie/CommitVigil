@@ -128,10 +128,10 @@ async def ingest_git_commitment(commit_data: dict):
 
 
 @router.get("/reports/audit/{user_id}", dependencies=[Depends(get_api_key)])
-async def get_performance_audit(user_id: str):
+async def get_performance_audit(user_id: str, report_format: str = "json"):
     """
     CASH-GENERATION ENDPOINT: Generates a professional Performance Integrity Audit.
-    This is the deliverable you sell to Engineering Managers.
+    Supports report_format='json', report_format='markdown', or report_format='html'.
     """
     # 1. Gather Data
     score, _, _ = await get_user_reliability(user_id)
@@ -152,7 +152,15 @@ async def get_performance_audit(user_id: str):
         user_id=user_id, reliability_score=score, total_commitments=10
     )
 
-    return AuditReportGenerator.generate_audit_summary(user_mock, slippage, gap)
+    summary = AuditReportGenerator.generate_audit_summary(user_mock, slippage, gap)
+
+    if report_format == "markdown":
+        return {"content": AuditReportGenerator.generate_markdown_audit(summary)}
+    elif report_format == "html":
+        from fastapi.responses import HTMLResponse
+        return HTMLResponse(content=AuditReportGenerator.generate_html_audit(summary))
+
+    return summary
 
 
 @router.post("/feedback/safety", dependencies=[Depends(get_api_key)])
