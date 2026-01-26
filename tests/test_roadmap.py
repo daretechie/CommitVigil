@@ -3,20 +3,8 @@ from unittest.mock import patch, AsyncMock
 from src.agents.brain import CommitGuardBrain
 from src.agents.safety import SafetySupervisor
 from src.agents.learning import SupervisorFeedbackLoop
-from src.schemas.agents import ToneType, SafetyAudit, SafetyFeedback
-from src.core.database import init_db
-
-
-@pytest.fixture(autouse=True)
-async def setup_db():
-    """Ensure database is initialized and clean."""
-    await init_db()
-    from src.core.database import AsyncSessionLocal
-    from sqlmodel import delete
-
-    async with AsyncSessionLocal() as session:
-        await session.execute(delete(SafetyFeedback))
-        await session.commit()
+from src.schemas.agents import ToneType, SafetyAudit
+# Using shared setup_test_db fixture from conftest.py
 
 
 @pytest.mark.asyncio

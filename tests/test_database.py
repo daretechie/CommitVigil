@@ -1,10 +1,5 @@
-import os
-
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlmodel import SQLModel
 
-from src.core.config import settings
 from src.core.database import (
     get_user_by_git_email,
     get_user_reliability,
@@ -14,44 +9,7 @@ from src.core.database import (
     update_user_reliability,
 )
 
-# Test Database URL
-TEST_DATABASE_URL = "sqlite+aiosqlite:///test_commitguard.db"
-
-
-@pytest.fixture(autouse=True)
-async def setup_test_db():
-    # Override settings for testing
-    original_url = settings.DATABASE_URL
-    settings.DATABASE_URL = TEST_DATABASE_URL
-
-    from src.core import database
-
-    original_engine = database.engine
-    original_session_local = database.AsyncSessionLocal
-
-    database.engine = create_async_engine(TEST_DATABASE_URL)
-    database.AsyncSessionLocal = async_sessionmaker(
-        bind=database.engine,
-        class_=AsyncSession,
-        expire_on_commit=False,
-        autoflush=False,
-    )
-
-    async with database.engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
-
-    yield
-
-    async with database.engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.drop_all)
-
-    await database.engine.dispose()
-    database.engine = original_engine
-    database.AsyncSessionLocal = original_session_local
-    settings.DATABASE_URL = original_url
-
-    if os.path.exists("test_commitguard.db"):
-        os.remove("test_commitguard.db")
+# Using shared setup_test_db fixture from conftest.py
 
 
 @pytest.mark.asyncio
