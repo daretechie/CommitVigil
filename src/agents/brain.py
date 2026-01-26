@@ -23,11 +23,41 @@ from src.schemas.agents import (
 class CommitGuardBrain:
     """
     Elite Agent Brain: Decoupled from LLM Providers via LLMFactory.
+    2026 Upgrade: Cultural Persona Routing & Industry Intelligence.
     """
+
+    CULTURAL_PROMPTS = {
+        "en": "Standard professional tone. Focus on clarity and deadline accountability.",
+        "en-UK": "British professional tone. Use polite understatements and avoid over-assertiveness.",
+        "ja": "High-context Japanese tone. Prioritize harmony (wa). Use indirect observations and soft suggestions instead of direct demands.",
+        "de": "Direct German Sachlichkeit. Focus on objective facts, precision, and straightforward feedback. No fluff.",
+    }
 
     def __init__(self):
         self.provider = LLMFactory.get_provider()
         self.model = settings.MODEL_NAME
+
+    async def detect_language(self, text: str) -> str:
+        """
+        2026 Agentic Language Detection: Uses semantic intent to identify cultural context.
+        """
+        # In a real 2026 deployment, we might use a dedicated lightweight model.
+        # Here we use the main provider with a strict routing prompt.
+        try:
+            detected = await self.provider.chat_completion(
+                response_model=str,
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Detect the language and cultural nuance of the following text. Return only the code: 'en', 'ja', or 'de'.",
+                    },
+                    {"role": "user", "content": text},
+                ],
+            )
+            return str(detected).strip().lower() if detected in ["en", "ja", "de"] else "en"
+        except Exception:
+            return "en"  # Fallback to English
 
     async def analyze_excuse(self, user_input: str) -> ExcuseAnalysis:
         return await self.provider.chat_completion(
@@ -93,13 +123,18 @@ class CommitGuardBrain:
         check_in: str,
         reliability_score: float,
         consecutive_firm: int,
+        lang: str | None = None,
+        industry: str | None = None,
     ) -> PipelineEvaluation:
         """
         The Orchestration Pipeline: Decoupled and high-fidelity evaluation.
         """
+        # 0. Language Awareness
+        target_lang = lang or await self.detect_language(check_in)
+        target_industry = industry or settings.SELECTED_INDUSTRY
+
         try:
             # 1. Parallel Analysis Phase (High Velocity) with Safety Timeout
-            # We enforce a 30s SLA for the initial heuristic/LLM sweep.
             excuse, burnout, risk = await asyncio.wait_for(
                 asyncio.gather(
                     self.analyze_excuse(check_in),
@@ -115,7 +150,6 @@ class CommitGuardBrain:
             logger.error(
                 "orchestration_timeout", user_id=user_id, status="aborting_pipeline"
             )
-            # Fallback for critical failure: supportive neutral message
             return PipelineEvaluation(
                 decision=AgentDecision(
                     action="escalate_to_manager",
@@ -124,7 +158,7 @@ class CommitGuardBrain:
                     analysis_summary="Orchestration Timeout: AI Providers failed to respond within 30s.",
                 ),
                 excuse=ExcuseAnalysis(
-                    category=ExcuseCategory.LEGITIMATE,  # Benefit of the doubt
+                    category=ExcuseCategory.LEGITIMATE,
                     confidence_score=0.0,
                     reasoning="Timeout: Analysis incomplete.",
                 ),
@@ -141,7 +175,7 @@ class CommitGuardBrain:
                 ),
             )
 
-        # 2. Decision Synthesis
+        # 2. Decision Synthesis (Culture & Industry Aware)
         with LatencyMonitor("decision_synthesis_latency", user_id):
             decision = await self.adapt_tone(
                 excuse,
@@ -149,23 +183,24 @@ class CommitGuardBrain:
                 burnout,
                 reliability_score=reliability_score,
                 consecutive_firm_calls=consecutive_firm,
+                lang=target_lang,
+                industry=target_industry,
             )
 
-        # 3. Final Ethical Supervision (Elite Guardrail)
+        # 3. Final Ethical Supervision (Semantic Firewall)
         supervisor = SafetySupervisor()
         context = (
             f"User: {user_id}. Reliability: {reliability_score}%. "
-            f"Consecutive firm: {consecutive_firm}."
+            f"Consecutive firm: {consecutive_firm}. Industry: {target_industry}."
         )
 
         with LatencyMonitor("safety_supervisor_latency", user_id):
             audit = await supervisor.audit_message(
-                decision.message, decision.tone, context
+                decision.message, decision.tone, context, industry=target_industry
             )
 
         intervention = None
 
-        # A. HARD BLOCK (HR Territory) - Immediate Escalation, No Retry
         if audit.is_hard_blocked:
             logger.critical(
                 "hr_legal_boundary_detected", user_id=user_id, message=decision.message
@@ -182,13 +217,11 @@ class CommitGuardBrain:
                 intervention_type="block",
             )
 
-        # B. SOFT CORRECTION (Tone/Cultural) - Injection Mechanism
         elif not audit.is_safe:
             logger.warning(
                 "safety_correction_injected", user_id=user_id, reason=audit.reasoning
             )
             original = decision.message
-            # Capitalization Hook: Ensure correction starts with uppercase
             raw_correction = audit.suggested_correction or decision.message
             if raw_correction and len(raw_correction) > 0:
                 raw_correction = raw_correction[0].upper() + raw_correction[1:]
@@ -196,11 +229,8 @@ class CommitGuardBrain:
             decision.message = raw_correction
             decision.analysis_summary += f" | Safety Correction: {audit.reasoning}"
 
-            # --- SAFETY VALVE: RE-VALIDATION (Tier 4 Humility) ---
-            # Verify the correction itself is not unsafe (e.g., hallucinated threat).
-            # This doubles latency but ensures zero-trust safety.
             re_audit = await supervisor.audit_message(
-                decision.message, decision.tone, context
+                decision.message, decision.tone, context, industry=target_industry
             )
             if not re_audit.is_safe:
                 logger.critical(
@@ -208,14 +238,13 @@ class CommitGuardBrain:
                     user_id=user_id,
                     bad_fix=decision.message,
                 )
-                # Fallback to HITL if the AI failed to fix it safely
                 decision.action = "escalate_to_manager"
                 decision.message = (
                     "Automated correction failed safety check. Manual review required."
                 )
                 intervention = SafetyIntervention(
                     original_message=original,
-                    corrected_message=None,  # Discard unsafe fix
+                    corrected_message=None,
                     reasoning="Safety Valve Triggered: Correction was still unsafe.",
                     intervention_type="review",
                 )
@@ -227,7 +256,6 @@ class CommitGuardBrain:
                     intervention_type="correction",
                 )
 
-        # C. AMBIGUITY (Low Confidence) - Human-in-the-Loop
         elif (
             audit.requires_human_review
             or audit.supervisor_confidence < settings.SAFETY_CONFIDENCE_THRESHOLD
@@ -257,18 +285,26 @@ class CommitGuardBrain:
         burnout: BurnoutDetection,
         reliability_score: float = 100.0,
         consecutive_firm_calls: int = 0,
+        lang: str = "en",
+        industry: str = "generic",
     ) -> AgentDecision:
-        # ENTERPRISE LLM PROMPT (Self-Correction / Sensitivity)
+        # 2026 Cultural Persona Logic
+        cultural_instruction = self.CULTURAL_PROMPTS.get(lang, self.CULTURAL_PROMPTS["en"])
+        
         prompt = f"""
-        Determine action and tone.
-        User Reliability: {reliability_score}%
-        Consecutive Strict Interventions: {consecutive_firm_calls}
-        Manager's Cultural Directness Setting: {settings.CULTURAL_DIRECTNESS_LEVEL}
+        Role: CommitGuard Decision Agent
+        Focus Industry: {industry}
+        Cultural Persona: {cultural_instruction}
 
-        RULES:
-        - If Consecutive Strict >= 3, you MUST use SUPPORTIVE/NEUTRAL tone
-          to avoid morale burnout.
-        - Respect the Cultural Directness: if 'low', soften all firm feedback.
+        Context:
+        - User Reliability: {reliability_score}%
+        - Consecutive Strict Interventions: {consecutive_firm_calls}
+        - Cultural Directness: {settings.CULTURAL_DIRECTNESS_LEVEL}
+
+        Rules:
+        - If Consecutive Strict >= 3, use SUPPORTIVE/NEUTRAL tone.
+        - Respect the Cultural Persona above above ALL else. 
+        - If industry is 'healthcare' or 'finance', avoid any phrasing that implies legally binding commitments unless explicit.
         """
 
         return await self.provider.chat_completion(

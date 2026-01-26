@@ -51,6 +51,7 @@ async def test_concurrent_safety_checks(mock_brain_components):
     brain.analyze_excuse = AsyncMock(return_value=excuse)
     brain.detect_burnout = AsyncMock(return_value=burnout)
     brain.assess_risk = AsyncMock(return_value=risk)
+    brain.detect_language = AsyncMock(return_value="en")
 
     # Mock ToneAdapter
     msg = decision.model_copy()
@@ -62,7 +63,7 @@ async def test_concurrent_safety_checks(mock_brain_components):
         mock_instance = MockSupervisor.return_value
 
         # Configure the mock to sleep slightly to verify concurrency
-        async def mock_audit_with_delay(_msg, _tone, _ctx):
+        async def mock_audit_with_delay(_msg, _tone, _ctx, industry="generic"):
             await asyncio.sleep(0.01)  # 10ms delay per call
 
             from src.agents.safety import SafetyAudit

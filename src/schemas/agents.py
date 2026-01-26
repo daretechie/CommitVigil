@@ -124,9 +124,30 @@ class UserHistory(SQLModel, table=True):
     failed_commitments: int = Field(default=0)
     reliability_score: float = Field(default=100.0)
 
+    # 2026 Core Preferences
+    industry_type: str = Field(default="generic")  # healthcare, finance, generic
+    language_preference: str = Field(default="en")  # en, en-UK, ja, de
+
     # Ethical Tracking
     consecutive_firm_interventions: int = Field(default=0)
     last_intervention_at: datetime | None = Field(default=None)
+
+
+class SafetyFeedback(SQLModel, table=True):
+    """
+    Continuous Learning: Persists manager overrides for model tuning.
+    """
+
+    __tablename__ = "safety_feedback"
+
+    id: int | None = Field(default=None, primary_key=True)
+    intervention_id: str = Field(index=True)
+    manager_id: str
+    user_id: str = Field(index=True)
+    action_taken: str  # accepted, rejected, modified
+    final_message_sent: str
+    feedback_notes: str | None = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class ReportSummary(BaseModel):

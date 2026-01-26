@@ -170,10 +170,15 @@ async def log_safety_feedback(feedback: CorrectionFeedback):
     """
     Priority 1 Feature: Track manager acceptance of Safety Supervisor interventions.
     """
-    logger.info(
-        "safety_feedback_received",
+    from src.agents.learning import SupervisorFeedbackLoop
+
+    await SupervisorFeedbackLoop.log_manager_decision(
         intervention_id=feedback.intervention_id,
+        user_id="unknown",  # We'll need a way to link this to the user in the next iteration
+        manager_id=feedback.manager_id,
         action=feedback.action_taken,
-        manager=feedback.manager_id,
+        message=feedback.final_message_sent,
+        notes=feedback.comments,
     )
+
     return {"status": "logged", "message": "Safety feedback recorded for model tuning."}

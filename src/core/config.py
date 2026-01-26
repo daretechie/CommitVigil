@@ -28,6 +28,16 @@ class Settings(BaseSettings):
     # Integrations
     SLACK_WEBHOOK_URL: str | None = None
 
+    # Roadmap: Multi-Language & Industry
+    SUPPORTED_LANGUAGES: dict[str, str] = {
+        "en": "English (Global)",
+        "en-UK": "English (British idioms)",
+        "ja": "Japanese (High-context culture)",
+        "de": "German (Direct communication style)",
+    }
+    SELECTED_INDUSTRY: str = "generic"  # Options: generic, healthcare, finance
+    LEARNING_ENABLED: bool = True
+
     # Security
 
     # Security
