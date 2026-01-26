@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, patch
 from src.agents.brain import CommitGuardBrain
 from src.agents.safety import SafetyAudit
-from src.agents.safety import SafetySupervisor
+
 from src.schemas.agents import (
     ToneType, 
     AgentDecision,
@@ -163,8 +163,9 @@ async def test_hybrid_correction_injection(mock_brain_components):
             reasoning="Correction is safe."
         )
 
-        async def side_effect(*args, **kwargs):
+        async def side_effect(_msg, _tone, _ctx):
             return [initial_audit, re_audit][mock_instance.audit_message.call_count - 1]
+
 
         mock_instance.audit_message.side_effect = side_effect
 
@@ -286,8 +287,9 @@ async def test_cultural_idiom_sensitivity(mock_brain_components):
             reasoning="Culturally appropriate."
         )
 
-        async def side_effect(*args, **kwargs):
+        async def side_effect(_msg, _tone, _ctx):
             return [initial_audit, re_audit][mock_instance.audit_message.call_count - 1]
+
 
         mock_instance.audit_message.side_effect = side_effect
 
@@ -333,16 +335,19 @@ async def test_no_infinite_corrections(mock_brain_components):
             reasoning="Re-audit passed"
         )
 
-        async def side_effect(*args, **kwargs):
+        async def side_effect(_msg, _tone, _ctx):
             return [initial_audit, re_audit][mock_instance.audit_message.call_count - 1]
+
 
         mock_instance.audit_message.side_effect = side_effect
 
 
-        print(f"\n[Test Output] Verifying Single-Pass Architecture...")
+        print("\n[Test Output] Verifying Single-Pass Architecture...")
+
         result = await brain.evaluate_participation("u1", "task", "status", 100.0, 0)
         
-        # KEY ASSERTION: audit_message called exactly once
+        # KEY ASSERTION: audit_message called exactly TWICE (Initial + Re-Validation)
+
         # KEY ASSERTION: audit_message called exactly TWICE (Initial + Re-Validation)
         # It should NOT be called 3+ times (no infinite loop).
         assert mock_instance.audit_message.call_count == 2
@@ -428,14 +433,16 @@ async def test_supervisor_catches_bad_correction(mock_brain_components):
         )
 
         # Configure side_effect with a callable that returns the next item
-        # We need to make sure the return values are awaitable since the code "awaits" them.
-        async def side_effect(*args, **kwargs):
+        async def side_effect(_msg, _tone, _ctx):
             return [audit_1, audit_2][mock_instance.audit_message.call_count - 1]
 
         mock_instance.audit_message.side_effect = side_effect
 
 
-        print(f"\n[Test Output] Verifying Safety Valve (Re-Audit)...")
+
+
+        print("\n[Test Output] Verifying Safety Valve (Re-Audit)...")
+
         result = await brain.evaluate_participation("u1", "task", "status", 100.0, 0)
         print(f"[Test Output] Final Action: '{result.decision.action}'")
         print(f"[Test Output] Reasoning: '{result.safety_audit.reasoning}'")

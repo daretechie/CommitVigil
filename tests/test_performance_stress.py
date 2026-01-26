@@ -52,8 +52,9 @@ async def test_concurrent_safety_checks(mock_brain_components):
         mock_instance = MockSupervisor.return_value
         
         # Configure the mock to sleep slightly to verify concurrency
-        async def mock_audit_with_delay(*args, **kwargs):
+        async def mock_audit_with_delay(_msg, _tone, _ctx):
             await asyncio.sleep(0.01) # 10ms delay per call
+
             from src.agents.safety import SafetyAudit
             return SafetyAudit(
                 is_safe=True,

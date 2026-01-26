@@ -3,10 +3,9 @@ import asyncio
 from src.agents.safety import SafetySupervisor
 from src.core.config import settings
 from src.core.logging import logger
-from src.core.config import settings
-from src.core.logging import logger
 from src.core.monitoring import LatencyMonitor
 from src.llm.factory import LLMFactory
+
 
 from src.schemas.agents import (
     AgentDecision,
