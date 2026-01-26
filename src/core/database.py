@@ -23,16 +23,21 @@ async def init_db():
     """
     Initialize the database and create tables using SQLModel.
     """
-    async with engine.begin() as conn:
-        # In a real enterprise app, we'd use Alembic migrations.
-        # For this portfolio build, we'll use create_all for speed.
-        await conn.run_sync(SQLModel.metadata.create_all)
-    logger.info("database_initialized", url=settings.DATABASE_URL)
+    try:
+        async with engine.begin() as conn:
+            # In a real enterprise app, we'd use Alembic migrations.
+            # For this portfolio build, we'll use create_all for speed.
+            await conn.run_sync(SQLModel.metadata.create_all)
+        logger.info("database_initialized", url=settings.DATABASE_URL)
+    except Exception as e:
+        # Catch errors if tables already exist or other initialization issues
+        # (Often happens with Postgres type conflicts in Docker restarts)
+        logger.warning("database_initialization_warning", error=str(e))
 
 
 async def get_user_reliability(user_id: str) -> tuple[float, str | None, int]:
     """
-    Fetch the reliability score, slack_id, and consecutive firm intervetions.
+    Fetch the reliability score, slack_id, and consecutive firm interventions.
     """
     async with AsyncSessionLocal() as session:
         statement = select(UserHistory).where(UserHistory.user_id == user_id)

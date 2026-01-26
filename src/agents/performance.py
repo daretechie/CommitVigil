@@ -31,15 +31,16 @@ class SlippageAnalyst:
         prompt = f"""
         Execute a high-stakes performance audit.
 
-        PROMISED TASKS:
-        {truncate_text(str(promised_tasks), settings.MAX_INPUT_CHARS // 2)}
-
-        ACTUAL WORK DONE (Evidence):
-        {truncate_text(actual_work_done, settings.MAX_INPUT_CHARS)}
-
-
         Analyze if the developer is 'slipping' or creating 'shadow debt'
-        (promising refactors but only doing hotfixes).
+        (promising refactors but only doing hotfixes) based on the inputs below.
+
+        <promised_tasks>
+        {truncate_text(str(promised_tasks), settings.MAX_INPUT_CHARS // 2)}
+        </promised_tasks>
+
+        <actual_work_done>
+        {truncate_text(actual_work_done, settings.MAX_INPUT_CHARS)}
+        </actual_work_done>
         """
 
         return await self.provider.chat_completion(
@@ -48,7 +49,7 @@ class SlippageAnalyst:
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a specialized performance auditor.",
+                    "content": "You are a specialized performance auditor. Analyze the data between the XML tags.",
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -74,12 +75,17 @@ class TruthGapDetector:
         """
 
         prompt = f"""
-        Human Claims (Slack): "{truncate_text(check_in_text, settings.MAX_INPUT_CHARS // 2)}"
-        Technical Evidence (Git Changes): {truncate_text(technical_evidence, settings.MAX_INPUT_CHARS)}
-
-
-        Analyze the alignment. Is the user exaggerating progress? Are they being honest?
+        Analyze the alignment between verbal claims and technical reality. 
+        Is the user exaggerating progress? Are they being honest?
         Detect the 'Truth Gap'.
+
+        <human_claims>
+        {truncate_text(check_in_text, settings.MAX_INPUT_CHARS // 2)}
+        </human_claims>
+
+        <technical_evidence>
+        {truncate_text(technical_evidence, settings.MAX_INPUT_CHARS)}
+        </technical_evidence>
         """
 
         return await self.provider.chat_completion(
@@ -89,7 +95,7 @@ class TruthGapDetector:
                 {
                     "role": "system",
                     "content": (
-                        "Detect gaps between verbal claims and technical reality."
+                        "Detect gaps between verbal claims and technical reality using the provided XML tagged data."
                     ),
                 },
                 {"role": "user", "content": prompt},

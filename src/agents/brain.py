@@ -12,7 +12,6 @@ from src.schemas.agents import (
     BurnoutDetection,
     ExcuseAnalysis,
     ExcuseCategory,
-    ExtractedCommitment,
     PipelineEvaluation,
     RiskAssessment,
     RiskLevel,
@@ -37,9 +36,12 @@ class CommitGuardBrain:
             messages=[
                 {
                     "role": "system",
-                    "content": "Analyze the user excuse for commitment failure.",
+                    "content": "Analyze the user excuse for commitment failure provided within <user_excuse> tags.",
                 },
-                {"role": "user", "content": user_input},
+                {
+                    "role": "user",
+                    "content": f"<user_excuse>\n{user_input}\n</user_excuse>",
+                },
             ],
         )
 
@@ -53,13 +55,15 @@ class CommitGuardBrain:
                 {
                     "role": "system",
                     "content": (
-                        "Assess the risk of commitment failure based on history."
+                        "Assess the risk of commitment failure based on the provided "
+                        "history and current status within their respective XML tags."
                     ),
                 },
                 {
                     "role": "user",
                     "content": (
-                        f"History: {historical_context}\nStatus: {current_status}"
+                        f"<historical_context>\n{historical_context}\n</historical_context>\n"
+                        f"<current_status>\n{current_status}\n</current_status>"
                     ),
                 },
             ],
@@ -73,28 +77,16 @@ class CommitGuardBrain:
                 {
                     "role": "system",
                     "content": (
-                        "Detect signs of professional burnout in the user input."
+                        "Detect signs of professional burnout in the user input provided within <user_input> tags."
                     ),
                 },
-                {"role": "user", "content": user_input},
+                {
+                    "role": "user",
+                    "content": f"<user_input>\n{user_input}\n</user_input>",
+                },
             ],
         )
 
-    async def extract_commitment(self, raw_input: str) -> ExtractedCommitment:
-        return await self.provider.chat_completion(
-            response_model=ExtractedCommitment,
-            model=self.model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Extract a task and deadline from the user's "
-                        "natural language promise."
-                    ),
-                },
-                {"role": "user", "content": raw_input},
-            ],
-        )
 
     async def evaluate_participation(
         self,

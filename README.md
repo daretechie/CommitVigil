@@ -53,7 +53,19 @@ Every commitment—whether from Slack or a Git Commit—passes through a determi
 
 ---
 
-## 🚀 API Showcase
+## � Professional Integrity Audits
+
+Need a deep-dive into your team's commitment reliability? I offer **one-time AI-powered audits** for remote engineering teams. 
+
+- **Extract "Shadow Debt"**: Identify technical promises made in commits that never made it to a PR.
+- **Predict Burnout**: Recognize linguistic patterns of fatigue before they impact velocity.
+- **Reliability Scoring**: Get a multi-dimensional scorecard for your squads.
+
+📧 **[Contact me for an Audit](mailto:adelekedare2012@gmail.com)** to see a sample report and book a 1-hour squad analysis.
+
+---
+
+## �🚀 API Showcase
 
 > **Note:** All API endpoints require authentication via the `X-API-Key` header.
 

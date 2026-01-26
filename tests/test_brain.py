@@ -1,6 +1,7 @@
 import pytest
 
 from src.agents.brain import CommitGuardBrain
+from src.agents.commitment_extractor import CommitmentExtractor
 from src.llm.mock import MockProvider
 from src.schemas.agents import ExcuseCategory, ToneType
 
@@ -13,6 +14,16 @@ def mock_brain():
     brain = CommitGuardBrain()
     brain.provider = MockProvider()
     return brain
+
+
+@pytest.fixture
+def mock_extractor():
+    """
+    Returns a CommitmentExtractor forced into Mock mode.
+    """
+    extractor = CommitmentExtractor()
+    extractor.provider = MockProvider()
+    return extractor
 
 
 @pytest.mark.asyncio
@@ -64,10 +75,10 @@ async def test_brain_adapt_tone_deflection(mock_brain):
 
 
 @pytest.mark.asyncio
-async def test_brain_extract_commitment(mock_brain):
+async def test_commitment_extractor(mock_extractor):
     raw_slack_text = "Hey John, I'll have the landing page finished by Monday morning."
-    extracted = await mock_brain.extract_commitment(raw_slack_text)
+    extracted = await mock_extractor.parse_conversation(raw_slack_text)
 
-    assert extracted.confidence_score >= 0.8
-    assert "Mock Task" in extracted.task
-    assert "Friday" in extracted.deadline
+    assert extracted.commitment_found is True
+    assert "Refactor API" in extracted.what
+    assert "Friday" in extracted.when

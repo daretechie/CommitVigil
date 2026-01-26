@@ -23,10 +23,7 @@ class SafetySupervisor:
 
         prompt = f"""
         AUDIT REQUEST:
-        Proposed Message: "{message}"
-        Intended Tone: {tone}
-        User Context (Reliability/History): {user_context}
-
+        
         CRITICAL TASKS:
         1. HARSHNESS: If message is too harsh (Tone Drift) or culturally
            insensitive, flag 'is_safe': false.
@@ -39,9 +36,21 @@ class SafetySupervisor:
            - Major Toxic Issue -> Full professional rewrite. Set 'correction_type': 'full_rewrite'.
 
         4. CONFIDENCE:
-        4. CONFIDENCE:
            - If unsure (e.g., ambiguous idioms), set 'supervisor_confidence' < {settings.SAFETY_CONFIDENCE_THRESHOLD}
              and flag 'requires_human_review'.
+
+        DATA TO AUDIT:
+        <proposed_message>
+        {message}
+        </proposed_message>
+        
+        <intended_tone>
+        {tone}
+        </intended_tone>
+        
+        <user_context>
+        {user_context}
+        </user_context>
         """
 
         return await self.provider.chat_completion(

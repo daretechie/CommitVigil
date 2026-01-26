@@ -39,3 +39,18 @@ When you provide a check-in via Slack, CommitGuard cross-references it with your
 *   **User**: *"I'm almost done refactoring."*
 *   **Git**: *0 lines changed in 48 hours.*
 *   **Agent**: *"I noticed no code changes. Is there a blocker I can help with?"* (Tone: Supportive but firm).
+### 4. Identity Mapping (Crucial Step)
+To link your Git commits to your Slack profile, you must map your email to your user ID:
+
+```bash
+curl -X POST \
+  -H 'X-API-Key: YOUR_API_KEY' \
+  'http://localhost:8000/api/v1/users/config/git?user_id=Daretechie&email=your-email@example.com'
+```
+
+Once mapped, `identity_matched` will return `true` in ingest responses, and the agent will know exactly who to ping in Slack.
+
+---
+
+> [!TIP]
+> Use the same `user_id` across both Slack and Git mapping to ensure a unified accountability profile.

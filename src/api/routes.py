@@ -83,14 +83,14 @@ async def map_slack_user(user_id: str, slack_id: str):
 
 
 @router.post("/users/config/git", dependencies=[Depends(get_api_key)])
-async def map_git_user(user_id: str, git_email: str):
+async def map_git_user(user_id: str, email: str):
     """
     Elite Config Feature: Map an internal user reference to a Git Email.
     """
-    await set_git_email(user_id, git_email)
+    await set_git_email(user_id, email)
     return {
         "status": "success",
-        "message": f"Mapped {user_id} to Git Email {git_email}",
+        "message": f"Mapped {user_id} to Git Email {email}",
     }
 
 

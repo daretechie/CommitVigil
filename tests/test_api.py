@@ -122,7 +122,7 @@ def test_map_slack_user(mock_set):
 @patch("src.api.routes.set_git_email", new_callable=AsyncMock)
 def test_map_git_user(mock_set):
     response = client.post(
-        "/api/v1/users/config/git", params={"user_id": "u1", "git_email": "e1"}
+        "/api/v1/users/config/git", params={"user_id": "u1", "email": "e1"}
     )
     assert response.status_code == 200
     mock_set.assert_called_once_with("u1", "e1")
