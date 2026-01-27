@@ -1,24 +1,24 @@
-# CommitGuard AI: The Autonomous Accountability Platform 🛡️
+# CommitVigil: The Autonomous Accountability Platform 🛡️
 
-![CommitGuard AI Hero](docs/assets/hero.jpg)
+![CommitVigil Hero](docs/assets/hero.jpg)
 
 <!-- Badges: Enterprise Metrics -->
-![Tests](https://img.shields.io/badge/adversarial_tests-10%2F10%20passing-brightgreen?style=for-the-badge)
-![Throughput](https://img.shields.io/badge/throughput-1250%20msg%2Fsec-blue?style=for-the-badge)
-![Latency](https://img.shields.io/badge/P95%20latency-<500ms-success?style=for-the-badge)
-![Cost Savings](https://img.shields.io/badge/token%20savings-85%25-orange?style=for-the-badge)
-![ROI](https://img.shields.io/badge/net%20ROI-%24558%2Fmonth-gold?style=for-the-badge)
+[![Tests](https://github.com/daretechie/CommitVigil/actions/workflows/ci.yml/badge.svg)](https://github.com/daretechie/CommitVigil/actions/workflows/ci.yml)
+![Throughput](https://img.shields.io/badge/throughput_benchmark-1250%20msg%2Fsec-blue?style=for-the-badge)
+![Latency](https://img.shields.io/badge/target_P95_latency-<500ms-success?style=for-the-badge)
+![Cost Savings](https://img.shields.io/badge/avg_token_savings-85%25-orange?style=for-the-badge)
+![ROI](https://img.shields.io/badge/est_net_ROI-%24558%2Fmonth-gold?style=for-the-badge)
 
 > **"One Engine. Two Worlds. Total Accountability."**
 
-[**Full Documentation 📚**](https://daretechie.github.io/CommitGuard-AI/) | [**Safety Validation Report 🛡️**](https://daretechie.github.io/CommitGuard-AI/validation/safety_validation_report/)
+[**Full Documentation 📚**](https://daretechie.github.io/CommitVigil/) | [**Safety Validation Report 🛡️**](https://daretechie.github.io/CommitVigil/validation/safety_validation_report/)
 
 ---
 
 
 ## 🎭 Dual-Persona Versatility
 
-CommitGuard AI is a multi-agent system designed for high-stakes enforcement. It adapts its identity based on the operational environment:
+CommitVigil is a multi-agent system designed for high-stakes enforcement. It adapts its identity based on the operational environment:
 
 ### 1. The Behavioral Accountability Agent (Management)
 **Headline:** *"Autonomous AI Agents for High-Stakes Accountability & Performance Enforcement"*
@@ -59,7 +59,7 @@ Every commitment—whether from Slack or a Git Commit—passes through a determi
 
 ---
 
-## � Professional Integrity Audits
+## 📊 Professional Integrity Audits
 
 Need a deep-dive into your team's commitment reliability? I offer **one-time AI-powered audits** for remote engineering teams. 
 
@@ -71,7 +71,7 @@ Need a deep-dive into your team's commitment reliability? I offer **one-time AI-
 
 ---
 
-## �🚀 API Showcase
+## 🚀 API Showcase
 
 > **Note:** All API endpoints require authentication via the `X-API-Key` header.
 

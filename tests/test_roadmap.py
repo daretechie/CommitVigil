@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, AsyncMock
-from src.agents.brain import CommitGuardBrain
+from src.agents.brain import CommitVigilBrain
 from src.agents.safety import SafetySupervisor
 from src.agents.learning import SupervisorFeedbackLoop
 from src.schemas.agents import ToneType, SafetyAudit
@@ -10,7 +10,7 @@ from src.schemas.agents import ToneType, SafetyAudit
 @pytest.mark.asyncio
 async def test_japanese_cultural_routing():
     """Verify that Japanese language triggers the correct cultural persona."""
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
 
     # Mock language detection to return 'ja'
     with patch.object(brain, "detect_language", return_value="ja"):
@@ -32,7 +32,7 @@ async def test_japanese_cultural_routing():
 @pytest.mark.asyncio
 async def test_french_cultural_routing():
     """Verify that French language triggers the correct cultural persona."""
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
     with patch.object(brain, "detect_language", return_value="fr"):
         with patch.object(
             brain.provider, "chat_completion", new_callable=AsyncMock
@@ -49,7 +49,7 @@ async def test_french_cultural_routing():
 @pytest.mark.asyncio
 async def test_british_english_detection_heuristic():
     """Verify that 'cheers mate' triggers en-UK even if standard en is detected."""
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
     with patch.object(
         brain.provider, "chat_completion", new_callable=AsyncMock
     ) as mock_chat:
@@ -61,7 +61,7 @@ async def test_british_english_detection_heuristic():
 @pytest.mark.asyncio
 async def test_british_english_routing():
     """Verify that UK English triggers polite understatements."""
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
     # Explicitly asking for en-UK
     with patch.object(
         brain.provider, "chat_completion", new_callable=AsyncMock
@@ -78,7 +78,7 @@ async def test_british_english_routing():
 @pytest.mark.asyncio
 async def test_spanish_cultural_routing():
     """Verify that Spanish triggers warm but boundaried persona."""
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
     with patch.object(
         brain.provider, "chat_completion", new_callable=AsyncMock
     ) as mock_chat:

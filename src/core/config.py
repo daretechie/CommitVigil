@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "CommitGuard AI"
+    PROJECT_NAME: str = "CommitVigil"
     VERSION: str = "0.1.0"
     API_V1_STR: str = "/api/v1"
     LOG_LEVEL: str = "INFO"  # Options: DEBUG, INFO, WARNING, ERROR
@@ -22,8 +22,8 @@ class Settings(BaseSettings):
 
     # Infrastructure
     REDIS_URL: str = "redis://localhost:6380"
-    DB_PATH: str = "commitguard.db"  # Legacy support
-    DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/commitguard"
+    DB_PATH: str = "commitvigil.db"  # Legacy support
+    DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/commitvigil"
 
     # Integrations
     SLACK_WEBHOOK_URL: str | None = None
@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     SUPPORTED_LANGUAGES: dict[str, str] = {
         "en": "English (Global)",
         "en-UK": "English (British idioms)",
+        "en-AF": "English (African communal accountability)",
         "ja": "Japanese (High-context culture)",
         "de": "German (Direct communication style)",
     }

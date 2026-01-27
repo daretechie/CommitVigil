@@ -124,13 +124,24 @@ class UserHistory(SQLModel, table=True):
     failed_commitments: int = Field(default=0)
     reliability_score: float = Field(default=100.0)
 
-    # 2026 Core Preferences
+    # Enterprise Attributes
+    department: str = Field(default="engineering", index=True)  # engineering, hr, research, finance
     industry_type: str = Field(default="generic")  # healthcare, finance, generic
     language_preference: str = Field(default="en")  # en, en-UK, ja, de
 
     # Ethical Tracking
     consecutive_firm_interventions: int = Field(default=0)
     last_intervention_at: datetime | None = Field(default=None)
+
+
+class AggregateReport(BaseModel):
+    department: str
+    total_members: int
+    average_reliability_score: float
+    burnout_risk_count: int
+    top_performers: list[str]
+    critical_risk_members: list[str]
+    intervention_acceptance_rate: float
 
 
 class SafetyFeedback(SQLModel, table=True):

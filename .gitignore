@@ -152,7 +152,7 @@ cython_debug/
 .vscode/
 
 # Project Specific
-commitguard.db
+commitvigil.db
 *.db
 .ruff_cache/
 brain/

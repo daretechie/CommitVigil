@@ -1,6 +1,6 @@
 # Quick Start Guide ⚡
 
-Get CommitGuard AI running in under 5 minutes.
+Get CommitVigil running in under 5 minutes.
 
 ## 🐳 Running with Docker (Recommended)
 The fastest way to spin up the full stack (API + Worker + Redis + Postgres):
@@ -29,7 +29,7 @@ docker-compose up --build
 ---
 
 ## 🧪 Quality and Stability
-CommitGuard AI enforces military-grade engineering standards:
+CommitVigil enforces military-grade engineering standards:
 - **Mock Mode**: Set `LLM_PROVIDER="mock"` in `.env` to run the entire system with zero token cost.
 - **Strict Typing**: The system is fully compliant with `mypy` strict type checking. Run `poetry run mypy src/` to verify correctness.
 - **Coverage**: All critical agents maintain a high test coverage threshold.

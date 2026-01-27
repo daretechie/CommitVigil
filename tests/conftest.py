@@ -7,7 +7,7 @@ from src.core.config import settings
 from src.core import database
 
 # Test Database URL
-TEST_DATABASE_URL = "sqlite+aiosqlite:///test_commitguard.db"
+TEST_DATABASE_URL = "sqlite+aiosqlite:///test_commitvigil.db"
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -60,8 +60,8 @@ async def setup_test_db():
 
         src.agents.learning.AsyncSessionLocal = original_session_local
 
-    if os.path.exists("test_commitguard.db"):
+    if os.path.exists("test_commitvigil.db"):
         try:
-            os.remove("test_commitguard.db")
+            os.remove("test_commitvigil.db")
         except PermissionError:
             pass

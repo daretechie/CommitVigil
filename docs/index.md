@@ -1,6 +1,6 @@
-# CommitGuard AI: The Accountability Specialist 🛡️
+# CommitVigil: The Accountability Specialist 🛡️
 
-![CommitGuard AI Hero](assets/hero.jpg)
+![CommitVigil Hero](assets/hero.jpg)
 
 
 > **"I provide 'Accountability as a Service.' My agent predicts when a team member is likely to fail *before* the deadline and intervenes with the right behavioral tone to ensure delivery."**
@@ -9,7 +9,7 @@
 In modern distributed teams, the **"Slack Stall"** is the #1 drain on project velocity. Project Managers are overwhelmed by vague promises like *"I'll get to it soon,"* which are often forgotten, leading to missed sprints and "bad guy" escalations.
 
 ## ✅ The Solution
-CommitGuard AI is a standalone, agentic service designed to monitor and enforce professional commitments. Every commitment passes through a **4-Stage Reasoning Pipeline**:
+CommitVigil is a standalone, agentic service designed to monitor and enforce professional commitments. Every commitment passes through a **4-Stage Reasoning Pipeline**:
 
 1.  **Extraction**: Automatically parses Slack threads or Git commits to identify {who, what, when}.
 2.  **Excuse Analysis**: Categorizes sentiment (Legitimate vs. Deflection vs. Burnout).
@@ -20,7 +20,7 @@ CommitGuard AI is a standalone, agentic service designed to monitor and enforce 
 ---
 
 ## 🏗️ Architecture at a Glance
-CommitGuard AI is built on a **Decoupled Event-Driven Architecture**:
+CommitVigil is built on a **Decoupled Event-Driven Architecture**:
 - **FastAPI Entrypoint**: High-speed ingestion for Slack and Git webhooks.
 - **Redis & ARQ**: Distributed background processing for high-volume orchestration.
 - **The Brain**: Multi-agent LLM reasoning loop.

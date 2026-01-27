@@ -1,6 +1,6 @@
 # API Reference 📖
 
-CommitGuard AI provides a clean RESTful interface for all operations.
+CommitVigil provides a clean RESTful interface for all operations.
 
 ## 📥 Commitment Ingestion
 

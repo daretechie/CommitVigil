@@ -1,6 +1,6 @@
 # Production & Enterprise Deployment Guide 🚀
 
-Scaling CommitGuard AI to 1000+ users requires moving from a local monolithic setup to a distributed, high-availability architecture.
+Scaling CommitVigil to 1000+ users requires moving from a local monolithic setup to a distributed, high-availability architecture.
 
 ## 🏗️ Enterprise Architecture
 
@@ -14,7 +14,7 @@ For large-scale teams, we separate the **Ingestion Layer** (API) from the **Proc
 
 ## ☸️ Kubernetes Orchestration
 
-We provide production-ready K8s manifests in [`infra/k8s/`](file:///home/daretechie/DevProject/GitHub/CommitGuard-AI/infra/k8s/).
+We provide production-ready K8s manifests in [`infra/k8s/`](file:///home/daretechie/DevProject/GitHub/CommitVigil-AI/infra/k8s/).
 
 ### Key Scaling Features:
 - **Replica Sets**: Run multiple API instances to handle high traffic.
@@ -34,7 +34,7 @@ Managers don't need to manually ingest commits. Use **GitHub Webhooks** at the O
 
 1.  Go to **GitHub Organization Settings** -> **Webhooks**.
 2.  Add a new webhook:
-    - **Payload URL**: `https://api.commitguard.yourcloud.com/api/v1/ingest/git`
+    - **Payload URL**: `https://api.commitvigil.yourcloud.com/api/v1/ingest/git`
     - **Content Type**: `application/json`
     - **Secret**: Your fixed `API_KEY_SECRET`
     - **Events**: Select `Pushes`.
@@ -50,7 +50,7 @@ Mapping 1000+ users via `curl` is inefficient. Implement a **Mapping Sync Servic
 - **Active Directory / Google Workspace**: Write a small cronjob that polls your employee list and calls:
   - `POST /api/v1/users/config/slack` (Email -> Slack ID)
   - `POST /api/v1/users/config/git` (Email -> Git Email)
-- **Automatic Discovery**: CommitGuard can be configured to use the Slack `users.lookupByEmail` API to auto-map users on their first commitment.
+- **Automatic Discovery**: CommitVigil can be configured to use the Slack `users.lookupByEmail` API to auto-map users on their first commitment.
 
 ---
 
@@ -67,11 +67,11 @@ Enterprise deployment includes **Prometheus + Grafana** integration:
 
 ## 💰 FinOps: Optimizing LLM Costs
 
-At 1000+ users, token costs can add up. CommitGuard helps you optimize:
+At 1000+ users, token costs can add up. CommitVigil helps you optimize:
 
 1.  **Provider Switching**: Use **Groq (Llama 3.3 70b)** for high-speed, low-cost extraction, and **OpenAI (GPT-4o)** only for complex tone adaptation.
 2.  **Mock Mode for Non-Critical Repos**: Use `LLM_PROVIDER="mock"` for internal experimental repositories to save budget.
-3.  **Caching**: CommitGuard can be extended with a vector cache (like RedisVL) to reuse extracted tasks from similar commit messages.
+3.  **Caching**: CommitVigil can be extended with a vector cache (like RedisVL) to reuse extracted tasks from similar commit messages.
 
 ---
 

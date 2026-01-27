@@ -1,30 +1,35 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: commitguard-api
+  name: commitvigil-api
   labels:
-    app: commitguard-api
+    app: commitvigil-api
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: commitguard-api
+      app: commitvigil-api
   template:
     metadata:
       labels:
-        app: commitguard-api
+        app: commitvigil-api
     spec:
       containers:
       - name: api
-        image: commitguard-ai:latest
+        image: commitvigil:latest
         command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
         ports:
         - containerPort: 8000
         envFrom:
         - secretRef:
-            name: commitguard-secrets
+            name: commitvigil-secrets
         - configMapRef:
-            name: commitguard-config
+            name: commitvigil-config
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: false # SQLite needs this; set to true if using Postgres ONLY
+          allowPrivilegeEscalation: false
         resources:
           requests:
             cpu: "250m"
@@ -32,34 +37,50 @@ spec:
           limits:
             cpu: "1000m"
             memory: "1Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
 
 ---
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: commitguard-worker
+  name: commitvigil-worker
   labels:
-    app: commitguard-worker
+    app: commitvigil-worker
 spec:
   replicas: 5
   selector:
     matchLabels:
-      app: commitguard-worker
+      app: commitvigil-worker
   template:
     metadata:
       labels:
-        app: commitguard-worker
+        app: commitvigil-worker
     spec:
       containers:
       - name: worker
-        image: commitguard-ai:latest
+        image: commitvigil:latest
         command: ["arq", "src.worker.WorkerSettings"]
         envFrom:
         - secretRef:
-            name: commitguard-secrets
+            name: commitvigil-secrets
         - configMapRef:
-            name: commitguard-config
+            name: commitvigil-config
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
         resources:
           requests:
             cpu: "500m"
@@ -73,12 +94,12 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: commitguard-worker-hpa
+  name: commitvigil-worker-hpa
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: commitguard-worker
+    name: commitvigil-worker
   minReplicas: 2
   maxReplicas: 20
   metrics:

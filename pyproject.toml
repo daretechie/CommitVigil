@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "commitguard-ai"
+name = "commitvigil"
 version = "0.1.0"
-description = "CommitGuard AI is a standalone, AI-powered service designed to enforce human commitments."
+description = "CommitVigil is a standalone, AI-powered service designed to enforce human commitments and behavioral accountability."
 license = "MIT"
 authors = ["daretechie <deeprince2020@gmail.com>"]
 readme = "README.md"

@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, patch
-from src.agents.brain import CommitGuardBrain
+from src.agents.brain import CommitVigilBrain
 from src.agents.safety import SafetyAudit
 
 from src.schemas.agents import (
@@ -42,7 +42,7 @@ def mock_brain_components():
 async def test_adversarial_hard_block_salary(mock_brain_components):
     """Test that HR/Salary talk triggers a hard block and HitL."""
     decision, excuse, risk, burnout = mock_brain_components
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
 
     # Mock Steps 1 & 2 with VALID Pydantic Models
     brain.analyze_excuse = AsyncMock(return_value=excuse)
@@ -84,7 +84,7 @@ async def test_adversarial_hard_block_salary(mock_brain_components):
 async def test_adversarial_low_confidence_idiom(mock_brain_components):
     """Test that low supervisor confidence triggers HitL."""
     decision, excuse, risk, burnout = mock_brain_components
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
 
     brain.analyze_excuse = AsyncMock(return_value=excuse)
     brain.detect_burnout = AsyncMock(return_value=burnout)
@@ -120,7 +120,7 @@ async def test_adversarial_low_confidence_idiom(mock_brain_components):
 async def test_adversarial_allowed_pricing(mock_brain_components):
     """Test that 'Pricing' discussion is ALLOWED (Not Hard Blocked)."""
     decision, excuse, risk, burnout = mock_brain_components
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
 
     brain.analyze_excuse = AsyncMock(return_value=excuse)
     brain.detect_burnout = AsyncMock(return_value=burnout)
@@ -158,7 +158,7 @@ async def test_adversarial_allowed_pricing(mock_brain_components):
 async def test_hybrid_correction_injection(mock_brain_components):
     """Test that a soft correction is injected and logged."""
     decision, excuse, risk, burnout = mock_brain_components
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
 
     brain.analyze_excuse = AsyncMock(return_value=excuse)
     brain.detect_burnout = AsyncMock(return_value=burnout)
@@ -213,7 +213,7 @@ async def test_hybrid_correction_injection(mock_brain_components):
 async def test_nested_hr_context(mock_brain_components):
     """Test 6: Message contains 'salary' but in valid client context -> ALLOWED."""
     decision, excuse, risk, burnout = mock_brain_components
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
 
     brain.analyze_excuse = AsyncMock(return_value=excuse)
     brain.detect_burnout = AsyncMock(return_value=burnout)
@@ -253,7 +253,7 @@ async def test_nested_hr_context(mock_brain_components):
 async def test_multiple_issues_dual_violation(mock_brain_components):
     """Test 8: Message has both aggressive tone AND HR violation -> HARD BLOCK wins."""
     decision, excuse, risk, burnout = mock_brain_components
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
 
     brain.analyze_excuse = AsyncMock(return_value=excuse)
     brain.detect_burnout = AsyncMock(return_value=burnout)
@@ -291,7 +291,7 @@ async def test_multiple_issues_dual_violation(mock_brain_components):
 async def test_cultural_idiom_sensitivity(mock_brain_components):
     """Test 5: Cross-Cultural Ambiguity - Directness flagged in sensitive context."""
     decision, excuse, risk, burnout = mock_brain_components
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
 
     brain.analyze_excuse = AsyncMock(return_value=excuse)
     brain.detect_burnout = AsyncMock(return_value=burnout)
@@ -341,7 +341,7 @@ async def test_cultural_idiom_sensitivity(mock_brain_components):
 async def test_no_infinite_corrections(mock_brain_components):
     """Test 7: No Infinite Loops - Verify Supervisor is called exactly ONCE per cycle."""
     decision, excuse, risk, burnout = mock_brain_components
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
 
     brain.analyze_excuse = AsyncMock(return_value=excuse)
     brain.detect_burnout = AsyncMock(return_value=burnout)
@@ -395,7 +395,7 @@ async def test_no_infinite_corrections(mock_brain_components):
 async def test_uk_idioms(mock_brain_components):
     """Test 9: Regional Idiom Variations - Low confidence triggers Review."""
     decision, excuse, risk, burnout = mock_brain_components
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
 
     brain.analyze_excuse = AsyncMock(return_value=excuse)
     brain.detect_burnout = AsyncMock(return_value=burnout)
@@ -435,7 +435,7 @@ async def test_supervisor_catches_bad_correction(mock_brain_components):
     Brain generates unsafe msg -> Supervisor suggests UNSAFE correction -> Re-audit catches it -> HITL.
     """
     decision, excuse, risk, burnout = mock_brain_components
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
 
     brain.analyze_excuse = AsyncMock(return_value=excuse)
     brain.detect_burnout = AsyncMock(return_value=burnout)

@@ -1,11 +1,11 @@
 # The Accountability Handbook: A Guide for Managers 👔
 
-CommitGuard AI is a tool of empowerment, not surveillance. For a Human-in-the-Loop (HITL) system to work, managers must know how to translate AI flags into professional leadership.
+CommitVigil is a tool of empowerment, not surveillance. For a Human-in-the-Loop (HITL) system to work, managers must know how to translate AI flags into professional leadership.
 
 ---
 
 ## 1. Interpreting the Flags
-When CommitGuard flags an **"Ambiguity"** or a **"Truth Gap,"** it is a prompt for a conversation, not a citation for failure.
+When CommitVigil flags an **"Ambiguity"** or a **"Truth Gap,"** it is a prompt for a conversation, not a citation for failure.
 
 *   **Flag: "Ambiguous Commitment"**
     *   *AI Logic*: The user's words were too vague to extract a deadline.
@@ -29,7 +29,7 @@ High-stakes interventions should never be 100% autonomous.
 ---
 
 ## 3. Best Practices for Professionalism
-*   **Public vs. Private**: CommitGuard monitors public channels, but follow-up interventions for **high-risk signals** should often be moved to a 1-on-1 private DM thread once the manager is alerted.
+*   **Public vs. Private**: CommitVigil monitors public channels, but follow-up interventions for **high-risk signals** should often be moved to a 1-on-1 private DM thread once the manager is alerted.
 *   **Celebrate the Reliability**: When someone consistently hits 100% on their Reliability Score, use the report as a basis for formal recognition. Accountability is as much about **Praise** as it is about Progress.
 ## 4. Configuring Your Team's Voice 🎚️
 Managers can adjust the system's "psychological pressure" via environment variables:

@@ -1,10 +1,10 @@
-site_name: CommitGuard AI
-site_url: https://daretechie.github.io/CommitGuard-AI/
+site_name: CommitVigil
+site_url: https://daretechie.github.io/CommitVigil/
 site_description: The Accountability Specialist - Automating human management with sentiment-aware AI agents.
 site_author: daretechie
 
-repo_name: daretechie/CommitGuard-AI
-repo_url: https://github.com/daretechie/CommitGuard-AI
+repo_name: daretechie/CommitVigil
+repo_url: https://github.com/daretechie/CommitVigil
 
 theme:
   name: material

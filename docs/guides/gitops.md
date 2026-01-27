@@ -10,8 +10,8 @@ Technical debt often accumulates because of "soft promises" made in code comment
 
 These promises "vanish" because no project management tool monitors them.
 
-## 🟢 The Solution: CommitGuard GitOps
-CommitGuard monitors your repository at the source level.
+## 🟢 The Solution: CommitVigil GitOps
+CommitVigil monitors your repository at the source level.
 
 ### 1. Extraction from Commits
 If a commit message contains a promise (Who/What/When), the **CommitmentExtractor** identifies it as a formal obligation. 
@@ -35,7 +35,7 @@ The **SlippageAnalyst** looks at the subsequent PR.
 *   **The Result**: If the code doesn't match the promise, the agent flags **"Shadow Debt"** and alerts the team.
 
 ### 3. Truth Gap Detection
-When you provide a check-in via Slack, CommitGuard cross-references it with your recent Git activity.
+When you provide a check-in via Slack, CommitVigil cross-references it with your recent Git activity.
 *   **User**: *"I'm almost done refactoring."*
 *   **Git**: *0 lines changed in 48 hours.*
 *   **Agent**: *"I noticed no code changes. Is there a blocker I can help with?"* (Tone: Supportive but firm).

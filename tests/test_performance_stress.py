@@ -2,7 +2,7 @@ import asyncio
 import time
 import pytest
 from unittest.mock import AsyncMock, patch
-from src.agents.brain import CommitGuardBrain
+from src.agents.brain import CommitVigilBrain
 from src.schemas.agents import (
     AgentDecision,
     ToneType,
@@ -47,7 +47,7 @@ async def test_concurrent_safety_checks(mock_brain_components):
     decision, excuse, risk, burnout = mock_brain_components
 
     # Setup Brain
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
     brain.analyze_excuse = AsyncMock(return_value=excuse)
     brain.detect_burnout = AsyncMock(return_value=burnout)
     brain.assess_risk = AsyncMock(return_value=risk)

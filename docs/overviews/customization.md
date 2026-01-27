@@ -1,6 +1,6 @@
 # Customization & "Open Intel" Policy 🛠️
 
-CommitGuard AI is designed for flexibility. We believe that teams should have total control over the "sensitivity" and "personality" of their accountability agents.
+CommitVigil is designed for flexibility. We believe that teams should have total control over the "sensitivity" and "personality" of their accountability agents.
 
 ---
 
@@ -22,10 +22,10 @@ You can customize the system's "Strictness" and "Caution" via environment variab
 
 
 ## 2. Model Configs & Context Injection
-The "Secret Sauce" of CommitGuard is in the **System Prompts**. You can find and modify the decision-making logic in the following locations:
+The "Secret Sauce" of CommitVigil is in the **System Prompts**. You can find and modify the decision-making logic in the following locations:
 
-*   **Behavioral Reasoning**: Located in [src/agents/brain.py](https://github.com/daretechie/CommitGuard-AI/blob/main/src/agents/brain.py).
-*   **Safety Supervision**: Located in [src/agents/safety.py](https://github.com/daretechie/CommitGuard-AI/blob/main/src/agents/safety.py).
+*   **Behavioral Reasoning**: Located in [src/agents/brain.py](https://github.com/daretechie/CommitVigil-AI/blob/main/src/agents/brain.py).
+*   **Safety Supervision**: Located in [src/agents/safety.py](https://github.com/daretechie/CommitVigil-AI/blob/main/src/agents/safety.py).
 
 ---
 
@@ -74,7 +74,7 @@ While the core logic uses Zero-Shot and Few-Shot reasoning via Pydantic/Instruct
 ---
 
 ## 5. Prompt Templates for Forking 🔱
-To help teams customize the "Agentic Personality," here are the core system prompts used in CommitGuard. You can "fork" these by modifying the code in the respective files.
+To help teams customize the "Agentic Personality," here are the core system prompts used in CommitVigil. You can "fork" these by modifying the code in the respective files.
 
 ### A. The Behavioral Brain (`src/agents/brain.py`)
 This prompt handles the core accountability decision logic.

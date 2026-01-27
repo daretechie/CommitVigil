@@ -1,6 +1,6 @@
 # Ethics, Privacy & Professionalism 🛡️
 
-CommitGuard AI is a high-pressure accountability tool, but it is built with the **"Supportive First"** philosophy. Addressing feedback on the human implications of AI-driven enforcement is critical for enterprise adoption.
+CommitVigil is a high-pressure accountability tool, but it is built with the **"Supportive First"** philosophy. Addressing feedback on the human implications of AI-driven enforcement is critical for enterprise adoption.
 
 ---
 
@@ -21,14 +21,14 @@ We explicitly distinguish between "Business Aggression" and "HR Violations." The
 ## 2. Cultural & Contextual Sensitivity
 "Deflection" is relative. What is seen as blunt in one culture is polite in another:
 
-*   **Sensitivity Calibration**: CommitGuard supports **Cultural Tone Profiles**. Managers can calibrate the "Pressure Sensitivity" of the agents to match their specific team norms (e.g., High-Directness vs. High-Context locales).
+*   **Sensitivity Calibration**: CommitVigil supports **Cultural Tone Profiles**. Managers can calibrate the "Pressure Sensitivity" of the agents to match their specific team norms (e.g., High-Directness vs. High-Context locales).
 *   **Domain-Specific Jargon**: The NLP models are refined to recognize that certain industry vernacular (e.g., *"I'm swamped"*) may be a routine status update rather than an excuse in specific high-velocity teams.
 
 ## 3. Privacy & Data Integrity
 
 Monitoring at the granularity of Slack threads and Git commits requires a strict privacy stance:
 
-*   **Scoped Monitoring**: CommitGuard is designed to monitor designated `#project` channels, not private DMs or unrelated chatter.
+*   **Scoped Monitoring**: CommitVigil is designed to monitor designated `#project` channels, not private DMs or unrelated chatter.
 *   **Source-Level Only**: Commit monitoring is restricted to commit messages and PR metadata—not the proprietary logic within the source code files themselves.
 *   **Identity Anonymization**: Internal IDs are used for analysis; real names can be masked in the database if necessary.
 
@@ -43,7 +43,7 @@ Ambiguity is the greatest challenge in Engineering NLP. Here is how we move towa
 
 ## 🚀 Deployment & The Future
 **Why build this?**
-CommitGuard was inspired by the "Slack Stall"—the invisible friction where professional promises disappear into the scroll history of remote teams. It turns "I'll get to it" into a technical obligation.
+CommitVigil was inspired by the "Slack Stall"—the invisible friction where professional promises disappear into the scroll history of remote teams. It turns "I'll get to it" into a technical obligation.
 
 **Real-World Testing**:
 The next phase of the project involves a **Private Beta** where the `TruthGapDetector` will be tested against real-world ambiguous data to refine its "Precision Accountability" engine.

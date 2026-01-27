@@ -47,7 +47,7 @@ By defaulting to `surgical` corrections for minor tone issues, we significantly 
 | **Total** | **$41.40/month** |
 
 ### ROI Comparison
-| Metric | Without CommitGuard | With CommitGuard | Savings |
+| Metric | Without CommitVigil | With CommitVigil | Savings |
 |--------|---------------------|------------------|---------|
 | Manager Hours (HITL) | 20 hrs/month | 8 hrs/month | 12 hrs/month |
 | Cost @ $50/hr | $1000 | $400 | **$600/month** |

@@ -12,9 +12,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache Poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.local
+          key: poetry-1.8.3
+
       - name: Install Poetry
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+          if ! command -v poetry &> /dev/null; then
+            curl -sSL https://install.python-poetry.org | python3 -
+          fi
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Set up Python 3.12

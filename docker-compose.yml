@@ -6,7 +6,7 @@ services:
       - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/commitguard
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/commitvigil
     depends_on:
       - redis
       - db
@@ -18,7 +18,7 @@ services:
     command: arq src.worker.WorkerSettings
     environment:
       - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/commitguard
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/commitvigil
     depends_on:
       - redis
       - db
@@ -38,7 +38,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=commitguard
+      - POSTGRES_DB=commitvigil
     ports:
       - "5433:5432"
     healthcheck:
@@ -49,7 +49,7 @@ services:
 
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.1.0
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:

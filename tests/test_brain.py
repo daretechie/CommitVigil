@@ -1,6 +1,6 @@
 import pytest
 
-from src.agents.brain import CommitGuardBrain
+from src.agents.brain import CommitVigilBrain
 from src.agents.commitment_extractor import CommitmentExtractor
 from src.llm.mock import MockProvider
 from src.schemas.agents import ExcuseCategory, ToneType
@@ -9,9 +9,9 @@ from src.schemas.agents import ExcuseCategory, ToneType
 @pytest.fixture
 def mock_brain():
     """
-    Returns a CommitGuardBrain forced into Mock mode for hermetic testing.
+    Returns a CommitVigilBrain forced into Mock mode for hermetic testing.
     """
-    brain = CommitGuardBrain()
+    brain = CommitVigilBrain()
     brain.provider = MockProvider()
     return brain
 

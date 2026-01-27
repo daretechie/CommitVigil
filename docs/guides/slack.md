@@ -12,7 +12,7 @@ Transform the agent into a visible collaborator by bridging it to your Slack wor
 1. Click the green **"Create New App"** button
 2. Select **"From scratch"** (not from a manifest)
 3. Fill in the form:
-   - **App Name:** `CommitGuard AI` (or any name you prefer)
+   - **App Name:** `CommitVigil` (or any name you prefer)
    - **Pick a workspace:** Select your Slack workspace from the dropdown
 4. Click **"Create App"**
 
@@ -25,7 +25,7 @@ Transform the agent into a visible collaborator by bridging it to your Slack wor
 ### Step 4: Add Webhook to Channel
 1. Scroll down to **"Webhook URLs for Your Workspace"**
 2. Click **"Add New Webhook to Workspace"**
-3. A popup will ask: *"Where should CommitGuard AI post?"*
+3. A popup will ask: *"Where should CommitVigil post?"*
 4. Select your target channel (e.g., `#engineering`, `#accountability`)
 5. Click **"Allow"**
 6. Copy the generated webhook URL:
@@ -51,7 +51,7 @@ Verify connectivity with a simple curl command:
 ```bash
 curl -X POST \
   -H 'Content-Type: application/json' \
-  -d '{"text": "🛡️ CommitGuard AI is connected!"}' \
+  -d '{"text": "🛡️ CommitVigil is connected!"}' \
   'YOUR_WEBHOOK_URL'
 ```
 
@@ -59,7 +59,7 @@ You should see `ok` in the terminal and the message in your Slack channel.
 
 ## 4. User @Mentions (Identity Mapping)
 
-CommitGuard can ping users directly using their **Slack Member ID**.
+CommitVigil can ping users directly using their **Slack Member ID**.
 
 ### How to Find a Slack Member ID
 1. Open Slack and go to the user's profile
@@ -76,7 +76,7 @@ curl -X POST \
 
 ### The Result
 When an alert is triggered, Slack turns the ID into a real mention:
-> 🔔 **CommitGuard Alert for @John:** Checking in on commitment: fix the CSS bugs
+> 🔔 **CommitVigil Alert for @John:** Checking in on commitment: fix the CSS bugs
 
 ---
 

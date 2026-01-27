@@ -55,7 +55,7 @@ async def test_process_commitment_eval_low_risk():
     mock_brain_instance.evaluate_participation = AsyncMock(return_value=mock_eval)
 
     with (
-        patch("src.worker.CommitGuardBrain", return_value=mock_brain_instance),
+        patch("src.worker.CommitVigilBrain", return_value=mock_brain_instance),
         patch(
             "src.worker.get_user_reliability",
             new_callable=AsyncMock,
@@ -102,7 +102,7 @@ async def test_process_commitment_eval_high_risk():
     mock_brain_instance.evaluate_participation = AsyncMock(return_value=mock_eval)
 
     with (
-        patch("src.worker.CommitGuardBrain", return_value=mock_brain_instance),
+        patch("src.worker.CommitVigilBrain", return_value=mock_brain_instance),
         patch(
             "src.worker.get_user_reliability",
             new_callable=AsyncMock,

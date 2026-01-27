@@ -20,7 +20,7 @@ from src.schemas.agents import (
 )
 
 
-class CommitGuardBrain:
+class CommitVigilBrain:
     """
     Elite Agent Brain: Decoupled from LLM Providers via LLMFactory.
     2026 Upgrade: Cultural Persona Routing & Industry Intelligence.
@@ -33,6 +33,7 @@ class CommitGuardBrain:
         "de": "Direct German Sachlichkeit. Focus on objective facts, precision, and substantive feedback.",
         "fr": "French professional tone. Value eloquence and formal structure. Maintain a balance between directness and professional courtesy.",
         "es": "Spanish professional tone. Warm and engaging but maintain professional boundaries. Value personal connection while enforcing deadlines.",
+        "en-AF": "African Ubuntu-inspired tone. Emphasize communal responsibility and the impact of individual actions on the collective project health. Use warm, community-centric language that encourages mutual support while maintaining firm expectations for the 'village' (the team).",
     }
 
     def __init__(self):
@@ -304,7 +305,7 @@ class CommitGuardBrain:
         )
 
         prompt = f"""
-        Role: CommitGuard Decision Agent
+        Role: CommitVigil Decision Agent
         Focus Industry: {industry}
         Cultural Persona: {cultural_instruction}
 

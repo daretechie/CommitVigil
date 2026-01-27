@@ -1,6 +1,6 @@
 # Agentic Reasoning Logic 🧠
 
-CommitGuard AI uses three distinct layers of reasoning to decide how to intervene.
+CommitVigil uses three distinct layers of reasoning to decide how to intervene.
 
 ## 1. Excuse Analysis (`ExcuseDetector`)
 The agent categorizes the check-in sentiment:
