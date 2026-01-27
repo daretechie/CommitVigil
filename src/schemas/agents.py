@@ -125,7 +125,9 @@ class UserHistory(SQLModel, table=True):
     reliability_score: float = Field(default=100.0)
 
     # Enterprise Attributes
-    department: str = Field(default="engineering", index=True)  # engineering, hr, research, finance
+    department: str = Field(
+        default="engineering", index=True
+    )  # engineering, hr, research, finance
     industry_type: str = Field(default="generic")  # healthcare, finance, generic
     language_preference: str = Field(default="en")  # en, en-UK, ja, de
 

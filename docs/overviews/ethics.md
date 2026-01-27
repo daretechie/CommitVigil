@@ -11,20 +11,23 @@ One of our most discussed features is the **"Confrontational"** tone. Here is ho
 *   **The Burnout Safety Valve**: If the `ExcuseDetector` identifies signs of fatigue, the system **blocks** confrontational escalation and triggers a "Burnout Alert" for the manager instead. 
 *   **Tone Drift & Cooling-off**: To prevent morale fatigue, the system implements **mathematical tone-damping**. If a user receives **3 consecutive "Firm" or "Confrontational" follow-ups**, the logic automatically locks the agent into a `NEUTRAL` or `SUPPORTIVE` state for 48 hours (configurable via `COOLING_OFF_PERIOD_HOURS`).
 
-## 2. Nuanced Hard-Blocking (The "Ethics Firewall")
-We explicitly distinguish between "Business Aggression" and "HR Violations." The **Safety Supervisor** enforces a **Semantic Firewall**:
-*   **BLOCKED (HR Territory)**: Discussions involving `Salary`, `PIP` (Performance Improvement Plans), `Firing`, or `Legal Threats` are immediately blocked. This is a hard-coded safety guarantee.
-*   **ALLOWED (Business Territory)**: Aggressive discussions about `Pricing Models`, `Budgeting`, or `Resource Allocation` are permitted as valid professional discourse.
+## 2. Industry-Specific Semantic Firewall 🧱
+CommitVigil provides hard-coded safety guarantees for regulated industries:
+*   **Healthcare (HIPAA)**: The system hard-blocks unauthorized medical mandates or PII disclosure. 
+*   **Finance (SEC)**: Prevents the agent from accidentally facilitating market manipulation or providing unregulated financial advice.
+*   **HR Territory**: Discussions involving `Salary`, `PIP` (Performance Improvement Plans), or `Firing` are immediately escalated to human review.
 
 
 
-## 2. Cultural & Contextual Sensitivity
-"Deflection" is relative. What is seen as blunt in one culture is polite in another:
+## 3. Continuous Learning & ROI Metrics 📈
+CommitVigil doesn't just act; it learns:
+*   **Manager Feedback Loop**: Every intervention can be reviewed by a supervisor. Their "Accept/Modify/Reject" decisions are persisted.
+*   **ROI Dashboard**: The system calculates the **Intervention Acceptance Rate** to quantify the AI's alignment with management intent.
 
 *   **Sensitivity Calibration**: CommitVigil supports **Cultural Tone Profiles**. Managers can calibrate the "Pressure Sensitivity" of the agents to match their specific team norms (e.g., High-Directness vs. High-Context locales).
 *   **Domain-Specific Jargon**: The NLP models are refined to recognize that certain industry vernacular (e.g., *"I'm swamped"*) may be a routine status update rather than an excuse in specific high-velocity teams.
 
-## 3. Privacy & Data Integrity
+## 4. Privacy & Data Integrity
 
 Monitoring at the granularity of Slack threads and Git commits requires a strict privacy stance:
 
@@ -32,7 +35,7 @@ Monitoring at the granularity of Slack threads and Git commits requires a strict
 *   **Source-Level Only**: Commit monitoring is restricted to commit messages and PR metadata—not the proprietary logic within the source code files themselves.
 *   **Identity Anonymization**: Internal IDs are used for analysis; real names can be masked in the database if necessary.
 
-## 3. Handling Ambiguity (The "100% Visibility" Claim) 🧠
+## 5. Handling Ambiguity (The "100% Visibility" Claim) 🧠
 Ambiguity is the greatest challenge in Engineering NLP. Here is how we move toward high accuracy:
 
 *   **Confidence Scores**: Every extraction (Commitment, Risk, Excuse) is accompanied by a `confidence_score`.

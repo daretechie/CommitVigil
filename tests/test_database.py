@@ -86,14 +86,15 @@ async def test_git_email_flow():
 @pytest.mark.asyncio
 async def test_cooling_off_reset():
     from src.core.database import AsyncSessionLocal
+
     user_id = "cooling_off_user"
-    
+
     # 1. Setup user with strict interventions and a recent timestamp
     async with AsyncSessionLocal() as session:
         user = UserHistory(
             user_id=user_id,
             consecutive_firm_interventions=5,
-            last_intervention_at=datetime.now(timezone.utc)
+            last_intervention_at=datetime.now(timezone.utc),
         )
         session.add(user)
         await session.commit()
@@ -103,11 +104,13 @@ async def test_cooling_off_reset():
         statement = select(UserHistory).where(UserHistory.user_id == user_id)
         results = await session.execute(statement)
         db_user = results.scalar_one()
-        db_user.last_intervention_at = datetime.now(timezone.utc) - timedelta(hours=settings.COOLING_OFF_PERIOD_HOURS + 1)
+        db_user.last_intervention_at = datetime.now(timezone.utc) - timedelta(
+            hours=settings.COOLING_OFF_PERIOD_HOURS + 1
+        )
         await session.commit()
 
     # 3. Update with firm tone. It should detect cooling off, reset to 0, then increment to 1.
     await update_user_reliability(user_id, was_failure=True, tone_used="firm")
-    
+
     _, _, consecutive_firm = await get_user_reliability(user_id)
     assert consecutive_firm == 1  # Reset to 0 then +1

@@ -30,6 +30,13 @@ CommitVigil provides a clean RESTful interface for all operations.
       show_root_heading: true
       show_source: false
 
+## 🏢 Enterprise Departmental Audits
+
+::: src.api.routes.get_departmental_audit
+    options:
+      show_root_heading: true
+      show_source: false
+
 ### Exporting Reports
 The audit endpoint supports three formats via the `report_format` query parameter:
 - **`json`** (Default): Standard API response for integration.

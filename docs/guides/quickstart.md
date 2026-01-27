@@ -12,18 +12,21 @@ docker-compose up --build
 ## 🏗️ Local Setup
 1.  **Install dependencies**:
     ```bash
+    # Recommendation: Use uv for high-performance dependency resolution
     uv sync
+    # OR standard poetry
+    poetry install
     ```
 2.  **Configure Environment**:
     Create a `.env` file based on `.env.example`. 
     > **Important**: Set `API_KEY_SECRET` to a secure value for production. Set `AUTH_ENABLED=False` for local testing without auth.
 3.  **Run the API**:
     ```bash
-    uv run uvicorn src.main:app --reload
+    poetry run uvicorn src.main:app --reload
     ```
 4.  **Run the Worker**:
     ```bash
-    uv run arq src.worker.WorkerSettings
+    poetry run arq src.worker.WorkerSettings
     ```
 
 ---

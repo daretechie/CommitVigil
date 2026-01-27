@@ -145,7 +145,11 @@ async def get_performance_audit(user_id: str, report_format: str = "json"):
     analyst = SlippageAnalyst()
     detector = TruthGapDetector()
 
-    from src.schemas.performance import SlippageAnalysis, TruthGapAnalysis, SlippageStatus
+    from src.schemas.performance import (
+        SlippageAnalysis,
+        TruthGapAnalysis,
+        SlippageStatus,
+    )
 
     try:
         slippage = await analyst.analyze_performance_gap(promised, reality)
@@ -158,13 +162,13 @@ async def get_performance_audit(user_id: str, report_format: str = "json"):
             fulfillment_ratio=0.0,
             detected_gap="The developer promised to refactor the API, fix CSS, and update docs, but only updated some typos in README. No major code changes detected.",
             risk_to_system_stability=0.8,
-            intervention_required=True
+            intervention_required=True,
         )
         gap = TruthGapAnalysis(
             gap_detected=True,
             truth_score=0.1,
             explanation="The user claims to be 90% done with the refactor, but the technical evidence only shows updates to typos in the README with no major code changes detected.",
-            recommended_tone="skeptical"
+            recommended_tone="skeptical",
         )
 
     # 3. Compile Report
@@ -201,6 +205,7 @@ async def log_safety_feedback(feedback: CorrectionFeedback):
     )
     return {"status": "logged", "message": "Safety feedback recorded for model tuning."}
 
+
 @router.get("/reports/department/{department}", dependencies=[Depends(get_api_key)])
 async def get_departmental_audit(department: str):
     """
@@ -218,13 +223,36 @@ async def get_departmental_audit(department: str):
             members = list(result.scalars().all())
 
         if not members:
-            logger.info("no_department_members_found_falling_back_to_demo_mock", department=department)
+            logger.info(
+                "no_department_members_found_falling_back_to_demo_mock",
+                department=department,
+            )
             members = [
-                UserHistory(user_id="lead_rockstar", reliability_score=98.5, department=department),
-                UserHistory(user_id="senior_reliable", reliability_score=92.0, department=department),
-                UserHistory(user_id="mid_slipping", reliability_score=45.0, department=department),
-                UserHistory(user_id="junior_burnout", reliability_score=62.0, department=department),
-                UserHistory(user_id="new_hire_risk", reliability_score=38.0, department=department)
+                UserHistory(
+                    user_id="lead_rockstar",
+                    reliability_score=98.5,
+                    department=department,
+                ),
+                UserHistory(
+                    user_id="senior_reliable",
+                    reliability_score=92.0,
+                    department=department,
+                ),
+                UserHistory(
+                    user_id="mid_slipping",
+                    reliability_score=45.0,
+                    department=department,
+                ),
+                UserHistory(
+                    user_id="junior_burnout",
+                    reliability_score=62.0,
+                    department=department,
+                ),
+                UserHistory(
+                    user_id="new_hire_risk",
+                    reliability_score=38.0,
+                    department=department,
+                ),
             ]
 
         # ROI Calculation: Intervention Acceptance
@@ -238,11 +266,31 @@ async def get_departmental_audit(department: str):
         return AuditReportGenerator.generate_departmental_audit(
             department=department,
             members=[
-                UserHistory(user_id="lead_rockstar", reliability_score=98.5, department=department),
-                UserHistory(user_id="senior_reliable", reliability_score=92.0, department=department),
-                UserHistory(user_id="mid_slipping", reliability_score=45.0, department=department),
-                UserHistory(user_id="junior_burnout", reliability_score=62.0, department=department),
-                UserHistory(user_id="new_hire_risk", reliability_score=38.0, department=department)
+                UserHistory(
+                    user_id="lead_rockstar",
+                    reliability_score=98.5,
+                    department=department,
+                ),
+                UserHistory(
+                    user_id="senior_reliable",
+                    reliability_score=92.0,
+                    department=department,
+                ),
+                UserHistory(
+                    user_id="mid_slipping",
+                    reliability_score=45.0,
+                    department=department,
+                ),
+                UserHistory(
+                    user_id="junior_burnout",
+                    reliability_score=62.0,
+                    department=department,
+                ),
+                UserHistory(
+                    user_id="new_hire_risk",
+                    reliability_score=38.0,
+                    department=department,
+                ),
             ],
-            intervention_rate=0.88
+            intervention_rate=0.88,
         )

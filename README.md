@@ -11,7 +11,7 @@
 
 > **"One Engine. Two Worlds. Total Accountability."**
 
-[**Full Documentation 📚**](https://daretechie.github.io/CommitVigil/) | [**Safety Validation Report 🛡️**](https://daretechie.github.io/CommitVigil/validation/safety_validation_report/)
+[**Full Documentation 📚**](https://daretechie.github.io/CommitVigil/) | [**Live Site 🌐**](https://daretechie.github.io/CommitVigil/) | [**Safety Validation Report 🛡️**](https://daretechie.github.io/CommitVigil/validation/safety_validation_report/)
 
 ---
 

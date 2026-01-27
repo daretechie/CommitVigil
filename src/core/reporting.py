@@ -240,12 +240,12 @@ The subject has demonstrated a **{report.performance_metrics["fulfillment_ratio"
         total_rel = sum(m.reliability_score for m in members)
         avg_rel = round(total_rel / len(members), 2)
 
-        top_perf = [
-            m.user_id for m in members if m.reliability_score >= 90.0
-        ][:5]  # Top 5
-        critical = [
-            m.user_id for m in members if m.reliability_score < 50.0
-        ][:5]  # Bottom 5
+        top_perf = [m.user_id for m in members if m.reliability_score >= 90.0][
+            :5
+        ]  # Top 5
+        critical = [m.user_id for m in members if m.reliability_score < 50.0][
+            :5
+        ]  # Bottom 5
 
         # Heuristic: If reliability is dropping rapidly across the team, flag it.
         # For this demo, we'll assume a static check.

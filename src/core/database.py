@@ -79,14 +79,14 @@ async def update_user_reliability(
             user.total_commitments += 1
             if was_failure:
                 user.failed_commitments += 1
-        
+
         # 1.5 Cooling-off Logic: Reset strict intervention counter if enough time has passed
         if user.last_intervention_at:
             last_int = user.last_intervention_at
             # SQLite returns naive datetimes; ensure comparison is aware
             if last_int.tzinfo is None:
                 last_int = last_int.replace(tzinfo=timezone.utc)
-            
+
             time_since_last = datetime.now(timezone.utc) - last_int
             if time_since_last > timedelta(hours=settings.COOLING_OFF_PERIOD_HOURS):
                 user.consecutive_firm_interventions = 0
