@@ -11,7 +11,24 @@
 ![Security](https://img.shields.io/badge/Security-Audit_Passed-success?style=for-the-badge)
 ![Test Coverage](https://img.shields.io/badge/Coverage-85%25-success?style=for-the-badge)
 
-> **"One Engine. Two Worlds. Total Accountability."**
+> **"The truth lives in the code. Accountability vive in the engine."**
+
+[**Full Documentation 📚**](https://daretechie.github.io/CommitVigil/) | [**Live Site 🌐**](https://daretechie.github.io/CommitVigil/) | [**Safety Validation Report 🛡️**](https://daretechie.github.io/CommitVigil/validation/safety_validation_report/) | [**Manager Feedback Guide 🎮**](docs/guides/feedback_loop.md) | [**Integration Guide 🔌**](docs/guides/integrations.md)
+
+---
+
+## 🆘 The Problem
+In modern distributed teams, the **"Slack Stall"** is the #1 drain on project velocity. 
+Managers are overwhelmed by vague promises—*"I'll get to it soon,"* or *"It's almost done"*—which are often forgotten or delayed, leading to missed sprints and expensive "bad guy" escalations.
+
+## ✅ The Solution
+CommitVigil is a standalone, AI-powered **Accountability Specialist**. It doesn't just "monitor"—it **predicts** failure before it happens by mapping verbal commitments in Slack/Teams to actual technical reality in Git/Jira.
+
+### 🎯 The "Truth-Gap" Engine
+Our multi-agent system extracts {who, what, when} from conversations and cross-references them with technical metadata to identify:
+*   **Burnout Signals**: Spotting over-commitment before it leads to regression.
+*   **Commitment Drift**: Quantifying the delta between "what was promised" and "what was pushed."
+*   **Behavioral Nudges**: Automatically adapting intervention tone based on culture and urgency.
 
 ---
 
@@ -22,8 +39,6 @@ Want to verify your team's velocity before a major release or acquisition? I off
 *   **Boardroom Reporting**: Professional, glassmorphic HTML ROI briefs for C-level visibility.
 
 [**Inquire on Upwork 🚀**](https://www.upwork.com/)
-
-[**Full Documentation 📚**](https://daretechie.github.io/CommitVigil/) | [**Live Site 🌐**](https://daretechie.github.io/CommitVigil/) | [**Safety Validation Report 🛡️**](https://daretechie.github.io/CommitVigil/validation/safety_validation_report/) | [**Manager Feedback Guide 🎮**](docs/guides/feedback_loop.md) | [**Integration Guide 🔌**](docs/guides/integrations.md)
 
 ---
 
@@ -91,15 +106,6 @@ CommitVigil/
 └── README.md           # This document
 ```
 
-## 📊 Professional Integrity Audits
-
-Need a deep-dive into your team's commitment reliability? I offer **one-time AI-powered audits** for remote engineering teams. 
-
-- **Extract "Shadow Debt"**: Identify technical promises made in commits that never made it to a PR.
-- **Predict Burnout**: Recognize linguistic patterns of fatigue before they impact velocity.
-- **Reliability Scoring**: Get a multi-dimensional scorecard for your squads.
-
-📧 **[Contact me for an Audit](mailto:adelekedare2012@gmail.com)** to see a sample report and book a 1-hour squad analysis.
 
 ---
 
