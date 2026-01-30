@@ -162,6 +162,11 @@ print_header "[PHASE 9] Organizational 'God-View' (CEO/CTO Reporting)"
 echo -e "${YELLOW}Generating organizational audit JSON...${NC}"
 curl -s -H "X-API-Key: $API_KEY" "$API_URL/reports/organization" | jq . > reports/organizational_audit.json
 echo "✅ Org JSON saved to: $(pwd)/reports/organizational_audit.json"
+
+# HTML Format
+echo -e "${YELLOW}Generating premium HTML 'God-View' heatmap...${NC}"
+curl -s -H "X-API-Key: $API_KEY" "$API_URL/reports/organization?report_format=html" > reports/organizational_audit.html
+echo "✅ Org HTML saved to: $(pwd)/reports/organizational_audit.html"
 sleep 7
 
 # Advanced Scenarios
@@ -302,6 +307,14 @@ if [[ -n "$INTERVENTION_ID" && "$INTERVENTION_ID" != "null" ]]; then
 else
   echo "⚠️ No Intervention ID captured from Scenario 13. Skipping feedback demo."
 fi
+
+echo -e "\n--- [GOD-MODE] Scenario 21: Dynamic Safety Policy Update ---"
+echo "Manager updating safety rules for the 'fintech' industry..."
+curl -s -X 'POST' \
+  -H "X-API-Key: $API_KEY" \
+  -H 'Content-Type: application/json' \
+  "$API_URL/config/safety?industry=fintech&semantic_rules=No%20mention%20of%20crypto%20speculation&is_active=true" \
+  -d "[\"crypto\", \"token\", \"moon\"]" | jq .
 
 echo -e "\n--------------------------------------------------"
 echo "✅ COMMITVIGIL SNIPER DEMO COMPLETE. COMMITMENT INTEGRITY SECURED. 🛡️"
