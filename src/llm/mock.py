@@ -1,4 +1,7 @@
+# Copyright (c) 2026 CommitVigil AI. All rights reserved.
 from typing import Any, TypeVar, cast
+
+from pydantic import BaseModel
 
 from src.core.logging import logger
 from src.llm.base import LLMProvider
@@ -14,7 +17,6 @@ from src.schemas.agents import (
     SlackCommitmentRecord,
     ToneType,
 )
-from pydantic import BaseModel
 from src.schemas.performance import SlippageAnalysis, SlippageStatus, TruthGapAnalysis
 
 T = TypeVar("T")

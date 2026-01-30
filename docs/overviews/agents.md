@@ -23,9 +23,17 @@ The final decision is a personalized intervention:
 
 ## 4. Safety Audit (`SafetySupervisor`)
 The "Overwatch" layer acts as a final sanity check before any intervention is sent. It enforces the **Industry-Specific Semantic Firewall**:
+- **Departmental Granularity**: Applies rules specific to `Finance:Trading` or `Tech:R&D` before falling back to industry-wide policies.
+- **Autonomous Onboarding**: If a new organizational context is detected, the agent generates preliminary safety rules and flags them for human review.
 - **Healthcare (HIPAA)**: Hard-blocks unauthorized PII or clinical mandates.
 - **Finance (SEC)**: Prevents market manipulation or non-compliant financial advice.
-- **HR Violations**: Guards against illegal firing or salary negotiations.
+
+## 5. Context Sensing (`ContextScout`)
+A specialized agent that continuously analyzes communication patterns to detect the operational environment:
+- **Industry & Department**: Automatically identifies if a user is in "Legal", "Engineering", or "Sales".
+- **Confidence Scoring**: Assigns a 0-100% confidence to every detection.
+- **Stabilization**: If confidence is low or the context is new, it triggers a **Human-in-the-Loop** verification request.
+
 
 ## 5. Cultural Persona Architecture
 CommitVigil adapts the **ToneAdapter** to the cultural context of the user:

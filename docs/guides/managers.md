@@ -24,7 +24,9 @@ High-stakes interventions should never be 100% autonomous.
 
 1.  **Review the Confidence Score**: If the AI has a `confidence_score` of 0.8 but flags a high risk, verify if the user's recent Slack messages were sarcastic or high-context.
 2.  **Calibrate for Morale**: If the team has just finished a "Death March" (long sprint), manually increase the **Supportive Threshold** to allow for natural recovery.
-3.  **Cross-Cultural Norms**: Ensure your specific team's "Directness Level" is reflected in the agent's tone settings.
+3.  **Verify New Contexts**: If the system flags a "New Industry/Department", review the generated safety rules. Once confirmed, **Lock the Context** to prevent future drift.
+4.  **Cross-Cultural Norms**: Ensure your specific team's "Directness Level" is reflected in the agent's tone settings.
+
 
 ---
 

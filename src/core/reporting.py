@@ -1,5 +1,16 @@
+# Copyright (c) 2026 CommitVigil AI. All rights reserved.
+import os
 from datetime import datetime, timezone
-from src.schemas.agents import UserHistory, ReportSummary, AggregateReport
+
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+from src.schemas.agents import (
+    AggregateReport,
+    ProspectProfile,
+    ReportSummary,
+    ROIPrediction,
+    UserHistory,
+)
 from src.schemas.performance import SlippageAnalysis, TruthGapAnalysis
 
 
@@ -9,9 +20,23 @@ class AuditReportGenerator:
     professional PDF/JSON report that can be sold as a service.
     """
 
+    # Initialize Jinja2 Environment
+    _template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
+    _env = Environment(
+        loader=FileSystemLoader(_template_dir),
+        autoescape=select_autoescape(['html', 'xml'])
+    )
+    
+    # Inject helpers
+    _env.globals.update(now=lambda: datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"))
+
     @staticmethod
     def generate_audit_summary(
-        user: UserHistory, slippage: SlippageAnalysis, truth_gap: TruthGapAnalysis
+        user: UserHistory,
+        slippage: SlippageAnalysis,
+        truth_gap: TruthGapAnalysis,
+        commitments: list[str] | None = None,
+        reality: str = "",
     ) -> ReportSummary:
         """
         Creates a high-value 'Performance Integrity Audit' for a manager.
@@ -23,15 +48,18 @@ class AuditReportGenerator:
                 "user_id": user.user_id,
                 "reliability_score": f"{user.reliability_score:.2f}%",
                 "total_commitments": user.total_commitments,
+                "department": user.department,
             },
             performance_metrics={
                 "status": slippage.status,
                 "fulfillment_ratio": f"{slippage.fulfillment_ratio * 100:.2f}%",
+                "fulfillment_val": slippage.fulfillment_ratio,
                 "detected_gap": slippage.detected_gap,
             },
             integrity_score={
                 "aligned": not truth_gap.gap_detected,
                 "truth_score": f"{truth_gap.truth_score * 100:.2f}%",
+                "truth_val": truth_gap.truth_score,
                 "explanation": truth_gap.explanation,
             },
             intervention_recommendation={
@@ -41,14 +69,32 @@ class AuditReportGenerator:
                 if truth_gap.gap_detected
                 else "Maintain current performance.",
             },
+            commitments=commitments or [],
+            reality=reality,
         )
 
     @staticmethod
     def generate_markdown_audit(report: ReportSummary) -> str:
         """
-        Turns a ReportSummary into a high-impact professional Markdown document.
+        Turns a ReportSummary into a professional Markdown document.
         """
-        return f"""# 🛡️ Performance Integrity Audit: {report.subject["user_id"]}
+        subject_id = report.subject.get("user_id", "Unknown")
+        rel_score = report.subject.get("reliability_score", "0.00%")
+        total_commits = report.subject.get("total_commitments", 0)
+        
+        status = report.performance_metrics.get("status", "UNKNOWN")
+        fulfillment = report.performance_metrics.get("fulfillment_ratio", "0.00%")
+        gaps = report.performance_metrics.get("detected_gap", "No data")
+        
+        aligned = report.integrity_score.get("aligned", False)
+        truth_score = report.integrity_score.get("truth_score", "0.00%")
+        explanation = report.integrity_score.get("explanation", "No explanation provided")
+        
+        req = report.intervention_recommendation.get("required", False)
+        tone = report.intervention_recommendation.get("tone", "neutral")
+        summary = report.intervention_recommendation.get("summary", "Maintain performance")
+
+        return f"""# 🛡️ Performance Integrity Audit: {subject_id}
 **Report ID**: `{report.report_id}` | **Date**: {report.generated_at[:10]}
 
 ---
@@ -56,177 +102,67 @@ class AuditReportGenerator:
 ## 📊 Summary Scorecard
 | Metric | Value |
 | :--- | :--- |
-| **Reliability Score** | **{report.subject["reliability_score"]}** |
-| **Total Commitments** | {report.subject["total_commitments"]} |
-| **Fulfillment Ratio** | {report.performance_metrics["fulfillment_ratio"]} |
-| **Integrity Alignment** | {"✅ ALIGNED" if report.integrity_score["aligned"] else "⚠️ GAP DETECTED"} |
+| **Reliability Score** | **{rel_score}** |
+| **Total Commitments** | {total_commits} |
+| **Fulfillment Ratio** | {fulfillment} |
+| **Integrity Alignment** | {"✅ ALIGNED" if aligned else "⚠️ GAP DETECTED"} |
 
 ---
 
 ## 🔍 Performance Deep-Dive
-**Status**: `{report.performance_metrics["status"]}`
+**Status**: `{status}`
 
-### Commitment fulfillment
-The subject has demonstrated a **{report.performance_metrics["fulfillment_ratio"]}** fulfillment rate.
-**Detected Gaps**: {report.performance_metrics["detected_gap"]}
+### Commitment Fulfillment
+The subject has demonstrated a **{fulfillment}** fulfillment rate.
+**Detected Gaps**: {gaps}
 
 ### Truth-Gap Analysis
-**Confidence Score**: {report.integrity_score["truth_score"]}
-{report.integrity_score["explanation"]}
+**Confidence Score**: {truth_score}
+{explanation}
 
 ---
 
 ## 🛠️ Management Strategy
-**Intervention Required**: **{"YES" if report.intervention_recommendation["required"] else "NO"}**
-**Recommended Tone**: `{report.intervention_recommendation["tone"]}`
+**Intervention Required**: **{"YES" if req else "NO"}**
+**Recommended Tone**: `{tone}`
 
 ### Manager Summary
-{report.intervention_recommendation["summary"]}
+{summary}
 
 ---
-*Generated by CommitVigil - Elite Accountability Infrastructure*
+*Generated by CommitVigil Accountability Infrastructure*
 """
 
-    @staticmethod
-    def generate_html_audit(report: ReportSummary) -> str:
+    @classmethod
+    def generate_html_audit(cls, report: ReportSummary) -> str:
         """
-        Creates a premium, glassmorphic HTML report that renders perfectly to PDF.
+        Creates a premium, glassmorphic HTML report using Jinja2 templates.
         """
-        aligned_color = "#10b981" if report.integrity_score["aligned"] else "#ef4444"
-        return f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>CommitVigil Audit - {report.subject["user_id"]}</title>
-    <style>
-        :root {{
-            --primary: #6366f1;
-            --bg: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --text: #f8fafc;
-        }}
-        body {{
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 40px;
-            line-height: 1.6;
-        }}
-        .container {{
-            max-width: 800px;
-            margin: auto;
-            background: var(--card-bg);
-            padding: 40px;
-            border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-        }}
-        .header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 40px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 20px;
-        }}
-        h1 {{ margin: 0; font-size: 24px; letter-spacing: -0.025em; }}
-        .badge {{
-            padding: 6px 12px;
-            border-radius: 99px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }}
-        .score-card {{
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 40px;
-        }}
-        .metric {{
-            background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 16px;
-            text-align: center;
-        }}
-        .metric-val {{ font-size: 32px; font-weight: 700; color: var(--primary); }}
-        .metric-label {{ font-size: 12px; opacity: 0.6; text-transform: uppercase; }}
-        .section-title {{
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--primary);
-            margin-bottom: 16px;
-        }}
-        .strategy-box {{
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
-            padding: 24px;
-            border-radius: 16px;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }}
-        @media print {{
-            body {{ background: white; color: black; padding: 0; }}
-            .container {{ border: none; box-shadow: none; background: white; }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1>🛡️ PERFORMANCE AUDIT</h1>
-                <small style="opacity: 0.5">Report ID: {report.report_id}</small>
-            </div>
-            <div class="badge" style="background: {aligned_color}22; color: {aligned_color}; border: 1px solid {aligned_color}44">
-                {"Aligned" if report.integrity_score["aligned"] else "Gap Detected"}
-            </div>
-        </div>
+        template = cls._env.get_template("user_audit.html")
+        return template.render(report=report)
 
-        <div class="score-card">
-            <div class="metric">
-                <div class="metric-val">{report.subject["reliability_score"]}</div>
-                <div class="metric-label">Reliability Score</div>
-            </div>
-            <div class="metric">
-                <div class="metric-val">{report.performance_metrics["fulfillment_ratio"]}</div>
-                <div class="metric-label">Fulfillment Rate</div>
-            </div>
-        </div>
-
-        <div class="section-title">Analysis Summary</div>
-        <p><strong>Status:</strong> {report.performance_metrics["status"]}</p>
-        <p>{report.integrity_score["explanation"]}</p>
-
-        <div style="margin-top: 40px;">
-            <div class="section-title">Management Strategy</div>
-            <div class="strategy-box">
-                <p style="margin-top: 0"><strong>Recommended Tone:</strong> <span class="badge" style="background: rgba(255,255,255,0.1)">{report.intervention_recommendation["tone"]}</span></p>
-                <p style="margin-bottom: 0">{report.intervention_recommendation["summary"]}</p>
-            </div>
-        </div>
-        <div style="margin-top: 60px; text-align: center; font-size: 10px; opacity: 0.3;">
-            GENERATED BY COMMITVIGIL &bull; ENTERPRISE GRADE ACCOUNTABILITY
-        </div>
-    </div>
-</body>
-</html>
-"""
+    @classmethod
+    def generate_department_html_audit(cls, report: AggregateReport) -> str:
+        """
+        Generates a premium HTML 'Heatmap' for departments using Jinja2.
+        """
+        template = cls._env.get_template("department_audit.html")
+        return template.render(report=report)
 
     @staticmethod
     def generate_departmental_audit(
-        department: str, members: list[UserHistory], intervention_rate: float
+        department: str, 
+        members: list[UserHistory], 
+        intervention_rate: float,
+        calculated_avg: float | None = None,
+        calculated_burnout: int | None = None,
+        total_count: int | None = None
     ) -> AggregateReport:
         """
         Enterprise Feature: Aggregates performance data for 100+ user departments.
-        Identifies systemic burnout and top-tier reliability.
+        Now supports pre-calculated stats for scalability.
         """
-        if not members:
-            # Fallback for empty departments
+        if not members and calculated_avg is None:
             return AggregateReport(
                 department=department,
                 total_members=0,
@@ -235,28 +171,151 @@ The subject has demonstrated a **{report.performance_metrics["fulfillment_ratio"
                 top_performers=[],
                 critical_risk_members=[],
                 intervention_acceptance_rate=intervention_rate,
+                strategy_recommendation="Initial Audit: No member data found for this department.",
             )
 
-        total_rel = sum(m.reliability_score for m in members)
-        avg_rel = round(total_rel / len(members), 2)
+        avg_rel = calculated_avg if calculated_avg is not None else round(sum(m.reliability_score for m in members) / len(members), 2)
+        burnout = calculated_burnout if calculated_burnout is not None else len([m for m in members if m.reliability_score < 70.0])
+        total_m = total_count if total_count is not None else len(members)
 
-        top_perf = [m.user_id for m in members if m.reliability_score >= 90.0][
-            :5
-        ]  # Top 5
-        critical = [m.user_id for m in members if m.reliability_score < 50.0][
-            :5
-        ]  # Bottom 5
+        top_perf = [m.user_id for m in members if m.reliability_score >= 90.0][:5]
+        critical = [m.user_id for m in members if m.reliability_score < 50.0][:5]
 
-        # Heuristic: If reliability is dropping rapidly across the team, flag it.
-        # For this demo, we'll assume a static check.
-        burnout = len([m for m in members if m.reliability_score < 70.0])
+        # Tiered Departmental Strategy Logic
+        if avg_rel >= 90 and burnout == 0:
+            strategy = "Elite Team Performance: Focus on high-impact objectives and reward consistency."
+        elif avg_rel >= 80:
+            strategy = "Standard Performance: Baseline integrity maintained. Monitor minor slippage."
+        elif avg_rel >= 60 or burnout > 0:
+            strategy = "Corrective Action Required: Systemic burnout or process failure detected."
+        else:
+            strategy = "Critical Intervention: Reassess team workload and process integrity immediately."
 
         return AggregateReport(
             department=department,
-            total_members=len(members),
+            total_members=total_m,
             average_reliability_score=avg_rel,
             burnout_risk_count=burnout,
             top_performers=top_perf,
             critical_risk_members=critical,
             intervention_acceptance_rate=intervention_rate,
+            strategy_recommendation=strategy,
         )
+
+    @classmethod
+    def generate_org_html_audit(cls, org_data: dict) -> str:
+        """
+        Highest Level Rendering: The C-Level 'God-View' HTML Report.
+        """
+        template = cls._env.get_template("org_audit.html")
+        return template.render(org=org_data)
+
+    @classmethod
+    def generate_organizational_audit(
+        cls, department_reports: list[AggregateReport]
+    ) -> dict:
+        """
+        Highest Hierarchy Level: The Full Organization View.
+        Aggregates all departments into a single 'God-View' for the CEO/CTO.
+        """
+        if not department_reports:
+            return {"status": "error", "message": "No departmental data available."}
+
+        total_members = sum(r.total_members for r in department_reports)
+        avg_org_rel = round(
+            sum(r.average_reliability_score for r in department_reports)
+            / len(department_reports),
+            2,
+        )
+        total_burnout = sum(r.burnout_risk_count for r in department_reports)
+
+        # Tiered Recommendation Logic
+        if avg_org_rel >= 90 and total_burnout == 0:
+            rec = "Elite Performance: Maintain current velocity and reward high-performers."
+        elif avg_org_rel >= 80:
+            rec = "Stable Performance: Minor slippage detected. Monitor at-risk nodes."
+        elif avg_org_rel >= 70 or total_burnout > 0:
+            rec = "Moderate Risk: Targeted intervention required to prevent systemic burnout."
+        else:
+            rec = "Critical Status: Immediate structural intervention and headcount review required."
+
+        return {
+            "organization_reliability": f"{avg_org_rel}%",
+            "total_engineering_headcount": total_members,
+            "systemic_burnout_risk": total_burnout,
+            "departmental_breakdown": [
+                {
+                    "name": r.department,
+                    "score": r.average_reliability_score,
+                    "risk_nodes": r.burnout_risk_count,
+                }
+                for r in department_reports
+            ],
+            "recommendation": rec,
+        }
+
+    @staticmethod
+    def predict_roi(profile: ProspectProfile, avg_slippage_rate: float = 0.15) -> ROIPrediction:
+        """
+        Sales Intelligence: Calculates the financial ROI of implementing CommitVigil.
+        Based on: Total Engineers * Avg Salary * Slippage Rate * Recovery Improvement.
+        """
+        from src.core.config import settings
+
+        hourly_rate = profile.avg_developer_salary / settings.ROI_WORKING_HOURS_PER_YEAR
+        lost_hours_per_year = settings.ROI_WORKING_HOURS_PER_YEAR * avg_slippage_rate * profile.team_size
+        recovered_hours = lost_hours_per_year * settings.ROI_IMPROVEMENT_FACTOR
+        annual_savings = recovered_hours * hourly_rate
+
+        # Payback Period (Calculated against monthly subscription fee)
+        payback = (settings.ROI_MONTHLY_FEE_USD * 12) / (annual_savings / 12) if annual_savings > 0 else 12.0
+
+        return ROIPrediction(
+            annual_savings_usd=round(annual_savings, 2),
+            developer_hours_recovered=round(recovered_hours, 1),
+            slippage_reduction_percent=round(avg_slippage_rate * settings.ROI_IMPROVEMENT_FACTOR * 100, 1),
+            payback_period_months=round(payback, 1),
+            calculation_basis=f"Based on a team of {profile.team_size} with {avg_slippage_rate*100}% baseline slippage."
+        )
+
+    @classmethod
+    def generate_prospect_audit(cls, profile: ProspectProfile) -> dict:
+        """
+        Executive Prospecting: Synthesizes a mockup audit to wow potential customers.
+        """
+        from src.schemas.performance import SlippageStatus
+
+        # 1. Predict ROI
+        roi = cls.predict_roi(profile)
+
+        # 2. Mockup fictional member audits based on drift_scenarios
+        mock_audits = []
+        for scenario in profile.drift_scenarios:
+            mock_user = UserHistory(
+                user_id=scenario["who"],
+                reliability_score=72.5,
+                department="unknown",
+            )
+            mock_slippage = SlippageAnalysis(
+                status=SlippageStatus.SLIPPING,
+                fulfillment_ratio=0.1,
+                detected_gap=f"User promised '{scenario['promise']}' but reality check shows '{scenario['reality']}'.",
+                risk_to_system_stability=0.7,
+                intervention_required=True
+            )
+            mock_gap = TruthGapAnalysis(
+                gap_detected=True,
+                truth_score=0.2,
+                explanation="Significant delta between verbal commitment and technical evidence.",
+                recommended_tone="firm"
+            )
+            mock_audits.append(cls.generate_audit_summary(mock_user, mock_slippage, mock_gap))
+
+        return {
+            "prospect": profile.company_name,
+            "target": profile.target_role,
+            "roi_prediction": roi.model_dump(),
+            "sample_interventions": mock_audits,
+            "prospectus_summary": f"CommitVigil identified {roi.developer_hours_recovered} hours of recoverable technical debt for {profile.company_name}."
+        }
+

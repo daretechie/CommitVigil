@@ -8,6 +8,8 @@
 ![Latency](https://img.shields.io/badge/target_P95_latency-<500ms-success?style=for-the-badge)
 ![Cost Savings](https://img.shields.io/badge/avg_token_savings-85%25-orange?style=for-the-badge)
 ![ROI](https://img.shields.io/badge/est_net_ROI-%24558%2Fmonth-gold?style=for-the-badge)
+![Security](https://img.shields.io/badge/Security-Audit_Passed-success?style=for-the-badge)
+![Test Coverage](https://img.shields.io/badge/Coverage-85%25-success?style=for-the-badge)
 
 > **"One Engine. Two Worlds. Total Accountability."**
 
@@ -34,11 +36,13 @@ CommitVigil is a multi-agent system designed for high-stakes enforcement. It ada
 
 ---
 
-### 🛡️ 2026 Enterprise Upgrade: Elite Guardrails
-The system now includes research-backed advanced features for global operations:
-- **Continuous Learning Pipeline**: Persists manager decisions to calculate **Intervention Acceptance Rates** and refine AI strategies.
+### 🛡️ 2026 Enterprise Upgrade: Autonomous Adaptation
+The system now includes self-evolving capabilities for global operations:
+- **Autonomous Context Sensing**: Automatically detects **Industry** (e.g., Gaming, Biotech) and **Department** (e.g., R&D, Sales) from communication patterns.
+- **Hierarchical Safety Enforcement**: Applies rules from specific (Department) to broad (Industry) to generic.
+- **Stabilization Layer**: Autonomous rules start as **Unverified** and trigger Human-in-the-Loop review. Once confirmed, context is **Locked** for stability.
 - **Cultural Persona Routing**: Automatically adapts tone for **Japanese (*Wa*)**, **German (*Sachlichkeit*)**, **French (Eloquence)**, **British English**, and **Spanish**.
-- **Industry Semantic Firewall**: Intent-based security for **Healthcare (HIPAA)** and **Finance (SEC)** compliance.
+
 
 ## 🏗️ The Four-Stage Autonomous Pipeline
 Every commitment—whether from Slack or a Git Commit—passes through a deterministic reasoning loop:
@@ -58,6 +62,18 @@ Every commitment—whether from Slack or a Git Commit—passes through a determi
 - **Observability**: Prometheus + Structlog
 
 ---
+
+## 📂 Project Structure
+
+```text
+CommitVigil/
+├── src/                # Core Application Logic
+├── tests/              # Comprehensive Test Suite
+├── infra/              # Infrastructure & Config (Prometheus, K8s, migrations)
+├── scripts/            # Ops & Demo Utilities (demo.sh)
+├── docs/               # Technical Documentation & ADRs
+└── README.md           # This document
+```
 
 ## 📊 Professional Integrity Audits
 
@@ -104,6 +120,13 @@ curl -X 'GET' \
 ```
 
 
+
+---
+## 🤝 Contributing
+CommitVigil is open source! We welcome contributions to our "Truth-Gap" engine and cultural personas. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 *Built for High-Performance Teams and Elite Portfolios.*

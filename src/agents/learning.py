@@ -1,8 +1,12 @@
+# Copyright (c) 2026 CommitVigil AI. All rights reserved.
 from datetime import datetime, timedelta, timezone
-from sqlmodel import select, func
+
+from sqlmodel import func, select
+
 from src.core.database import AsyncSessionLocal
-from src.schemas.agents import SafetyFeedback
 from src.core.logging import logger
+from src.core.state import state
+from src.schemas.agents import SafetyFeedback
 
 
 class SupervisorFeedbackLoop:
@@ -30,7 +34,7 @@ class SupervisorFeedbackLoop:
                 action_taken=action,
                 final_message_sent=message,
                 feedback_notes=notes,
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
             session.add(feedback)
             await session.commit()
@@ -46,28 +50,43 @@ class SupervisorFeedbackLoop:
     async def calculate_intervention_acceptance(days: int = 30) -> float:
         """
         ROI Metric: Calculates the percentage of AI corrections accepted by managers.
+        Includes 1-hour Redis caching to prevent database thrashing.
         """
-        since = datetime.now() - timedelta(days=days)
+        cache_key = f"acceptance_rate:{days}"
+        redis = state.get("redis")
+
+        # 1. Check Cache
+        if redis:
+            try:
+                cached = await redis.get(cache_key)
+                if cached:
+                    return float(cached)
+            except Exception as e:
+                logger.warning("acceptance_rate_cache_peek_failed", error=str(e))
+
+        # 2. Database Calculation (Aggregated)
+        since = (datetime.now(timezone.utc) - timedelta(days=days)).replace(tzinfo=None)
         async with AsyncSessionLocal() as session:
-            # Total count
-            statement_total = select(func.count(SafetyFeedback.id)).where(
-                SafetyFeedback.created_at >= since
-            )
-            result_total = await session.execute(statement_total)
-            total = result_total.scalar() or 0
+            # Optimized: Single query for both counts
+            statement = select(
+                func.count(SafetyFeedback.id),
+                func.count(SafetyFeedback.id).filter(SafetyFeedback.action_taken == "accepted")
+            ).where(SafetyFeedback.created_at >= since)
+            
+            result = await session.execute(statement)
+            total, accepted = result.one()
+            
+            rate = round(accepted / total, 2) if total > 0 else 1.0
 
-            if total == 0:
-                return 1.0  # Default to perfect if no feedback yet
+        # 3. Update Cache
+        if redis:
+            try:
+                # Cache for 1 hour
+                await redis.setex(cache_key, 3600, str(rate))
+            except Exception as e:
+                logger.warning("acceptance_rate_cache_population_failed", error=str(e))
 
-            # Accepted count
-            statement_accepted = select(func.count(SafetyFeedback.id)).where(
-                SafetyFeedback.created_at >= since,
-                SafetyFeedback.action_taken == "accepted",
-            )
-            result_accepted = await session.execute(statement_accepted)
-            accepted = result_accepted.scalar() or 0
-
-            return round(accepted / total, 2)
+        return rate
 
     @staticmethod
     async def get_audit_trail(intervention_id: str) -> SafetyFeedback | None:

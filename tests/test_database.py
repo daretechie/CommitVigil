@@ -70,12 +70,14 @@ async def test_git_email_flow():
     # Set for new user
     await set_git_email(user_id, email)
     user = await get_user_by_git_email(email)
+    assert user is not None
     assert user.user_id == user_id
     assert user.git_email == email
 
     # Update existing
     await set_git_email(user_id, "other@example.com")
     user = await get_user_by_git_email("other@example.com")
+    assert user is not None
     assert user.git_email == "other@example.com"
 
     # Get non-existent

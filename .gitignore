@@ -152,9 +152,12 @@ cython_debug/
 .vscode/
 
 # Project Specific
-commitvigil.db
 *.db
+*.sqlite
 .ruff_cache/
 brain/
 docs/reference/prospecting_log.md
 docs/reference/demo_script.md
+# Ignore reports content but keep the folder
+reports/*
+!reports/.gitkeep

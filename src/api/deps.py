@@ -1,7 +1,11 @@
-from fastapi import Security, HTTPException, status
+# Copyright (c) 2026 CommitVigil AI. All rights reserved.
+from fastapi import HTTPException, Security, status
 from fastapi.security import APIKeyHeader
+
 from src.core.config import settings
 from src.core.logging import logger
+from src.core.state import state
+from arq import ArqRedis
 
 # Define the scheme but don't auto-error yet, we handle logic manually
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -27,7 +31,9 @@ async def get_api_key(
             detail="Missing Authentication Header (X-API-Key)",
         )
 
-    if api_key_header != settings.API_KEY_SECRET:
+    import secrets
+
+    if not secrets.compare_digest(api_key_header, settings.API_KEY_SECRET):
         logger.warning("authentication_failed", reason="invalid_key")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -35,3 +41,13 @@ async def get_api_key(
         )
 
     return api_key_header
+
+async def get_redis() -> ArqRedis:
+    """Dependency to inject Redis pool."""
+    redis = state.get("redis")
+    if not redis:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Redis service unavailable"
+        )
+    return redis

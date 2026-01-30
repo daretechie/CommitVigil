@@ -3,8 +3,16 @@ FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libc-dev \
+    libpq-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir poetry
 
@@ -29,13 +37,11 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy app code with proper ownership to avoid slow chown later
 COPY --chown=commitvigil:commitvigil . .
 
-# Ensure the database file is writable by the non-root user if using SQLite
-RUN touch commitvigil.db && chown commitvigil:commitvigil commitvigil.db && chmod 600 commitvigil.db
-
+# User setup
 USER commitvigil
 
 EXPOSE 8000
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-# We use docker-compose to decide whether to run 'uvicorn' or 'arq'
+# We use docker compose to decide whether to run 'uvicorn' or 'arq'

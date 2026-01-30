@@ -66,7 +66,7 @@ async def test_process_commitment_eval_low_risk():
         ) as mock_update,
         patch("src.worker.scheduler") as mock_scheduler,
     ):
-        ctx = {}
+        ctx: dict[str, str] = {}
         await process_commitment_eval(ctx, "user1", "task1", "status1")
 
         mock_update.assert_called_once_with(
@@ -113,7 +113,7 @@ async def test_process_commitment_eval_high_risk():
         ) as mock_update,
         patch("src.worker.scheduler") as mock_scheduler,
     ):
-        ctx = {}
+        ctx: dict[str, str] = {}
         await process_commitment_eval(ctx, "user1", "task1", "status1")
 
         mock_update.assert_called_once_with(

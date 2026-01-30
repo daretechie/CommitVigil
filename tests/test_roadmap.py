@@ -3,25 +3,29 @@ from unittest.mock import patch, AsyncMock
 from src.agents.brain import CommitVigilBrain
 from src.agents.safety import SafetySupervisor
 from src.agents.learning import SupervisorFeedbackLoop
-from src.schemas.agents import ToneType, SafetyAudit
+from src.schemas.agents import ToneType, SafetyAudit, LanguageResponse
 # Using shared setup_test_db fixture from conftest.py
 
 
 @pytest.mark.asyncio
 async def test_japanese_cultural_routing():
-    """Verify that Japanese language triggers the correct cultural persona."""
+    from src.schemas.agents import CulturalPersona
     brain = CommitVigilBrain()
 
-    # Mock language detection to return 'ja'
+    # Mock dynamic persona lookup
+    mock_persona = CulturalPersona(code="ja", name="Japanese", instruction="High-context Japanese tone... harmony (wa)...", is_verified=True)
     with patch.object(brain, "detect_language", return_value="ja"):
-        with patch.object(
-            brain.provider, "chat_completion", new_callable=AsyncMock
-        ) as mock_chat:
-            mock_chat.return_value = AsyncMock()  # Generic response
+        with patch.object(brain, "get_or_create_persona", new_callable=AsyncMock) as mock_get_persona:
+            mock_get_persona.return_value = mock_persona
+            
+            with patch.object(
+                brain.provider, "chat_completion", new_callable=AsyncMock
+            ) as mock_chat:
+                mock_chat.return_value = AsyncMock()  # Generic response
 
-            await brain.adapt_tone(
-                excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="ja"
-            )
+                await brain.adapt_tone(
+                    excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="ja"
+                )
 
             # Check if the Japanese cultural prompt was used
             called_prompt = mock_chat.call_args[1]["messages"][0]["content"]
@@ -29,20 +33,24 @@ async def test_japanese_cultural_routing():
             assert "harmony (wa)" in called_prompt
 
 
-@pytest.mark.asyncio
 async def test_french_cultural_routing():
-    """Verify that French language triggers the correct cultural persona."""
+    from src.schemas.agents import CulturalPersona
     brain = CommitVigilBrain()
+    mock_persona = CulturalPersona(code="fr", name="French", instruction="French Cartesian tone... eloquence...", is_verified=True)
+    
     with patch.object(brain, "detect_language", return_value="fr"):
-        with patch.object(
-            brain.provider, "chat_completion", new_callable=AsyncMock
-        ) as mock_chat:
-            mock_chat.return_value = AsyncMock()
-            await brain.adapt_tone(
-                excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="fr"
-            )
+        with patch.object(brain, "get_or_create_persona", new_callable=AsyncMock) as mock_get_persona:
+            mock_get_persona.return_value = mock_persona
+            
+            with patch.object(
+                brain.provider, "chat_completion", new_callable=AsyncMock
+            ) as mock_chat:
+                mock_chat.return_value = AsyncMock()
+                await brain.adapt_tone(
+                    excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="fr"
+                )
             called_prompt = mock_chat.call_args[1]["messages"][0]["content"]
-            assert "French professional tone" in called_prompt
+            assert "French Cartesian tone" in called_prompt
             assert "eloquence" in called_prompt
 
 
@@ -53,7 +61,7 @@ async def test_british_english_detection_heuristic():
     with patch.object(
         brain.provider, "chat_completion", new_callable=AsyncMock
     ) as mock_chat:
-        mock_chat.return_value = "en"  # Standard LLM result
+        mock_chat.return_value = LanguageResponse(code="en")  # Standard LLM result
         lang = await brain.detect_language("Cheers mate, I'll have it sorted.")
         assert lang == "en-UK"
 
@@ -61,15 +69,21 @@ async def test_british_english_detection_heuristic():
 @pytest.mark.asyncio
 async def test_british_english_routing():
     """Verify that UK English triggers polite understatements."""
+    from src.schemas.agents import CulturalPersona
     brain = CommitVigilBrain()
+    mock_persona = CulturalPersona(code="en-UK", name="British", instruction="British professional tone... understatements...", is_verified=True)
+
     # Explicitly asking for en-UK
-    with patch.object(
-        brain.provider, "chat_completion", new_callable=AsyncMock
-    ) as mock_chat:
-        mock_chat.return_value = AsyncMock()
-        await brain.adapt_tone(
-            excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="en-UK"
-        )
+    with patch.object(brain, "get_or_create_persona", new_callable=AsyncMock) as mock_get_persona:
+        mock_get_persona.return_value = mock_persona
+        
+        with patch.object(
+            brain.provider, "chat_completion", new_callable=AsyncMock
+        ) as mock_chat:
+            mock_chat.return_value = AsyncMock()
+            await brain.adapt_tone(
+                excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="en-UK"
+            )
         called_prompt = mock_chat.call_args[1]["messages"][0]["content"]
         assert "British professional tone" in called_prompt
         assert "understatements" in called_prompt
@@ -78,14 +92,20 @@ async def test_british_english_routing():
 @pytest.mark.asyncio
 async def test_spanish_cultural_routing():
     """Verify that Spanish triggers warm but boundaried persona."""
+    from src.schemas.agents import CulturalPersona
     brain = CommitVigilBrain()
-    with patch.object(
-        brain.provider, "chat_completion", new_callable=AsyncMock
-    ) as mock_chat:
-        mock_chat.return_value = AsyncMock()
-        await brain.adapt_tone(
-            excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="es"
-        )
+    mock_persona = CulturalPersona(code="es", name="Spanish", instruction="Spanish professional tone... Warm and engaging...", is_verified=True)
+    
+    with patch.object(brain, "get_or_create_persona", new_callable=AsyncMock) as mock_get_persona:
+        mock_get_persona.return_value = mock_persona
+        
+        with patch.object(
+            brain.provider, "chat_completion", new_callable=AsyncMock
+        ) as mock_chat:
+            mock_chat.return_value = AsyncMock()
+            await brain.adapt_tone(
+                excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="es"
+            )
         called_prompt = mock_chat.call_args[1]["messages"][0]["content"]
         assert "Spanish professional tone" in called_prompt
         assert "Warm and engaging" in called_prompt

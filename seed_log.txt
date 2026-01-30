@@ -1,0 +1,148 @@
+DEBUG_CONFIG: SYNC_DATABASE_URL=postgresql://postgres:postgres@db:5432/commitvigil
+Seeding cultural personas...
+Traceback (most recent call last):
+  File "asyncpg/protocol/prepared_stmt.pyx", line 175, in asyncpg.protocol.protocol.PreparedStatementState._encode_bind_msg
+  File "asyncpg/protocol/codecs/base.pyx", line 251, in asyncpg.protocol.protocol.Codec.encode
+  File "asyncpg/protocol/codecs/base.pyx", line 153, in asyncpg.protocol.protocol.Codec.encode_scalar
+  File "asyncpg/pgproto/codecs/datetime.pyx", line 152, in asyncpg.pgproto.pgproto.timestamp_encode
+TypeError: can't subtract offset-naive and offset-aware datetimes
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 578, in _executemany
+    return await self._connection.executemany(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/asyncpg/connection.py", line 401, in executemany
+    return await self._executemany(command, args, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/asyncpg/connection.py", line 1997, in _executemany
+    result, _ = await self._do_execute(
+                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/asyncpg/connection.py", line 2033, in _do_execute
+    result = await executor(stmt, None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol/protocol.pyx", line 266, in bind_execute_many
+  File "asyncpg/protocol/coreproto.pyx", line 1054, in asyncpg.protocol.protocol.CoreProtocol._bind_execute_many_more
+  File "asyncpg/protocol/protocol.pyx", line 228, in genexpr
+  File "asyncpg/protocol/prepared_stmt.pyx", line 204, in asyncpg.protocol.protocol.PreparedStatementState._encode_bind_msg
+asyncpg.exceptions.DataError: invalid input for query argument $6 in element #0 of executemany() sequence: datetime.datetime(2026, 1, 29, 21, 5, 47... (can't subtract offset-naive and offset-aware datetimes)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1936, in _exec_single_context
+    self.dialect.do_executemany(
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 949, in do_executemany
+    cursor.executemany(statement, parameters)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 590, in executemany
+    return self._adapt_connection.await_(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 582, in _executemany
+    self._handle_exception(error)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
+    raise translated_error from error
+sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.Error: <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $6 in element #0 of executemany() sequence: datetime.datetime(2026, 1, 29, 21, 5, 47... (can't subtract offset-naive and offset-aware datetimes)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/seed_db.py", line 12, in <module>
+    asyncio.run(main())
+  File "/usr/local/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/app/seed_db.py", line 6, in main
+    await seed_cultural_personas()
+  File "/app/src/core/database.py", line 437, in seed_cultural_personas
+    await session.commit()
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/session.py", line 1000, in commit
+    await greenlet_spawn(self.sync_session.commit)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2030, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1311, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1286, in _prepare_impl
+    self.session.flush()
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4331, in flush
+    self._flush(objects)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4466, in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4427, in _flush
+    flush_context.execute()
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 1048, in _emit_insert_statements
+    result = connection.execute(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+           ^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 527, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2363, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1936, in _exec_single_context
+    self.dialect.do_executemany(
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 949, in do_executemany
+    cursor.executemany(statement, parameters)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 590, in executemany
+    return self._adapt_connection.await_(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 582, in _executemany
+    self._handle_exception(error)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
+    raise translated_error from error
+sqlalchemy.exc.DBAPIError: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $6 in element #0 of executemany() sequence: datetime.datetime(2026, 1, 29, 21, 5, 47... (can't subtract offset-naive and offset-aware datetimes)
+[SQL: INSERT INTO cultural_personas (code, name, instruction, is_verified, source, created_at, updated_at) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::BOOLEAN, $5::VARCHAR, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE)]
+[parameters: [('en', 'Standard EN Persona', 'Standard global professional tone. Clear and direct.', True, 'system', datetime.datetime(2026, 1, 29, 21, 5, 47, 246863, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 29, 21, 5, 47, 246902, tzinfo=datetime.timezone.utc)), ('en-uk', 'Standard EN-UK Persona', "British professional tone. Use polite understatements, 'please/thank you' frequency, and avoid over-assertiveness.", True, 'system', datetime.datetime(2026, 1, 29, 21, 5, 47, 249481, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 29, 21, 5, 47, 249510, tzinfo=datetime.timezone.utc)), ('ja', 'Japanese (Wa)', "High-context Japanese tone. Prioritize harmony (wa). Use indirect observations and soft suggestions instead of direct demands. Maintain 'Face' (Mianzi/Menboku).", True, 'system', datetime.datetime(2026, 1, 29, 21, 5, 47, 251047, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 29, 21, 5, 47, 251072, tzinfo=datetime.timezone.utc)), ('de', 'German (Sachlichkeit)', 'Direct German Sachlichkeit. Focus on objective facts, precision, and substantive feedback. Avoid emotional appeals.', True, 'system', datetime.datetime(2026, 1, 29, 21, 5, 47, 252143, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 29, 21, 5, 47, 252163, tzinfo=datetime.timezone.utc)), ('fr', 'Standard FR Persona', 'French Cartesian tone. Value logical rigor, eloquence, and formal structure. Maintain professional distance and intellectual clarity.', True, 'system', datetime.datetime(2026, 1, 29, 21, 5, 47, 253120, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 29, 21, 5, 47, 253140, tzinfo=datetime.timezone.utc)), ('es', 'Standard ES Persona', "Spanish professional tone. Warm and engaging but maintain professional boundaries. Value personal connection ('Confianza') while enforcing deadlines.", True, 'system', datetime.datetime(2026, 1, 29, 21, 5, 47, 253913, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 29, 21, 5, 47, 253933, tzinfo=datetime.timezone.utc)), ('pt-br', 'Brazilian (Jeitinho)', "Brazilian 'Jeitinho' tone. High-warmth and extremely relationship-focused. Use flexible but firm negotiation. Emphasize that the partnership depends on mutual commitment.", True, 'system', datetime.datetime(2026, 1, 29, 21, 5, 47, 254709, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 29, 21, 5, 47, 254728, tzinfo=datetime.timezone.utc)), ('zh', 'Standard ZH Persona', "Chinese 'Guanxi' tone. Prioritize long-term relationship and communal face. Use respectful, group-alignment language. Be firm on results but soft on the person.", True, 'system', datetime.datetime(2026, 1, 29, 21, 5, 47, 255755, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 29, 21, 5, 47, 255775, tzinfo=datetime.timezone.utc))  ... displaying 10 of 11 total bound parameter sets ...  ('en-in', 'Standard EN-IN Persona', "Indian Professional tone. High-context and respectful. Use formal deferential language ('Sir/Madam' if context suggests) but maintain extreme technical clarity and follow-up persistence.", True, 'system', datetime.datetime(2026, 1, 29, 21, 5, 47, 258223, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 29, 21, 5, 47, 258247, tzinfo=datetime.timezone.utc)), ('en-af', 'Standard EN-AF Persona', "African Ubuntu-inspired tone. Emphasize communal responsibility ('I am because we are'). Use warm, community-centric language that encourages mutual support while maintaining firm expectations for the 'village' (the team).", True, 'system', datetime.datetime(2026, 1, 29, 21, 5, 47, 259336, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 29, 21, 5, 47, 259356, tzinfo=datetime.timezone.utc))]]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)

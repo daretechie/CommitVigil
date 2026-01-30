@@ -1,3 +1,4 @@
+# Copyright (c) 2026 CommitVigil AI. All rights reserved.
 import httpx
 
 from src.core.config import settings

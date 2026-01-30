@@ -1,15 +1,20 @@
+name: commitvigil
+
 services:
   api:
     build: .
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/commitvigil
+      - SYNC_DATABASE_URL=postgresql://postgres:postgres@db:5432/commitvigil
     depends_on:
       - redis
       - db
+    volumes:
+      - .:/app
 
 
 
@@ -19,9 +24,12 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/commitvigil
+      - SYNC_DATABASE_URL=postgresql://postgres:postgres@db:5432/commitvigil
     depends_on:
       - redis
       - db
+    volumes:
+      - .:/app
 
   redis:
     image: redis:7-alpine
@@ -51,6 +59,6 @@ services:
   prometheus:
     image: prom/prometheus:v3.1.0
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"

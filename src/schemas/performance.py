@@ -1,3 +1,4 @@
+# Copyright (c) 2026 CommitVigil AI. All rights reserved.
 from enum import Enum
 
 from pydantic import BaseModel, Field

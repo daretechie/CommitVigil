@@ -1,5 +1,6 @@
+# Copyright (c) 2026 CommitVigil AI. All rights reserved.
 from src.core.config import settings
-from src.core.utils import truncate_text
+from src.core.utils import truncate_text, sanitize_prompt_input
 from src.llm.factory import LLMFactory
 from src.schemas.agents import SlackCommitmentRecord
 
@@ -19,6 +20,7 @@ class CommitmentExtractor:
         Extracts {who, what, when} from a raw conversation.
         Now includes 'Identity Attribution' logic.
         """
+        sanitized_text = sanitize_prompt_input(truncate_text(thread_text, settings.MAX_INPUT_CHARS))
         return await self.provider.chat_completion(
             response_model=SlackCommitmentRecord,
             model=self.model,
@@ -37,7 +39,7 @@ class CommitmentExtractor:
                     "role": "user",
                     "content": (
                         f"<conversation_log>\n"
-                        f"{truncate_text(thread_text, settings.MAX_INPUT_CHARS)}\n"
+                        f"{sanitized_text}\n"
                         f"</conversation_log>"
                     ),
                 },

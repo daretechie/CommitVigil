@@ -9,7 +9,7 @@
 In modern distributed teams, the **"Slack Stall"** is the #1 drain on project velocity. Project Managers are overwhelmed by vague promises like *"I'll get to it soon,"* which are often forgotten, leading to missed sprints and "bad guy" escalations.
 
 ## ✅ The Solution
-CommitVigil is a standalone, agentic service designed to monitor and enforce professional commitments. Every commitment passes through a **4-Stage Reasoning Pipeline**:
+CommitVigil is a standalone, agentic service designed to monitor and enforce professional commitments. Every commitment passes through a **5-Stage Reasoning Pipeline**:
 
 1.  **Extraction**: Automatically parses Slack threads or Git commits to identify {who, what, when}.
 2.  **Excuse Analysis**: Categorizes sentiment (Legitimate vs. Deflection vs. Burnout).

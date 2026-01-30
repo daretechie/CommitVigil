@@ -46,24 +46,16 @@ async def test_concurrent_safety_checks(mock_brain_components):
     """
     decision, excuse, risk, burnout = mock_brain_components
 
-    # Setup Brain
-    brain = CommitVigilBrain()
-    brain.analyze_excuse = AsyncMock(return_value=excuse)
-    brain.detect_burnout = AsyncMock(return_value=burnout)
-    brain.assess_risk = AsyncMock(return_value=risk)
-    brain.detect_language = AsyncMock(return_value="en")
-
     # Mock ToneAdapter
     msg = decision.model_copy()
     msg.message = "Check the logs."
-    brain.adapt_tone = AsyncMock(return_value=msg)
 
     # Mock Supervisor with random delays (simulation of network/LLM latency)
     with patch("src.agents.brain.SafetySupervisor") as MockSupervisor:
         mock_instance = MockSupervisor.return_value
 
         # Configure the mock to sleep slightly to verify concurrency
-        async def mock_audit_with_delay(_msg, _tone, _ctx, industry="generic"):
+        async def mock_audit_with_delay(_msg, _tone, _ctx, industry="generic", **kwargs):
             await asyncio.sleep(0.01)  # 10ms delay per call
 
             from src.agents.safety import SafetyAudit
@@ -78,6 +70,14 @@ async def test_concurrent_safety_checks(mock_brain_components):
             )
 
         mock_instance.audit_message = AsyncMock(side_effect=mock_audit_with_delay)
+
+        # Setup Brain INSIDE the patch to ensure it gets the mocked supervisor
+        brain = CommitVigilBrain()
+        brain.analyze_excuse = AsyncMock(return_value=excuse)  # type: ignore[method-assign]
+        brain.detect_burnout = AsyncMock(return_value=burnout)  # type: ignore[method-assign]
+        brain.assess_risk = AsyncMock(return_value=risk)  # type: ignore[method-assign]
+        brain.detect_language = AsyncMock(return_value="en")  # type: ignore[method-assign]
+        brain.adapt_tone = AsyncMock(return_value=msg)  # type: ignore[method-assign]
 
         # EXECUTION: 50 concurrent requests
         start_time = time.perf_counter()

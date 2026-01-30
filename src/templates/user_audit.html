@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CommitVigil Audit - {{ report.subject.user_id }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+        }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 40px;
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: var(--card-bg);
+            padding: 48px;
+            border-radius: 32px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 48px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 32px;
+        }
+        .logo-area h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+        .badge {
+            padding: 8px 16px;
+            border-radius: 99px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+        .card {
+            background: rgba(255,255,255,0.03);
+            padding: 32px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .meter-container {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .svg-meter { width: 80px; height: 80px; transform: rotate(-90deg); }
+        .svg-meter circle { fill: none; stroke-width: 8; stroke-linecap: round; }
+        .svg-meter .bg { stroke: rgba(255,255,255,0.1); }
+        .svg-meter .val { stroke: var(--primary); transition: stroke-dasharray 1s ease-out; }
+
+        .metric-val { font-size: 36px; font-weight: 800; color: #fff; }
+        .metric-label { font-size: 12px; opacity: 0.5; font-weight: 600; text-transform: uppercase; margin-top: 4px; }
+        
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--primary);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-title::after { content: ""; height: 1px; flex: 1; background: rgba(255,255,255,0.1); }
+
+        .timeline { margin-top: 24px; }
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 0;
+            font-size: 14px;
+            border-left: 2px solid rgba(255,255,255,0.1);
+            margin-left: 8px;
+            padding-left: 24px;
+            position: relative;
+        }
+        .timeline-item .dot {
+            position: absolute;
+            left: -6px;
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .reality-box {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px dashed rgba(239, 68, 68, 0.3);
+            padding: 20px;
+            border-radius: 16px;
+            margin-top: 16px;
+            font-style: italic;
+            color: #fda4af;
+        }
+
+        .strategy-banner {
+            background: linear-gradient(90deg, var(--primary), #a855f7);
+            padding: 32px;
+            border-radius: 24px;
+            margin-top: 48px;
+            color: white;
+            box-shadow: 0 15px 30px -10px rgba(99, 102, 241, 0.4);
+        }
+        .strategy-banner h3 { margin: 0 0 8px 0; font-size: 18px; }
+        
+        .footer { text-align: center; margin-top: 64px; opacity: 0.3; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; }
+
+        @media print {
+            body { background: white; color: black; padding: 0; }
+            .container { border: none; box-shadow: none; background: white; backdrop-filter: none; }
+            .card, .strategy-banner { border: 1px solid #eee; background: white !important; color: black !important; }
+            .metric-val { color: black; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-area">
+                <h1>🛡️ PERFORMANCE AUDIT</h1>
+                <div style="opacity: 0.5; font-size: 13px; margin-top: 4px;">Ref: {{ report.report_id }} • {{ report.subject.department.upper() }}</div>
+            </div>
+            {% if report.integrity_score.aligned %}
+            <div class="badge" style="background: var(--success)22; color: var(--success); border: 1px solid var(--success)44">
+                ✅ ALIGNED
+            </div>
+            {% else %}
+            <div class="badge" style="background: var(--danger)22; color: var(--danger); border: 1px solid var(--danger)44">
+                ⚠️ GAP DETECTED
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="meter-container">
+                    <svg class="svg-meter" viewBox="0 0 100 100">
+                        <circle class="bg" cx="50" cy="50" r="40"></circle>
+                        <circle class="val" cx="50" cy="50" r="40" stroke-dasharray="{{ report.subject.reliability_score.replace('%', '')|float * 2.51 }} 251"></circle>
+                    </svg>
+                    <div>
+                        <div class="metric-val">{{ report.subject.reliability_score }}</div>
+                        <div class="metric-label">Reliability Score</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="meter-container">
+                    <svg class="svg-meter" viewBox="0 0 100 100">
+                        <circle class="bg" cx="50" cy="50" r="40"></circle>
+                        {% set color = "#10b981" if report.integrity_score.aligned else "#ef4444" %}
+                        <circle class="val" cx="50" cy="50" r="40" stroke-dasharray="{{ report.integrity_score.truth_val * 100 * 2.51 }} 251" style="stroke: {{ color }}"></circle>
+                    </svg>
+                    <div>
+                        <div class="metric-val">{{ report.integrity_score.truth_score }}</div>
+                        <div class="metric-label">Truth Score</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">Evidence & Extraction</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+            <div>
+                <h4 style="margin: 0 0 12px 0; font-size: 14px; opacity: 0.7;">Verbal Commitments</h4>
+                <div class="timeline">
+                    {% for item in report.commitments %}
+                    <div class="timeline-item"><div class="dot"></div>{{ item }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div>
+                <h4 style="margin: 0 0 12px 0; font-size: 14px; opacity: 0.7;">Technical Reality (Git)</h4>
+                <div class="reality-box">
+                    "{{ report.reality }}"
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 48px;">
+            <div class="section-title">Behavioral Analysis</div>
+            <p style="font-size: 18px; font-weight: 500;">{{ report.integrity_score.explanation }}</p>
+        </div>
+
+        <div class="strategy-banner">
+            <h3>Management Strategy: {{ report.intervention_recommendation.tone.upper() }}</h3>
+            <p style="opacity: 0.9; margin: 0;">{{ report.intervention_recommendation.summary }}</p>
+        </div>
+
+        <div class="footer">
+            Generated by CommitVigil AI • Premium Accountability Infrastructure • v2026.1
+        </div>
+    </div>
+</body>
+</html>

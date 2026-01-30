@@ -35,17 +35,20 @@ The **Safety Supervisor** follows a **Post-Generation Overwatch** pattern. This 
 ```mermaid
 graph TD
     A[User Action/Commitment] --> B[Behavioral Brain]
-    B --> C{Safety Supervisor Audit}
-    C -->|Pass| D[Send Message]
-    C -->|Soft Correction| E[Inject Rewrite]
-    E --> D
-    C -->|Hard Block| F[Log + HITL Escalation]
-    C -->|Low Confidence| F
+    B --> C{Verified Context?}
+    C -->|Yes| D[Lock Context & Skip Sensing]
+    C -->|No| E[Autonomous Sensing (ContextScout)]
+    E --> F{Safety Supervisor Audit}
+    F -->|Pass| G[Send Message]
+    F -->|Unverified| H[Flag for Human Review]
+    F -->|Soft Correction| I[Inject Rewrite]
+    I --> G
 
-    style F fill:#ff6b6b
-    style D fill:#51cf66
-    style E fill:#ffd43b
+    style H fill:#ff6b6b
+    style G fill:#51cf66
+    style D fill:#ffd43b
 ```
+
 
 
 ### The Injection Mechanism (Hybrid Corrections)

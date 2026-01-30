@@ -1,3 +1,4 @@
+# Copyright (c) 2026 CommitVigil AI. All rights reserved.
 from src.core.config import settings
 from src.core.logging import logger
 from src.core.utils import truncate_text

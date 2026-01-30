@@ -1,23 +1,36 @@
 import asyncio
 
 from src.agents.safety import SafetySupervisor
+from src.agents.scout import ContextScout
 from src.core.config import settings
+from src.core.database import (
+    get_user_history, 
+    get_cultural_persona, 
+    create_cultural_persona, 
+    seed_cultural_personas
+)
 from src.core.logging import logger
+from src.core.utils import sanitize_prompt_input
+from src.schemas.agents import CulturalPersona
+
 from src.core.monitoring import LatencyMonitor
 from src.llm.factory import LLMFactory
-
-
 from src.schemas.agents import (
     AgentDecision,
     BurnoutDetection,
     ExcuseAnalysis,
     ExcuseCategory,
+    LanguageResponse,
     PipelineEvaluation,
     RiskAssessment,
     RiskLevel,
     SafetyIntervention,
     ToneType,
 )
+from src.schemas.context import ContextProfile, IndustryType
+
+
+from src.core.persona import CULTURAL_PROMPTS
 
 
 class CommitVigilBrain:
@@ -26,48 +39,48 @@ class CommitVigilBrain:
     2026 Upgrade: Cultural Persona Routing & Industry Intelligence.
     """
 
-    CULTURAL_PROMPTS = {
-        "en": "Standard global professional tone. Clear and direct.",
-        "en-UK": "British professional tone. Use polite understatements, 'please/thank you' frequency, and avoid over-assertiveness.",
-        "ja": "High-context Japanese tone. Prioritize harmony (wa). Use indirect observations and soft suggestions instead of direct demands.",
-        "de": "Direct German Sachlichkeit. Focus on objective facts, precision, and substantive feedback.",
-        "fr": "French professional tone. Value eloquence and formal structure. Maintain a balance between directness and professional courtesy.",
-        "es": "Spanish professional tone. Warm and engaging but maintain professional boundaries. Value personal connection while enforcing deadlines.",
-        "en-AF": "African Ubuntu-inspired tone. Emphasize communal responsibility and the impact of individual actions on the collective project health. Use warm, community-centric language that encourages mutual support while maintaining firm expectations for the 'village' (the team).",
-    }
-
     def __init__(self):
         self.provider = LLMFactory.get_provider()
+        self.scout = ContextScout()
+        self.supervisor = SafetySupervisor()
         self.model = settings.MODEL_NAME
+
+
 
     async def detect_language(self, text: str) -> str:
         """
         2026 Agentic Language & Culture Detection.
         Identifies the primary language and mapping it to our cultural archetypes.
         """
+        if not text:
+            return "en"
+
         try:
             detected = await self.provider.chat_completion(
-                response_model=str,
+                response_model=LanguageResponse,
                 model=self.model,
                 messages=[
                     {
                         "role": "system",
-                        "content": "Detect the language of the following text. Return only the 2-letter ISO code (e.g., 'en', 'ja', 'de', 'fr', 'es').",
+                        "content": "Detect the language of the following text. Return a JSON with a single field 'code' containing the 2-letter ISO code (e.g., 'en', 'ja', 'de', 'fr', 'es').",
                     },
                     {"role": "user", "content": text},
                 ],
             )
             # Normalize and map to supported types
-            code = str(detected).strip().lower()
+            code = detected.code.strip().lower()
 
-            # Handle regional variations for English (Heuristic: Detect if 'UK/British' context exists)
-            if code == "en" and any(
-                word in text.lower() for word in ["cheers", "bloody", "quid", "mate"]
-            ):
-                return "en-UK"
+            # Handle regional variations for English
+            if code == "en":
+                from src.core.constants import UK_ENGLISH_KEYWORDS
+                
+                text_lower = text.lower()
+                if any(word in text_lower for word in UK_ENGLISH_KEYWORDS):
+                    return "en-UK"
 
-            return code if code in self.CULTURAL_PROMPTS else "en"
+            return code if code in CULTURAL_PROMPTS else "en"
         except Exception:
+            logger.exception("language_detection_failed")
             return "en"
 
     async def analyze_excuse(self, user_input: str) -> ExcuseAnalysis:
@@ -81,7 +94,7 @@ class CommitVigilBrain:
                 },
                 {
                     "role": "user",
-                    "content": f"<user_excuse>\n{user_input}\n</user_excuse>",
+                    "content": f"<user_excuse>\n{sanitize_prompt_input(user_input)}\n</user_excuse>",
                 },
             ],
         )
@@ -103,8 +116,8 @@ class CommitVigilBrain:
                 {
                     "role": "user",
                     "content": (
-                        f"<historical_context>\n{historical_context}\n</historical_context>\n"
-                        f"<current_status>\n{current_status}\n</current_status>"
+                        f"<historical_context>\n{sanitize_prompt_input(historical_context)}\n</historical_context>\n"
+                        f"<current_status>\n{sanitize_prompt_input(current_status)}\n</current_status>"
                     ),
                 },
             ],
@@ -123,7 +136,7 @@ class CommitVigilBrain:
                 },
                 {
                     "role": "user",
-                    "content": f"<user_input>\n{user_input}\n</user_input>",
+                    "content": f"<user_input>\n{sanitize_prompt_input(user_input)}\n</user_input>",
                 },
             ],
         )
@@ -140,23 +153,71 @@ class CommitVigilBrain:
         """
         The Orchestration Pipeline: Decoupled and high-fidelity evaluation.
         """
-        # 0. Language Awareness
-        target_lang = lang or await self.detect_language(check_in)
-        target_industry = industry or settings.SELECTED_INDUSTRY
+        # 0. Context Awareness (Adaptive Sensing)
+        target_industry_val: str
+        target_department_val: str
+
+        # 0.1 Check for Verified Context Lock
+        user_history = await get_user_history(user_id)
+        context_locked = False
+        
+        if user_history and user_history.is_context_verified:
+            target_industry_val = user_history.industry_type
+            target_department_val = user_history.department
+            logger.info("context_lock_active", user_id=user_id, industry=target_industry_val, department=target_department_val)
+            
+            context_profile = ContextProfile(
+                industry=target_industry_val,
+                department=target_department_val,
+                confidence=1.0,
+                reasoning="Manually verified context (Locked)."
+            )
+            context_locked = True
+        
+        # Dynamic Industry & Department Awareness (if not locked)
+        if not context_locked:
+            if industry == "AUTO":
+                context_profile = await self.scout.sense_context([check_in])
+                target_industry_val = str(context_profile.industry)
+                target_department_val = str(context_profile.department)
+                logger.info("dynamic_context_sensing", industry=target_industry_val, department=target_department_val)
+            else:
+                target_industry_val = str(industry or settings.SELECTED_INDUSTRY)
+                target_department_val = "*"
+                
+                context_profile = ContextProfile(
+                    industry=target_industry_val,
+                    department=target_department_val,
+                    confidence=1.0,
+                    reasoning="Static context provided"
+                )
+
+
 
         try:
             # 1. Parallel Analysis Phase (High Velocity) with Safety Timeout
-            excuse, burnout, risk = await asyncio.wait_for(
-                asyncio.gather(
-                    self.analyze_excuse(check_in),
-                    self.detect_burnout(check_in),
-                    self.assess_risk(
-                        historical_context=str(reliability_score),
-                        current_status=check_in,
-                    ),
-                ),
-                timeout=30.0,
-            )
+            # Now includes language detection to reduce sequential latency
+            tasks = [
+                self.analyze_excuse(check_in),
+                self.detect_burnout(check_in),
+                self.assess_risk(
+                    historical_context=str(reliability_score),
+                    current_status=check_in,
+                )
+            ]
+            
+            if lang:
+                target_lang = lang
+            else:
+                tasks.append(self.detect_language(check_in))
+            
+            results = await asyncio.wait_for(asyncio.gather(*tasks), timeout=60.0)
+            
+            excuse = results[0]
+            burnout = results[1]
+            risk = results[2]
+            target_lang = lang if lang else results[3]
+
         except asyncio.TimeoutError:
             logger.error(
                 "orchestration_timeout", user_id=user_id, status="aborting_pipeline"
@@ -195,20 +256,25 @@ class CommitVigilBrain:
                 reliability_score=reliability_score,
                 consecutive_firm_calls=consecutive_firm,
                 lang=target_lang,
-                industry=target_industry,
+                context_profile=context_profile,
             )
 
         # 3. Final Ethical Supervision (Semantic Firewall)
-        supervisor = SafetySupervisor()
         context = (
             f"User: {user_id}. Reliability: {reliability_score}%. "
-            f"Consecutive firm: {consecutive_firm}. Industry: {target_industry}."
+            f"Consecutive firm: {consecutive_firm}. Industry: {target_industry_val}."
         )
 
         with LatencyMonitor("safety_supervisor_latency", user_id):
-            audit = await supervisor.audit_message(
-                decision.message, decision.tone, context, industry=target_industry
+            audit = await self.supervisor.audit_message(
+                decision.message, 
+                decision.tone, 
+                context, 
+                industry=target_industry_val,
+                department=target_department_val,
+                context_profile=context_profile
             )
+
 
         intervention = None
 
@@ -240,9 +306,10 @@ class CommitVigilBrain:
             decision.message = raw_correction
             decision.analysis_summary += f" | Safety Correction: {audit.reasoning}"
 
-            re_audit = await supervisor.audit_message(
-                decision.message, decision.tone, context, industry=target_industry
+            re_audit = await self.supervisor.audit_message(
+                decision.message, decision.tone, context, industry=target_industry_val, department=target_department_val
             )
+
             if not re_audit.is_safe:
                 logger.critical(
                     "unsafe_correction_caught",
@@ -289,6 +356,80 @@ class CommitVigilBrain:
             safety_audit=intervention,
         )
 
+    
+    async def get_or_create_persona(self, lang: str) -> CulturalPersona:
+        """
+        Adaptive Learning: Fetch known persona or autonomously draft a new one.
+        """
+        lang = lang.lower()
+        persona = await get_cultural_persona(lang)
+        
+        if not persona:
+            # Check if we need to seed defaults first?
+            # Actually, let's try to draft it if it's missing entirely.
+            if lang == "en": # Fallback if DB is empty and cache missed
+                 return CulturalPersona(
+                     code="en", 
+                     name="Standard English", 
+                     instruction="Standard global professional tone. Clear and direct.",
+                     is_verified=True,
+                     source="system_fallback"
+                 )
+                 
+            logger.info("unknown_culture_detected", lang=lang, action="autonomously_drafting")
+            persona = await self.draft_new_persona(lang)
+            
+        return persona
+
+    async def draft_new_persona(self, lang: str) -> CulturalPersona:
+        """
+        Agentic Workflow: Ask the LLM to define the professional communication style for this culture.
+        """
+        try:
+            # We ask the model to generate the instruction
+            prompt = f"""
+            You are an expert Cultural Anthropologist and Business Communication Specialist.
+            
+            Task: Define the 'Professional Communication Style' for the language/region code: '{lang}'.
+            Focus on:
+            - Directness vs. Indirectness
+            - Hierarchy and Humility (Power Distance)
+            - Relationship vs. Task orientation
+            - Key cultural values (e.g., 'Wa' in Japan, 'Guanxi' in China)
+            
+            Output: A single, concise paragraph (max 40 words) that instructs an AI agent how to mime this persona.
+            Start with: "{lang.upper()} professional tone. ..."
+            """
+            
+            response = await self.provider.chat_completion(
+                response_model=None, # Raw string response
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            
+            instruction = response.choices[0].message.content.strip()
+            
+            new_persona = CulturalPersona(
+                code=lang,
+                name=f"Adaptive {lang.upper()} Persona",
+                instruction=instruction,
+                is_verified=False, # Requires HITL approval
+                source="auto_agent"
+            )
+            
+            return await create_cultural_persona(new_persona)
+            
+        except Exception as e:
+            logger.error("persona_drafting_failed", lang=lang, error=str(e))
+            # Fallback to English
+            return CulturalPersona(
+                 code=lang, 
+                 name=f"Fallback {lang}", 
+                 instruction="Standard professional tone. Be clear and polite.",
+                 is_verified=True,
+                 source="fallback"
+             )
+
     async def adapt_tone(
         self,
         excuse: ExcuseAnalysis,
@@ -297,17 +438,26 @@ class CommitVigilBrain:
         reliability_score: float = 100.0,
         consecutive_firm_calls: int = 0,
         lang: str = "en",
-        industry: str = "generic",
+        context_profile: ContextProfile | None = None,
     ) -> AgentDecision:
-        # 2026 Cultural Persona Logic
-        cultural_instruction = self.CULTURAL_PROMPTS.get(
-            lang, self.CULTURAL_PROMPTS["en"]
-        )
+        # Dynamic Persona Lookup
+        persona = await self.get_or_create_persona(lang)
+        cultural_instruction = persona.instruction
+        
+        # If unverified, maybe append a warning or safe-mode instruction?
+        if not persona.is_verified:
+            cultural_instruction += " (Maintain extreme strictness on professional boundaries as this persona is unverified)."
+
+        industry = context_profile.industry if context_profile else "generic"
+        formality = context_profile.formality if context_profile else "informal"
+        culture_profile = context_profile.culture if context_profile else "low_context"
 
         prompt = f"""
         Role: CommitVigil Decision Agent
         Focus Industry: {industry}
-        Cultural Persona: {cultural_instruction}
+        Organizational Formality: {formality}
+        Cultural Profile: {culture_profile}
+        Cultural Persona Instruction: {cultural_instruction}
 
         Context:
         - User Reliability: {reliability_score}%

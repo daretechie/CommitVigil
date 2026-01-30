@@ -6,7 +6,7 @@ Get CommitVigil running in under 5 minutes.
 The fastest way to spin up the full stack (API + Worker + Redis + Postgres):
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 ## 🏗️ Local Setup

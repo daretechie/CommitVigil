@@ -42,3 +42,10 @@ jobs:
       - name: Run tests with coverage
         run: poetry run pytest --cov=src --cov-report=xml
 
+      - name: SAST Scan (Bandit)
+        run: poetry run bandit -r src -ll -q
+
+      - name: Secret Scanning (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

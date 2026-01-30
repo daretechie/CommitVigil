@@ -1,9 +1,9 @@
 import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, MagicMock
 from httpx import AsyncClient, ASGITransport
-from src.api.routes import router
+from src.api.v1.reports import router
 from fastapi import FastAPI
-from src.schemas.performance import SlippageAnalysis, TruthGapAnalysis
+from src.schemas.performance import SlippageAnalysis, TruthGapAnalysis, SlippageStatus
 from src.core.config import settings
 
 # Setup a minimal test app
@@ -13,19 +13,30 @@ app.include_router(router, prefix="/api/v1")
 
 @pytest.fixture
 def mock_dependencies():
+    from src.schemas.agents import UserHistory
     with (
+        patch("src.api.v1.reports.AsyncSessionLocal") as mock_session_cls,
         patch(
-            "src.api.routes.get_user_reliability", new_callable=AsyncMock
+            "src.api.v1.reports.get_user_reliability", new_callable=AsyncMock
         ) as mock_rel,
-        patch("src.api.routes.SlippageAnalyst", autospec=True) as mock_slippage,
-        patch("src.api.routes.TruthGapDetector", autospec=True) as mock_truth,
+        patch("src.api.v1.reports.SlippageAnalyst", autospec=True) as mock_slippage,
+        patch("src.api.v1.reports.TruthGapDetector", autospec=True) as mock_truth,
     ):
+        # Mocking DB
+        mock_session = AsyncMock()
+        mock_session_cls.return_value.__aenter__.return_value = mock_session
+        
+        mock_user = UserHistory(user_id="test_user", reliability_score=85.5, department="Engineering")
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_user
+        mock_session.execute.return_value = mock_result
+
         mock_rel.return_value = (85.5, 10, 2)
 
         # Mocking Analyst
         mock_slippage.return_value.analyze_performance_gap = AsyncMock(
             return_value=SlippageAnalysis(
-                status="slipping",
+                status=SlippageStatus.SLIPPING,
                 fulfillment_ratio=0.7,
                 detected_gap="Missing refactor",
                 risk_to_system_stability=0.5,

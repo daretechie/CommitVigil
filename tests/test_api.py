@@ -4,7 +4,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.main import app
+from src.api.deps import get_redis
 from src.core.config import settings
+from src.schemas.agents import UserHistory
 
 # Inject Auth Header Globally for Tests
 client = TestClient(app)
@@ -77,29 +79,56 @@ def test_read_health_redis_not_initialized():
         assert data["dependencies"]["redis"] == "not_initialized"
 
 
-@patch("src.api.routes.state")
-def test_evaluate_commitment_redis_not_initialized(mock_state):
-    # Ensure state["redis"] returns None
-    mock_state.__getitem__.return_value = None
+def test_evaluate_commitment_redis_not_initialized():
+    """Verify that evaluation fails with 503 if Redis is unavailable."""
     payload = {"user_id": "u1", "commitment": "c", "check_in": "ok"}
-    response = client.post("/api/v1/evaluate", json=payload)
-    assert response.status_code == 200
-    assert response.json()["status"] == "error"
+    # Override get_redis to raise 503
+    async def mock_get_redis_fail():
+        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail="Redis service unavailable")
+    
+    app.dependency_overrides[get_redis] = mock_get_redis_fail
+    try:
+        response = client.post("/api/v1/evaluate", json=payload)
+        assert response.status_code == 503
+        assert "Redis service unavailable" in response.json()["detail"]
+    finally:
+        app.dependency_overrides = {}
 
 
-@patch("src.api.routes.state")
-def test_evaluate_commitment_success(mock_state):
+def test_evaluate_commitment_demo_mode_no_longer_sync():
+    """Verify that even in Demo Mode, missing Redis results in 503 (Sync fallback removed)."""
+    payload = {"user_id": "u1", "commitment": "c", "check_in": "ok"}
+    
+    async def mock_get_redis_fail():
+        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail="Service Temporarily Unavailable")
+        
+    app.dependency_overrides[get_redis] = mock_get_redis_fail
+    try:
+        with patch("src.api.v1.evaluation.settings.DEMO_MODE", True):
+            response = client.post("/api/v1/evaluate", json=payload)
+            assert response.status_code == 503
+            assert "Service Temporarily Unavailable" in response.json()["detail"]
+    finally:
+        app.dependency_overrides = {}
+
+
+def test_evaluate_commitment_success():
     mock_redis = AsyncMock()
     mock_job = MagicMock()
     mock_job.job_id = "test-job-id"
     mock_redis.enqueue_job.return_value = mock_job
-    # Ensure state["redis"] returns our mock
-    mock_state.__getitem__.return_value = mock_redis
-    payload = {"user_id": "u1", "commitment": "c", "check_in": "ok"}
-    response = client.post("/api/v1/evaluate", json=payload)
-    assert response.status_code == 200
-    assert response.json()["status"] == "enqueued"
-    mock_redis.enqueue_job.assert_called_once()
+    
+    app.dependency_overrides[get_redis] = lambda: mock_redis
+    try:
+        payload = {"user_id": "u1", "commitment": "c", "check_in": "ok"}
+        response = client.post("/api/v1/evaluate", json=payload)
+        assert response.status_code == 200
+        assert response.json()["status"] == "enqueued"
+        mock_redis.enqueue_job.assert_called_once()
+    finally:
+        app.dependency_overrides = {}
 
 
 def test_ingest_raw_commitment():
@@ -110,7 +139,7 @@ def test_ingest_raw_commitment():
     assert response.json()["status"] == "extracted"
 
 
-@patch("src.api.routes.set_slack_id", new_callable=AsyncMock)
+@patch("src.api.v1.config_routes.set_slack_id", new_callable=AsyncMock)
 def test_map_slack_user(mock_set):
     response = client.post(
         "/api/v1/users/config/slack", params={"user_id": "u1", "slack_id": "s1"}
@@ -119,7 +148,7 @@ def test_map_slack_user(mock_set):
     mock_set.assert_called_once_with("u1", "s1")
 
 
-@patch("src.api.routes.set_git_email", new_callable=AsyncMock)
+@patch("src.api.v1.config_routes.set_git_email", new_callable=AsyncMock)
 def test_map_git_user(mock_set):
     response = client.post(
         "/api/v1/users/config/git", params={"user_id": "u1", "email": "e1"}
@@ -128,41 +157,59 @@ def test_map_git_user(mock_set):
     mock_set.assert_called_once_with("u1", "e1")
 
 
-@patch("src.api.routes.get_user_by_git_email", new_callable=AsyncMock)
+@patch("src.api.v1.ingestion.get_user_by_git_email", new_callable=AsyncMock)
 def test_ingest_git_commitment_matched(mock_get_user):
-    mock_get_user.return_value = MagicMock(user_id="u1")
-    payload = {"author_email": "e1", "message": "fixed bug"}
+    mock_get_user.return_value = UserHistory(user_id="john_dev", git_email="john@example.com")
+    payload = {"author_email": "john@example.com", "message": "hello"}
     response = client.post("/api/v1/ingest/git", json=payload)
     assert response.status_code == 200
     assert response.json()["status"] == "extracted"
     assert response.json()["identity_matched"] is True
 
 
-@patch("src.api.routes.get_user_by_git_email", new_callable=AsyncMock)
+@patch("src.api.v1.ingestion.get_user_by_git_email", new_callable=AsyncMock)
 def test_ingest_git_commitment_unmatched(mock_get_user):
     mock_get_user.return_value = None
-    payload = {"author_email": "unknown", "message": "hello"}
+    payload = {"author_email": "unknown@example.com", "message": "hello"}
     response = client.post("/api/v1/ingest/git", json=payload)
     assert response.status_code == 200
     assert response.json()["identity_matched"] is False
 
 
-@patch("src.api.routes.get_user_reliability", new_callable=AsyncMock)
-@patch("src.api.routes.SlippageAnalyst")
-@patch("src.api.routes.TruthGapDetector")
-@patch("src.api.routes.AuditReportGenerator")
-def test_reports_audit(mock_gen, mock_det, mock_ana, mock_get_rel):
-    mock_get_rel.return_value = (90.0, "s1", 0)
+@pytest.mark.asyncio
+async def test_reports_audit():
+    """Verify that the reports audit endpoint works with real database entries."""
+    from src.core.database import AsyncSessionLocal
+    
+    # 1. Seed the test database
+    async with AsyncSessionLocal() as session:
+        user = UserHistory(
+            user_id="u1",
+            reliability_score=85.0,
+            department="Engineering",
+            total_commitments=5
+        )
+        session.add(user)
+        await session.commit()
 
-    mock_ana_inst = mock_ana.return_value
-    mock_ana_inst.analyze_performance_gap = AsyncMock(return_value={})
-    mock_det_inst = mock_det.return_value
-    mock_det_inst.detect_gap = AsyncMock(return_value={})
-    mock_gen.generate_audit_summary.return_value = {"report": "content"}
+    # 2. Mock Agent responses to avoid actual LLM calls
+    # We use patch.multiple for a cleaner interface
+    with (
+        patch("src.api.v1.reports.SlippageAnalyst", autospec=True) as mock_ana,
+        patch("src.api.v1.reports.TruthGapDetector", autospec=True) as mock_det,
+        patch("src.api.v1.reports.AuditReportGenerator", autospec=True) as mock_gen
+    ):
+        mock_ana_inst = mock_ana.return_value
+        mock_ana_inst.analyze_performance_gap = AsyncMock(return_value=MagicMock())
+        
+        mock_det_inst = mock_det.return_value
+        mock_det_inst.detect_gap = AsyncMock(return_value=MagicMock())
+        
+        mock_gen.generate_audit_summary.return_value = {"report": "final_content"}
 
-    response = client.get("/api/v1/reports/audit/u1")
-    assert response.status_code == 200
-    assert response.json() == {"report": "content"}
+        response = client.get("/api/v1/reports/audit/u1")
+        assert response.status_code == 200
+        assert response.json() == {"report": "final_content"}
 
 
 @pytest.mark.asyncio
@@ -217,12 +264,38 @@ async def test_safety_supervisor_audit():
     from src.schemas.agents import ToneType
 
     supervisor = SafetySupervisor()
-    result = await supervisor.audit_message(
-        message="Please complete the task by Friday.",
-        tone=ToneType.NEUTRAL,
-        user_context="Reliability: 85%, Consecutive firm: 1",
-    )
+    
+    with patch.object(supervisor.provider, "chat_completion", new_callable=AsyncMock) as mock_chat:
+        from src.schemas.agents import SafetyAudit
+        mock_chat.return_value = SafetyAudit(
+            is_safe=True,
+            supervisor_confidence=0.9,
+            risk_of_morale_damage=0.0,
+            reasoning="Safe",
+            is_hard_blocked=False
+        )
 
-    # The mock provider should return a SafetyAudit
-    assert hasattr(result, "is_safe")
-    assert hasattr(result, "is_hard_blocked")
+        result = await supervisor.audit_message(
+            message="Please complete the task by Friday.",
+            tone=ToneType.NEUTRAL,
+            user_context="Reliability: 85%, Consecutive firm: 1",
+        )
+
+        # The mock provider should return a SafetyAudit
+        assert hasattr(result, "is_safe")
+        assert hasattr(result, "is_hard_blocked")
+        assert result.is_safe is True
+
+
+def test_metrics_protection():
+    """Verify that the /metrics endpoint is protected by API key."""
+    # 1. No auth should fail
+    no_auth_client = TestClient(app)
+    response = no_auth_client.get("/metrics")
+    assert response.status_code == 403
+
+    # 2. Correct auth should pass
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    # Prometheus format usually starts with # HELP
+    assert b"# HELP" in response.content

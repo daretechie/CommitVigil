@@ -1,6 +1,9 @@
+# Copyright (c) 2026 CommitVigil AI. All rights reserved.
 import logging
 import sys
+
 import structlog
+
 from src.core.config import settings
 
 

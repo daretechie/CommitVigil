@@ -1,9 +1,13 @@
-from datetime import datetime
+# Copyright (c) 2026 CommitVigil AI. All rights reserved.
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
+from uuid import uuid4
 
 from pydantic import BaseModel
+from sqlalchemy import Column, JSON
 from sqlmodel import Field, SQLModel
+
 
 
 class ExcuseCategory(str, Enum):
@@ -73,6 +77,7 @@ class SafetyAudit(BaseModel):
 
 
 class SafetyIntervention(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid4()))  # UUID for feedback correlation
     original_message: str
     corrected_message: str | None
     reasoning: str
@@ -112,14 +117,15 @@ class CommitmentUpdate(BaseModel):
     user_id: str
     commitment: str
     check_in: str
+    industry: str = "generic"  # Use "AUTO" for dynamic sensing
 
 
 class UserHistory(SQLModel, table=True):
     __tablename__ = "user_history"
 
     user_id: str = Field(primary_key=True, index=True)
-    slack_id: str | None = Field(default=None)
-    git_email: str | None = Field(default=None)
+    slack_id: str | None = Field(default=None, index=True)
+    git_email: str | None = Field(default=None, index=True)
     total_commitments: int = Field(default=0)
     failed_commitments: int = Field(default=0)
     reliability_score: float = Field(default=100.0)
@@ -129,7 +135,9 @@ class UserHistory(SQLModel, table=True):
         default="engineering", index=True
     )  # engineering, hr, research, finance
     industry_type: str = Field(default="generic")  # healthcare, finance, generic
+    is_context_verified: bool = Field(default=False, description="Whether the industry/department has been confirmed for this user.")
     language_preference: str = Field(default="en")  # en, en-UK, ja, de
+
 
     # Ethical Tracking
     consecutive_firm_interventions: int = Field(default=0)
@@ -144,6 +152,33 @@ class AggregateReport(BaseModel):
     top_performers: list[str]
     critical_risk_members: list[str]
     intervention_acceptance_rate: float
+    strategy_recommendation: str | None = None
+
+
+class ROIPrediction(BaseModel):
+    """
+    Sales Intelligence: Predicts potential savings for a prospect.
+    """
+    annual_savings_usd: float
+    developer_hours_recovered: float
+    slippage_reduction_percent: float
+    payback_period_months: float
+    calculation_basis: str
+
+
+class ProspectProfile(BaseModel):
+    """
+    Sales Intelligence: Input for generating high-impact demo audits.
+    """
+    company_name: str
+    target_role: str  # e.g., CTO, VP Engineering
+    team_size: int
+    avg_developer_salary: float = Field(default=150000.0)
+    drift_scenarios: list[dict[str, str]] = Field(
+        default_factory=list,
+        description="Fictional scenarios: {'who': 'Dev A', 'promise': '...', 'reality': '...'}"
+    )
+
 
 
 class SafetyFeedback(SQLModel, table=True):
@@ -160,7 +195,7 @@ class SafetyFeedback(SQLModel, table=True):
     action_taken: str  # accepted, rejected, modified
     final_message_sent: str
     feedback_notes: str | None = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 
 class ReportSummary(BaseModel):
@@ -170,6 +205,8 @@ class ReportSummary(BaseModel):
     performance_metrics: dict[str, Any]
     integrity_score: dict[str, Any]
     intervention_recommendation: dict[str, Any]
+    commitments: list[str] = []
+    reality: str = ""
 
 
 class CorrectionFeedback(BaseModel):
@@ -181,3 +218,40 @@ class CorrectionFeedback(BaseModel):
     action_taken: str = Field(..., description="'accepted', 'rejected', 'modified'")
     final_message_sent: str
     comments: str | None = None
+
+
+class LanguageResponse(BaseModel):
+    code: str
+
+
+class SafetyRule(SQLModel, table=True):
+    """
+    Enterprise Safety Layer: Dynamic industry and department specific rules.
+    """
+
+    __tablename__ = "safety_rules"
+
+    id: int | None = Field(default=None, primary_key=True)
+    industry: str = Field(index=True)
+    department: str = Field(default="*", index=True) # "*" acts as a wildcard for all departments in an industry
+    hr_keywords: list[str] = Field(default_factory=list, sa_column=Column(JSON)) 
+    semantic_rules: str
+    is_active: bool = Field(default=True)
+    is_verified: bool = Field(default=False, description="Whether this rule has been approved by a manager.")
+    onboarded_by: str = Field(default="system", description="Source of the rule (system/manager/manual).")
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+
+
+class CulturalPersona(SQLModel, table=True):
+    """
+    Adaptive Persona System: Dynamic cultural communication styles.
+    """
+    __tablename__ = "cultural_personas"
+
+    code: str = Field(primary_key=True, index=True)  # e.g., "it", "ko"
+    name: str  # e.g., "Italian Professional"
+    instruction: str  # The prompt definition
+    is_verified: bool = Field(default=False)  # HITL flag
+    source: str = Field(default="auto_generated")  # "system" or "auto_generated"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

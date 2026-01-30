@@ -12,7 +12,7 @@ def test_llm_factory_mock():
     # Force mock mode by clearing keys
     settings.OPENAI_API_KEY = None
     settings.GROQ_API_KEY = None
-    settings.LLM_PROVIDER = None
+    settings.LLM_PROVIDER = None  # type: ignore[assignment]
 
     provider = LLMFactory.get_provider()
     assert isinstance(provider, MockProvider)

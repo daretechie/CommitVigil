@@ -41,14 +41,16 @@ spec:
           httpGet:
             path: /health
             port: 8000
-          initialDelaySeconds: 10
+          initialDelaySeconds: 15
           periodSeconds: 30
+          timeoutSeconds: 5
         readinessProbe:
           httpGet:
             path: /health
             port: 8000
           initialDelaySeconds: 5
           periodSeconds: 10
+          timeoutSeconds: 3
 
 ---
 
@@ -88,6 +90,22 @@ spec:
           limits:
             cpu: "2000m"
             memory: "2Gi"
+        livenessProbe:
+          exec:
+            command:
+            - arq
+            - --check
+            - "src.worker.WorkerSettings"
+          initialDelaySeconds: 30
+          periodSeconds: 60
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import os; exit(0)"
+          initialDelaySeconds: 10
+          periodSeconds: 20
 
 ---
 
@@ -102,6 +120,26 @@ spec:
     name: commitvigil-worker
   minReplicas: 2
   maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+---
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: commitvigil-api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: commitvigil-api
+  minReplicas: 2
+  maxReplicas: 10
   metrics:
   - type: Resource
     resource:

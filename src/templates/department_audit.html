@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Heatmap - {{ report.department }}</title>
+    <style>
+        :root { --primary: #6366f1; --bg: #0f172a; --card-bg: rgba(30, 41, 59, 0.7); --text: #f8fafc; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 40px; margin: 0; }
+        .container { max-width: 1000px; margin: auto; background: var(--card-bg); padding: 48px; border-radius: 32px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(20px); }
+        .header { text-align: center; margin-bottom: 48px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 48px; }
+        .stat-card { background: rgba(255,255,255,0.05); padding: 32px; border-radius: 24px; text-align: center; }
+        .stat-val { font-size: 40px; font-weight: 800; color: var(--primary); }
+        .heatmap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
+        .node { padding: 16px; border-radius: 12px; font-size: 12px; font-weight: 600; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .strategy-banner {
+            background: linear-gradient(90deg, var(--primary), #a855f7);
+            padding: 32px;
+            border-radius: 24px;
+            margin-top: 48px;
+            color: white;
+            box-shadow: 0 15px 30px -10px rgba(99, 102, 241, 0.4);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="margin: 0">🏢 DEPARTMENTAL HEATMAP</h1>
+            <div style="opacity: 0.5">{{ report.department.upper() }} DIVISION • ENTERPRISE AUDIT</div>
+        </div>
+
+        <div class="grid">
+            <div class="stat-card">
+                <div class="stat-val">{{ report.average_reliability_score }}%</div>
+                <div style="opacity: 0.6; font-size: 12px; text-transform: uppercase;">Avg Reliability</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" style="color: #ef4444">{{ report.burnout_risk_count }}</div>
+                <div style="opacity: 0.6; font-size: 12px; text-transform: uppercase;">Burnout Risks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" style="color: #10b981">{{ (report.intervention_acceptance_rate * 100)|round|int }}%</div>
+                <div style="opacity: 0.6; font-size: 12px; text-transform: uppercase;">Manager ROI</div>
+            </div>
+        </div>
+
+        <h3 style="text-transform: uppercase; font-size: 13px; letter-spacing: 0.1em; color: var(--primary);">Systemic Integrity Map</h3>
+        <div class="heatmap-grid">
+            {% for p in report.top_performers %}
+            <div class="node" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: #10b98144">✅ {{ p }}</div>
+            {% endfor %}
+            {% for p in report.critical_risk_members %}
+            <div class="node" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef444444">⚠️ {{ p }}</div>
+            {% endfor %}
+        </div>
+
+        {% if report.strategy_recommendation %}
+        <div class="strategy-banner">
+            <h3 style="margin: 0 0 8px 0; font-size: 18px;">🛡️ STRATEGIC RECOMMENDATION</h3>
+            <p style="opacity: 0.9; margin: 0; font-weight: 500;">{{ report.strategy_recommendation }}</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

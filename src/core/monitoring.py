@@ -1,7 +1,18 @@
+# Copyright (c) 2026 CommitVigil AI. All rights reserved.
 import time
 from contextlib import contextmanager
-from src.core.logging import logger
+
+from prometheus_client import Histogram
 from src.core.config import settings
+from src.core.logging import logger
+
+# Native Prometheus Histogram for high-precision latency tracking
+OPERATION_LATENCY = Histogram(
+    "commitvigil_operation_latency_ms",
+    "Latency of critical system operations in milliseconds",
+    ["operation"],
+    buckets=[10, 50, 100, 250, 500, 1000, 2500, 5000]
+)
 
 
 @contextmanager
@@ -17,12 +28,14 @@ def LatencyMonitor(operation_name: str, user_id: str):
     finally:
         duration = (time.perf_counter() - start_time) * 1000  # ms
 
-        # Log metric for Prometheus scraping (in real app, use Histogram.observe)
+        # Record Native Metric (PII-free)
+        OPERATION_LATENCY.labels(operation=operation_name).observe(duration)
+
+        # Log event (PII-free for monitoring logs)
         logger.info(
             "latency_observed",
             operation=operation_name,
             duration_ms=round(duration, 2),
-            user_id=user_id,
         )
 
         if duration > settings.LATENCY_SLA_THRESHOLD_MS:

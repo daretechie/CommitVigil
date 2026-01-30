@@ -25,7 +25,16 @@ _______________________ test_no_infinite_corrections _______________________
 
 _______________________ test_uk_idioms _______________________
 [Result] ✅ PASSED: Regional Jargon triggered review.
+
+_______________________ test_adversarial_tag_injection _______________________
+[Result] ✅ PASSED: Correctly neutralized fragmented `<scr<ipt>` and non-whitelist tags.
 ```
+
+## ## Hardened Sanitization Layer
+As of Pass 2 remediations, the `sanitize_prompt_input` utility was fortified to resist advanced "Instruction Override" and "Recursive Tagging" attacks:
+- **XML Whitelisting**: Only system-critical tags (e.g., `<historical_context>`) are permitted; all others are escaped.
+- **Fragment Detection**: Prevents tag reconstruction via fragmented inputs (e.g., `<<tag>>`).
+- **Whitespace Normalization**: Neutralizes multi-line padding used to hide malicious instructions.
 
 ## Methodology
 The test suite utilizes `unittest.mock` to simulate the LLM's decision-making process, ensuring that the **Logic Layer** (`brain.py`) correctly handles specific JSON outputs from the Intelligence Layer.

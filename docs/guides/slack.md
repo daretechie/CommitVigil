@@ -42,7 +42,7 @@ SLACK_WEBHOOK_URL="https://hooks.slack.com/services/WORKSPACE_ID/APP_ID/TOKEN"
 
 Restart the service to apply changes:
 ```bash
-docker-compose down && docker-compose up --build
+docker compose down && docker compose up --build
 ```
 
 ## 3. Test the Webhook
