@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.post(
     "/evaluate", 
-    dependencies=[Depends(get_api_key), Depends(RateLimiter(times=5, seconds=60))]
+    dependencies=[Depends(get_api_key), Depends(RateLimiter(times=10, seconds=60))]
 )
 async def evaluate_commitment(
     update: CommitmentUpdate, 

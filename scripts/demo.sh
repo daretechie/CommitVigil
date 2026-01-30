@@ -83,21 +83,21 @@ CHECK_IN="I am drowning in these refactor tasks. I've worked 60 hours this week.
 curl -s -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
   "$API_URL/evaluate?sync=true" \
   -d "{\"user_id\": \"$USER_ID\", \"commitment\": \"Architecture Refactor\", \"check_in\": \"$CHECK_IN\"}" | jq .
-sleep 5
+sleep 7
 # Scenario B: Japanese Cultural Routing (Wa/Harmony)
 echo -e "\n${YELLOW}--- Scenario B: Cultural Persona Routing (Japanese) ---${NC}"
 CHECK_IN_JA="申し訳ありませんが、締め切りに間に合わない可能性があります。和を重んじ、精一杯調整いたします。"
 curl -s -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
   "$API_URL/evaluate?sync=true" \
   -d "{\"user_id\": \"$USER_ID\", \"commitment\": \"API Sync\", \"check_in\": \"$CHECK_IN_JA\"}" | jq .
-sleep 5
+sleep 7
 # Scenario C: German Directness (Sachlichkeit)
 echo -e "\n${YELLOW}--- Scenario C: Cultural Persona Routing (German) ---${NC}"
 CHECK_IN_DE="Ich werde die Datenbank-Migration bis Freitag abschließen. Die Fakten sprechen für eine Verzögerung von zwei Tagen."
 curl -s -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
   "$API_URL/evaluate?sync=true" \
   -d "{\"user_id\": \"$USER_ID\", \"commitment\": \"DB Migration\", \"check_in\": \"$CHECK_IN_DE\"}" | jq .
-sleep 5
+sleep 7
 # 4. The Industry Semantic Firewall
 print_header "[PHASE 4] Industry Semantic Firewall (Blocking & Redaction)"
 # Scenario A: Finance Compliance (Insidier Trading/Market Manipulation)
@@ -106,14 +106,14 @@ CHECK_IN_FIN="I'm busy manipulating the market and discussing insider trading."
 curl -s -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
   "$API_URL/evaluate?sync=true" \
   -d "{\"user_id\": \"$USER_ID\", \"commitment\": \"Financial Audit\", \"check_in\": \"$CHECK_IN_FIN\"}" | jq .
-sleep 5
+sleep 7
 # Scenario B: HR/Legal Policy Enforcement
 echo -e "\n${YELLOW}--- Scenario B: HR Boundary Protection (Salary Discussion) ---${NC}"
 CHECK_IN_HR="I am late because I am fighting with HR about my salary increase."
 curl -s -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
   "$API_URL/evaluate?sync=true" \
   -d "{\"user_id\": \"$USER_ID\", \"commitment\": \"Weekly Sync\", \"check_in\": \"$CHECK_IN_HR\"}" | jq .
-sleep 5
+sleep 7
 # 5. GitOps Accountability
 print_header "[PHASE 5] GitOps Ingestion Layer"
 COMMIT_MSG="fix: resolve racing condition. [CommitVigil: I will implement the lock strategy by Monday]"
@@ -162,7 +162,7 @@ print_header "[PHASE 9] Organizational 'God-View' (CEO/CTO Reporting)"
 echo -e "${YELLOW}Generating organizational audit JSON...${NC}"
 curl -s -H "X-API-Key: $API_KEY" "$API_URL/reports/organization" | jq . > reports/organizational_audit.json
 echo "✅ Org JSON saved to: $(pwd)/reports/organizational_audit.json"
-sleep 5
+sleep 7
 
 # Advanced Scenarios
 print_header "[ADVANCED] Ingestion & Dynamic Intelligence"
@@ -172,7 +172,7 @@ echo "Sending messy Slack text. System will extract 'Who', 'What', and 'When'...
 RAW_TEXT="Hey @dev_god, please make sure you finish the server migration by next Tuesday at 4pm. Thanks!"
 curl -s -X POST -H "X-API-Key: $API_KEY" \
   "$API_URL/ingest/raw?user_id=$USER_ID&raw_text=$(urlencode "$RAW_TEXT")" | jq .
-sleep 6
+sleep 7
 
 echo -e "${PURPLE}--- [ELITE] Scenario 13: HR Sensitivity & Privacy (Salary Block) ---${NC}"
 echo "Simulating an HR manager accidentally mentioning salary in a check-in..."
@@ -187,7 +187,7 @@ HR_RESPONSE=$(curl -s -X 'POST' \
   \"check_in\": \"$CHECK_IN\"
 }")
 echo "$HR_RESPONSE" | jq .
-sleep 6
+sleep 7
 
 # Extract Intervention ID for Feedback Loop Demo
 INTERVENTION_ID=$(echo "$HR_RESPONSE" | jq -r '.safety_audit.id // empty')
@@ -204,7 +204,7 @@ curl -s -X 'POST' \
   \"commitment\": \"Vendor Onboarding\",
   \"check_in\": \"$CHECK_IN\"
 }" | jq .
-sleep 6
+sleep 7
 
 # Scenario 15: ERP Integration (SAP Webhook Simulation)
 CHECK_IN_SAP="The purchase order for the server rack was approved 2 days late due to budget review."
@@ -217,7 +217,7 @@ curl -s -X 'POST' \
   \"commitment\": \"PO-12345 Approval\",
   \"check_in\": \"$CHECK_IN_SAP\"
 }" | jq .
-sleep 6
+sleep 7
 
 echo -e "\n--- [GOD-MODE] Scenario 16: Adaptive Cultural Learning (Dutch) ---"
 echo "We are sending a check-in in DUTCH ('nl'). The system has NEVER seen this culture before."
@@ -232,7 +232,7 @@ curl -s -X 'POST' \
   \"commitment\": \"Marketing Report\",
   \"check_in\": \"$CHECK_IN_NL\"
 }" | jq .
-sleep 5
+sleep 7
 
 echo -e "\n--- [GOD-MODE] Scenario 17: Adaptive Safety Onboarding (Nuclear Industry) ---"
 echo "Switching context to 'nuclear'. The system has NO prior rules for this industry."
@@ -249,7 +249,7 @@ curl -s -X 'POST' \
   \"industry\": \"nuclear\",
   \"department\": \"operations\"
 }" | jq .
-sleep 5
+sleep 7
 
 echo -e "\n--- [GOD-MODE] Scenario 18: Zero-Shot Industry Sensing (Aerospace) ---"
 echo "Sending a check-in with 'AUTO' industry. The system will GUESS the context..."
@@ -264,7 +264,7 @@ curl -s -X 'POST' \
   \"check_in\": \"$CHECK_IN_AERO\",
   \"industry\": \"AUTO\"
 }" | jq .
-sleep 5
+sleep 7
 
 echo -e "\n--- [GOD-MODE] Scenario 19: Adaptive Safety Onboarding (Pharma Industry) ---"
 echo "Switching context to 'pharmaceutical'. The system has NO prior rules for this industry."
