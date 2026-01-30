@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CommitVigil AI - The Trust Layer for Engineering Teams</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.6);
+            --text: #f8fafc;
+        }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.2) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.2) 0px, transparent 50%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 0 20px;
+        }
+        nav {
+            padding: 40px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+        
+        .hero {
+            padding: 80px 0;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 64px;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            margin-bottom: 24px;
+            background: linear-gradient(to bottom right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            font-size: 20px;
+            opacity: 0.7;
+            max-width: 600px;
+            margin: auto;
+            margin-bottom: 48px;
+        }
+
+        .cta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 32px;
+            margin-top: 60px;
+        }
+        .glass-card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 32px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease;
+        }
+        .glass-card:hover { transform: translateY(-10px); }
+
+        .form-group { margin-bottom: 24px; text-align: left; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; opacity: 0.5; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+        input, select {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 16px;
+            border-radius: 12px;
+            color: white;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 10px 20px -5px var(--primary-glow);
+        }
+        .btn-primary:hover { background: #4f46e5; box-shadow: 0 15px 30px -5px var(--primary-glow); }
+
+        .roi-display {
+            margin-top: 32px;
+            padding: 24px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 16px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            text-align: center;
+        }
+        .roi-val { font-size: 32px; font-weight: 800; color: var(--success); }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        footer { padding: 80px 0; text-align: center; opacity: 0.3; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <div class="logo">🛡️ COMMITVIGIL AI</div>
+            <div style="font-weight: 600; opacity: 0.6;">v2026.1 Enterprise</div>
+        </nav>
+
+        <section class="hero">
+            <div class="badge">TRUST-AS-A-SERVICE</div>
+            <h1>Solve the "Slack Stall" with AI Accountability.</h1>
+            <p>We map verbal promises to technical reality. Proactively detect burnout, identify truth gaps, and secure project velocity.</p>
+
+            <div class="cta-grid">
+                <!-- ROI Calculator -->
+                <div class="glass-card">
+                    <h2 style="margin-top: 0;">Calculate Savings</h2>
+                    <div class="form-group">
+                        <label>Team Size</label>
+                        <input type="number" id="teamSize" placeholder="50">
+                    </div>
+                    <div class="form-group">
+                        <label>Avg Developer Salary ($)</label>
+                        <input type="number" id="avgSalary" placeholder="150000">
+                    </div>
+                    <button class="btn btn-primary" onclick="calculateROI()">Project Net ROI</button>
+                    
+                    <div id="roiResult" class="roi-display" style="display: none;">
+                        <div class="roi-val" id="roiVal">$0.00</div>
+                        <div style="font-size: 12px; opacity: 0.7;">Est. Annual Efficiency Gain</div>
+                    </div>
+                </div>
+
+                <!-- Live Demo Generator -->
+                <div class="glass-card">
+                    <h2 style="margin-top: 0;">Instant Demo</h2>
+                    <div class="form-group">
+                        <label>Company Name</label>
+                        <input type="text" id="companyName" placeholder="TechCorp">
+                    </div>
+                    <div class="form-group">
+                        <label>Industry Vertical</label>
+                        <select id="industry">
+                            <option value="fintech">FinTech (Strict)</option>
+                            <option value="healthcare">Healthcare (Safety-First)</option>
+                            <option value="gaming">Gaming (High Velocity)</option>
+                            <option value="saas">Standard B2B SaaS</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="generateDemo()">Generate Sample Audit</button>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            Built for High-Performance Teams • Enterprise Certified • zero-trust behavioral engine
+        </footer>
+    </div>
+
+    <script>
+        async function calculateROI() {
+            const size = document.getElementById('teamSize').value || 50;
+            const salary = document.getElementById('avgSalary').value || 150000;
+            
+            try {
+                const response = await fetch(`/api/v1/sales/roi-calculator?team_size=${size}&avg_salary=${salary}`);
+                const data = await response.json();
+                
+                document.getElementById('roiVal').innerText = data.annual_savings;
+                document.getElementById('roiResult').style.display = 'block';
+            } catch (err) {
+                console.error("ROI calculation failed", err);
+            }
+        }
+
+        async function generateDemo() {
+            const company = document.getElementById('companyName').value || "TechCorp";
+            const ind = document.getElementById('industry').value;
+            
+            // Redirect to a specialized HTML Brief for this prospect
+            window.location.href = `/api/v1/sales/executive-brief?company_name=${company}&industry=${ind}&team_size=50&target_role=VP%20Engineering`;
+        }
+    </script>
+</body>
+</html>

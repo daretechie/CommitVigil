@@ -93,3 +93,10 @@ async def generate_executive_brief(
     
     # 3. Render HTML
     return AuditReportGenerator.generate_sales_brief_html(profile, roi, currency)
+@router.get("/landing", response_class=HTMLResponse)
+async def get_interactive_landing():
+    """
+    SALES INTERFACE: Serves the high-converting glassmorphic landing page.
+    This is the entry point for custom 'Instant Demos'.
+    """
+    return HTMLResponse(content=AuditReportGenerator.render_landing_page())

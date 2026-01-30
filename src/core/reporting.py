@@ -142,6 +142,14 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
         return template.render(report=report)
 
     @classmethod
+    def render_landing_page(cls) -> str:
+        """
+        Renders the glassmorphic interactive landing page for sales demo use.
+        """
+        template = cls._env.get_template("landing_page.html")
+        return template.render()
+
+    @classmethod
     def generate_department_html_audit(cls, report: AggregateReport) -> str:
         """
         Generates a premium HTML 'Heatmap' for departments using Jinja2.
