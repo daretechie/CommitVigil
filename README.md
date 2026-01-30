@@ -13,6 +13,16 @@
 
 > **"One Engine. Two Worlds. Total Accountability."**
 
+---
+
+## 💼 Hire for "Integrity Audit" Services
+Want to verify your team's velocity before a major release or acquisition? I offer specialized **Accountability Consulting** using this CommitVigil engine:
+*   **Forensic Audits**: Truth-gap detection between Slack/Jira and Git reality.
+*   **Burnout Prevention**: Strategic agentic follow-ups to protect at-risk developers.
+*   **Boardroom Reporting**: Professional, glassmorphic HTML ROI briefs for C-level visibility.
+
+[**Inquire on Upwork 🚀**](https://www.upwork.com/)
+
 [**Full Documentation 📚**](https://daretechie.github.io/CommitVigil/) | [**Live Site 🌐**](https://daretechie.github.io/CommitVigil/) | [**Safety Validation Report 🛡️**](https://daretechie.github.io/CommitVigil/validation/safety_validation_report/) | [**Manager Feedback Guide 🎮**](docs/guides/feedback_loop.md) | [**Integration Guide 🔌**](docs/guides/integrations.md)
 
 ---
