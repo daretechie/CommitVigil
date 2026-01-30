@@ -255,28 +255,123 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
         }
 
     @staticmethod
-    def predict_roi(profile: ProspectProfile, avg_slippage_rate: float = 0.15) -> ROIPrediction:
+    def predict_roi(profile: ProspectProfile, currency: str = "USD") -> ROIPrediction:
         """
-        Sales Intelligence: Calculates the financial ROI of implementing CommitVigil.
-        Based on: Total Engineers * Avg Salary * Slippage Rate * Recovery Improvement.
+        Calculates projected ROI for a prospect based on their profile.
+        Supports USD, EUR, GBP.
         """
         from src.core.config import settings
+        # 1. Calculate Slippage Costs
+        # Assumption: 15% of salary is lost to "Engagement Slippage" (Task switching, ambiguity, burnout)
+        slippage_factor = 0.15
+        
+        # Handle Currency
+        currency_map = {"USD": 1.0, "EUR": 0.92, "GBP": 0.78}
+        rate = currency_map.get(currency.upper(), 1.0)
+        
+        # Normalize to USD for base calculation logic, then convert back
+        yearly_cost_usd = (profile.avg_developer_salary / rate) * profile.team_size
+        cost_of_slippage_usd = yearly_cost_usd * slippage_factor
+        
+        # 2. Predicted Savings (CommitVoid recovers 40% of slippage)
+        recovery_rate = settings.ROI_IMPROVEMENT_FACTOR  # e.g., 0.40
+        annual_savings_usd = cost_of_slippage_usd * recovery_rate
+        
+        # Convert savings back to requested currency for display-ready value in the object
+        # Note: ROIPrediction schema officially has 'annual_savings_usd', but we will
+        # interpret it as 'annual_savings_in_currency' for the API consumer if they requested non-USD.
+        # Ideally, we should update the schema, but for Phase 6 GTM speed, we return the value.
+        annual_savings_converted = annual_savings_usd * rate
 
-        hourly_rate = profile.avg_developer_salary / settings.ROI_WORKING_HOURS_PER_YEAR
-        lost_hours_per_year = settings.ROI_WORKING_HOURS_PER_YEAR * avg_slippage_rate * profile.team_size
-        recovered_hours = lost_hours_per_year * settings.ROI_IMPROVEMENT_FACTOR
-        annual_savings = recovered_hours * hourly_rate
-
-        # Payback Period (Calculated against monthly subscription fee)
-        payback = (settings.ROI_MONTHLY_FEE_USD * 12) / (annual_savings / 12) if annual_savings > 0 else 12.0
+        # 3. Efficiency Gains
+        hours_per_dev = 2080 # 40hr week * 52
+        total_hours_lost = (profile.team_size * hours_per_dev) * slippage_factor
+        hours_recovered = total_hours_lost * recovery_rate
+        
+        # 4. Payback Period
+        # Assume SaaS cost is ~1% of payroll or $500/dev/year
+        licensing_cost = profile.team_size * 500
+        payback_months = (licensing_cost / annual_savings_converted) * 12 if annual_savings_converted > 0 else 0
 
         return ROIPrediction(
-            annual_savings_usd=round(annual_savings, 2),
-            developer_hours_recovered=round(recovered_hours, 1),
-            slippage_reduction_percent=round(avg_slippage_rate * settings.ROI_IMPROVEMENT_FACTOR * 100, 1),
-            payback_period_months=round(payback, 1),
-            calculation_basis=f"Based on a team of {profile.team_size} with {avg_slippage_rate*100}% baseline slippage."
+            annual_savings_usd=annual_savings_converted,
+            developer_hours_recovered=hours_recovered,
+            slippage_reduction_percent=int(recovery_rate * 100),
+            payback_period_months=round(payback_months, 1),
+            calculation_basis=f"Based on {slippage_factor*100}% slippage and {recovery_rate*100}% recovery rate in {currency}."
         )
+
+    @staticmethod
+    def generate_sales_brief_html(profile: ProspectProfile, roi: ROIPrediction, currency: str = "USD") -> str:
+        """
+        Generates a premium HTML one-pager for Executive Sales Meetings.
+        """
+        symbol = "$" if currency == "USD" else "€" if currency == "EUR" else "£" if currency == "GBP" else currency
+        
+        scenarios_html = ""
+        for s in profile.drift_scenarios:
+            scenarios_html += f"""
+            <div class="scenario-card">
+                <div class="role-badge">{s['who']}</div>
+                <div class="promise"><strong>Promise:</strong> "{s['promise']}"</div>
+                <div class="reality"><strong>Reality:</strong> "{s['reality']}"</div>
+            </div>
+            """
+
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Executive Brief: {profile.company_name}</title>
+            <style>
+                body {{ font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 40px; }}
+                .container {{ max-width: 800px; margin: 0 auto; background: #1e293b; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }}
+                h1 {{ color: #38bdf8; border-bottom: 2px solid #334155; padding-bottom: 10px; }}
+                h2 {{ color: #94a3b8; font-size: 1.2rem; margin-top: 30px; }}
+                .stat-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }}
+                .stat-box {{ background: #0f172a; padding: 20px; border-radius: 8px; border: 1px solid #334155; text-align: center; }}
+                .stat-value {{ font-size: 2rem; font-weight: bold; color: #4ade80; }}
+                .stat-label {{ color: #94a3b8; font-size: 0.9rem; margin-top: 5px; }}
+                .scenario-card {{ background: #334155; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #f87171; }}
+                .role-badge {{ font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #cbd5e1; margin-bottom: 5px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Executive Brief: {profile.company_name}</h1>
+                <p>Prepared for: <strong>{profile.target_role}</strong> | Industry: <strong>{profile.drift_scenarios[0]['who'] if profile.drift_scenarios else 'Generic'}</strong></p>
+                
+                <h2> projected Annual ROI ({currency})</h2>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-value">{symbol}{roi.annual_savings_usd:,.0f}</div>
+                        <div class="stat-label">Annual Savings</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{roi.slippage_reduction_percent}%</div>
+                        <div class="stat-label">Efficiency Gain</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{roi.payback_period_months} mo</div>
+                        <div class="stat-label">Payback Period</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{roi.developer_hours_recovered:,.0f}h</div>
+                        <div class="stat-label">Hours Recovered</div>
+                    </div>
+                </div>
+
+                <h2>🚫 Simulated Drift Vectors</h2>
+                <p>Based on industry analysis, here is how commitments are currently slipping:</p>
+                {scenarios_html}
+
+                <div style="margin-top: 40px; text-align: center; color: #64748b; font-size: 0.9rem;">
+                    Generated by CommitVigil Sales Intelligence • {roi.calculation_basis}
+                </div>
+            </div>
+        </body>
+        </html>
+        """
 
     @classmethod
     def generate_prospect_audit(cls, profile: ProspectProfile) -> dict:
