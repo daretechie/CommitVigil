@@ -1,13 +1,12 @@
 # Copyright (c) 2026 CommitVigil AI. All rights reserved.
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel
-from sqlalchemy import Column, JSON
+from sqlalchemy import JSON, Column
 from sqlmodel import Field, SQLModel
-
 
 
 class ExcuseCategory(str, Enum):
@@ -32,9 +31,7 @@ class RiskLevel(str, Enum):
 class RiskAssessment(BaseModel):
     risk_score: float = Field(..., ge=0, le=1)
     level: RiskLevel
-    predicted_latency_days: int = Field(
-        ..., description="Estimated delay in completion."
-    )
+    predicted_latency_days: int = Field(..., description="Estimated delay in completion.")
     mitigation_strategy: str
 
 
@@ -70,9 +67,7 @@ class SafetyAudit(BaseModel):
         description="Confidence in the audit verdict.",
     )
     suggested_correction: str | None = None
-    correction_type: str = Field(
-        default="none", description="'none', 'surgical', 'full_rewrite'"
-    )
+    correction_type: str = Field(default="none", description="'none', 'surgical', 'full_rewrite'")
     reasoning: str
 
 
@@ -94,23 +89,15 @@ class PipelineEvaluation(BaseModel):
 
 class ExtractedCommitment(BaseModel):
     task: str = Field(..., description="The task the user committed to.")
-    deadline: str = Field(
-        ..., description="The deadline extracted (e.g., Friday 5 PM)."
-    )
+    deadline: str = Field(..., description="The deadline extracted (e.g., Friday 5 PM).")
     confidence_score: float = Field(..., ge=0, le=1)
 
 
 class SlackCommitmentRecord(BaseModel):
-    commitment_found: bool = Field(
-        ..., description="True if a promise was actually found."
-    )
-    who: str | None = Field(
-        default=None, description="The person who made the promise."
-    )
+    commitment_found: bool = Field(..., description="True if a promise was actually found.")
+    who: str | None = Field(default=None, description="The person who made the promise.")
     what: str | None = Field(default=None, description="The action or task promised.")
-    when: str | None = Field(
-        default=None, description="The deadline or time frame promised."
-    )
+    when: str | None = Field(default=None, description="The deadline or time frame promised.")
 
 
 class CommitmentUpdate(BaseModel):
@@ -131,13 +118,13 @@ class UserHistory(SQLModel, table=True):
     reliability_score: float = Field(default=100.0)
 
     # Enterprise Attributes
-    department: str = Field(
-        default="engineering", index=True
-    )  # engineering, hr, research, finance
+    department: str = Field(default="engineering", index=True)  # engineering, hr, research, finance
     industry_type: str = Field(default="generic")  # healthcare, finance, generic
-    is_context_verified: bool = Field(default=False, description="Whether the industry/department has been confirmed for this user.")
+    is_context_verified: bool = Field(
+        default=False,
+        description="Whether the industry/department has been confirmed for this user.",
+    )
     language_preference: str = Field(default="en")  # en, en-UK, ja, de
-
 
     # Ethical Tracking
     consecutive_firm_interventions: int = Field(default=0)
@@ -159,6 +146,7 @@ class ROIPrediction(BaseModel):
     """
     Sales Intelligence: Predicts potential savings for a prospect.
     """
+
     annual_savings_usd: float
     developer_hours_recovered: float
     slippage_reduction_percent: float
@@ -170,15 +158,15 @@ class ProspectProfile(BaseModel):
     """
     Sales Intelligence: Input for generating high-impact demo audits.
     """
+
     company_name: str
     target_role: str  # e.g., CTO, VP Engineering
     team_size: int
     avg_developer_salary: float = Field(default=150000.0)
     drift_scenarios: list[dict[str, str]] = Field(
         default_factory=list,
-        description="Fictional scenarios: {'who': 'Dev A', 'promise': '...', 'reality': '...'}"
+        description="Fictional scenarios: {'who': 'Dev A', 'promise': '...', 'reality': '...'}",
     )
-
 
 
 class SafetyFeedback(SQLModel, table=True):
@@ -195,7 +183,7 @@ class SafetyFeedback(SQLModel, table=True):
     action_taken: str  # accepted, rejected, modified
     final_message_sent: str
     feedback_notes: str | None = Field(default=None)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
 
 
 class ReportSummary(BaseModel):
@@ -211,9 +199,7 @@ class ReportSummary(BaseModel):
 
 class CorrectionFeedback(BaseModel):
     intervention_id: str
-    user_id: str = Field(
-        ..., description="The ID of the user whose commitment was corrected."
-    )
+    user_id: str = Field(..., description="The ID of the user whose commitment was corrected.")
     manager_id: str
     action_taken: str = Field(..., description="'accepted', 'rejected', 'modified'")
     final_message_sent: str
@@ -233,19 +219,26 @@ class SafetyRule(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     industry: str = Field(index=True)
-    department: str = Field(default="*", index=True) # "*" acts as a wildcard for all departments in an industry
-    hr_keywords: list[str] = Field(default_factory=list, sa_column=Column(JSON)) 
+    department: str = Field(
+        default="*", index=True
+    )  # "*" acts as a wildcard for all departments in an industry
+    hr_keywords: list[str] = Field(default_factory=list, sa_column=Column(JSON))
     semantic_rules: str
     is_active: bool = Field(default=True)
-    is_verified: bool = Field(default=False, description="Whether this rule has been approved by a manager.")
-    onboarded_by: str = Field(default="system", description="Source of the rule (system/manager/manual).")
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    is_verified: bool = Field(
+        default=False, description="Whether this rule has been approved by a manager."
+    )
+    onboarded_by: str = Field(
+        default="system", description="Source of the rule (system/manager/manual)."
+    )
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
 
 
 class CulturalPersona(SQLModel, table=True):
     """
     Adaptive Persona System: Dynamic cultural communication styles.
     """
+
     __tablename__ = "cultural_personas"
 
     code: str = Field(primary_key=True, index=True)  # e.g., "it", "ko"
@@ -253,5 +246,5 @@ class CulturalPersona(SQLModel, table=True):
     instruction: str  # The prompt definition
     is_verified: bool = Field(default=False)  # HITL flag
     source: str = Field(default="auto_generated")  # "system" or "auto_generated"
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))

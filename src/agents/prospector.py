@@ -19,7 +19,7 @@ class ProspectingScout:
         self, company_name: str, target_role: str, team_size: int, industry: str
     ) -> ProspectProfile:
         """
-        Synthesizes a full prospect profile with realistic "drift scenarios" 
+        Synthesizes a full prospect profile with realistic "drift scenarios"
         relevant to the target's industry.
         """
         logger.info("prospect_generation_started", company=company_name, industry=industry)
@@ -27,7 +27,7 @@ class ProspectingScout:
         prompt = f"""
         Role: Enterprise Sales Engineer for CommitVigil.
         Task: Create a realistic prospect profile for a demo.
-        
+
         Target:
         - Company: {company_name}
         - Role: {target_role}
@@ -39,7 +39,7 @@ class ProspectingScout:
         - 'who': A realistic role (e.g., 'Lead Backend Dev', 'Compliance Officer')
         - 'promise': A specific commitment made in Slack/Jira.
         - 'reality': What the code/audit trail actually shows (the failure).
-        
+
         Ensure the 'avg_developer_salary' is realistic for the industry ($120k-$180k).
         """
 
@@ -47,15 +47,13 @@ class ProspectingScout:
             profile = await self.provider.chat_completion(
                 response_model=ProspectProfile,
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": prompt}
-                ],
+                messages=[{"role": "system", "content": prompt}],
             )
             # Ensure the input fields are preserved if the LLM hallucinates them differently
             profile.company_name = company_name
             profile.target_role = target_role
             profile.team_size = team_size
-            
+
             logger.info("prospect_generation_success", company=company_name)
             return profile
 
@@ -71,7 +69,7 @@ class ProspectingScout:
                     {
                         "who": "Senior Dev",
                         "promise": "I'll update the API docs by EOD",
-                        "reality": "No commits to /docs folder in 48 hours"
+                        "reality": "No commits to /docs folder in 48 hours",
                     }
-                ]
+                ],
             )

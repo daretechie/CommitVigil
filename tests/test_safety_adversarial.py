@@ -1,18 +1,18 @@
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from src.agents.brain import CommitVigilBrain
 from src.agents.safety import SafetyAudit
-
 from src.schemas.agents import (
-    ToneType,
     AgentDecision,
+    BurnoutDetection,
     ExcuseAnalysis,
     ExcuseCategory,
     RiskAssessment,
     RiskLevel,
-    BurnoutDetection,
+    ToneType,
 )
-
 
 
 @pytest.fixture(autouse=True)
@@ -21,18 +21,20 @@ def force_mock_settings(request):
     if request.config.getoption("--run-live"):
         yield
         return
-        
+
     from src.core.config import settings
+
     orig_provider = settings.LLM_PROVIDER
     orig_key = settings.OPENAI_API_KEY
-    
+
     settings.LLM_PROVIDER = "mock"
     settings.OPENAI_API_KEY = None
-    
+
     yield
-    
+
     settings.LLM_PROVIDER = orig_provider
     settings.OPENAI_API_KEY = orig_key
+
 
 @pytest.fixture
 def mock_brain_components():
@@ -52,9 +54,7 @@ def mock_brain_components():
         predicted_latency_days=0,
         mitigation_strategy="none",
     )
-    burnout = BurnoutDetection(
-        is_at_risk=False, sentiment_indicators=[], recommendation="rest"
-    )
+    burnout = BurnoutDetection(is_at_risk=False, sentiment_indicators=[], recommendation="rest")
     return decision, excuse, risk, burnout
 
 
@@ -64,7 +64,6 @@ def apply_standard_mocks(brain, excuse, risk, burnout):
     brain.assess_risk = AsyncMock(return_value=risk)
 
 
-
 @pytest.mark.asyncio
 async def test_adversarial_hard_block_salary(mock_brain_components):
     """Test that HR/Salary talk triggers a hard block and HitL."""
@@ -72,8 +71,8 @@ async def test_adversarial_hard_block_salary(mock_brain_components):
     # Mock Safety Supervisor to return HARD BLOCK
     with patch("src.agents.brain.SafetySupervisor") as MockSupervisor:
         mock_instance = MockSupervisor.return_value
-        brain = CommitVigilBrain() # Move inside patch
-        
+        brain = CommitVigilBrain()  # Move inside patch
+
         # Mock Steps 1 & 2 with VALID Pydantic Models
         brain.analyze_excuse = AsyncMock(return_value=excuse)  # type: ignore[method-assign]
         brain.detect_burnout = AsyncMock(return_value=burnout)  # type: ignore[method-assign]
@@ -142,7 +141,8 @@ async def test_adversarial_low_confidence_idiom(mock_brain_components):
         assert result.decision.action == "escalate_to_manager"
         assert result.safety_audit is not None
         assert result.safety_audit.intervention_type == "review"
-        assert result.safety_audit.reasoning is not None and "Confidence below threshold" in result.safety_audit.reasoning  # type: ignore[union-attr]
+        assert result.safety_audit.reasoning is not None  # type: ignore[union-attr]
+        assert "Confidence below threshold" in result.safety_audit.reasoning
 
 
 @pytest.mark.asyncio
@@ -177,9 +177,7 @@ async def test_adversarial_allowed_pricing(mock_brain_components):
             f"[Test Output] Final Decision: Action='{result.decision.action}', Message='{result.decision.message}'"
         )
 
-        assert (
-            result.decision.action == "notified"
-        )  # Assuming default action mapped nicely
+        assert result.decision.action == "notified"  # Assuming default action mapped nicely
         assert result.safety_audit is None  # No intervention
 
 
@@ -218,7 +216,7 @@ async def test_hybrid_correction_injection(mock_brain_components):
             reasoning="Correction is safe.",
         )
 
-        async def side_effect(_msg, _tone, _ctx, *args, **kwargs):
+        async def side_effect(_msg, _tone, _ctx, *_args, **_kwargs):
             return [initial_audit, re_audit][mock_instance.audit_message.call_count - 1]
 
         mock_instance.audit_message.side_effect = side_effect
@@ -354,7 +352,7 @@ async def test_cultural_idiom_sensitivity(mock_brain_components):
             reasoning="Culturally appropriate.",
         )
 
-        async def side_effect(_msg, _tone, _ctx, *args, **kwargs):
+        async def side_effect(_msg, _tone, _ctx, *_args, **_kwargs):
             return [initial_audit, re_audit][mock_instance.audit_message.call_count - 1]
 
         mock_instance.audit_message.side_effect = side_effect
@@ -405,7 +403,7 @@ async def test_no_infinite_corrections(mock_brain_components):
             reasoning="Re-audit passed",
         )
 
-        async def side_effect(_msg, _tone, _ctx, *args, **kwargs):
+        async def side_effect(_msg, _tone, _ctx, *_args, **_kwargs):
             return [initial_audit, re_audit][mock_instance.audit_message.call_count - 1]
 
         mock_instance.audit_message.side_effect = side_effect
@@ -507,7 +505,7 @@ async def test_supervisor_catches_bad_correction(mock_brain_components):
         )
 
         # Configure side_effect with a callable that returns the next item
-        async def side_effect(_msg, _tone, _ctx, *args, **kwargs):
+        async def side_effect(_msg, _tone, _ctx, *_args, **_kwargs):
             return [audit_1, audit_2][mock_instance.audit_message.call_count - 1]
 
         mock_instance.audit_message.side_effect = side_effect
@@ -516,7 +514,9 @@ async def test_supervisor_catches_bad_correction(mock_brain_components):
 
         result = await brain.evaluate_participation("u1", "status", 100.0, 0)
         print(f"[Test Output] Final Action: '{result.decision.action}'")
-        print(f"[Test Output] Reasoning: '{result.safety_audit.reasoning if result.safety_audit else 'None'}'")
+        print(
+            f"[Test Output] Reasoning: '{result.safety_audit.reasoning if result.safety_audit else 'None'}'"
+        )
 
         # VERIFICATION
         assert mock_instance.audit_message.call_count == 2  # Proves re-audit happened
@@ -524,7 +524,8 @@ async def test_supervisor_catches_bad_correction(mock_brain_components):
         audit = result.safety_audit
         assert audit is not None
         assert audit.intervention_type == "review"
-        assert audit.reasoning is not None and "Safety Valve Triggered" in audit.reasoning
+        assert audit.reasoning is not None
+        assert "Safety Valve Triggered" in audit.reasoning
 
 
 @pytest.mark.asyncio
@@ -532,22 +533,21 @@ async def test_cultural_persona_wa_japanese(mock_brain_components):
     """Phase 15: Verify Japanese 'Wa' persona (Polite Suggestion)."""
     decision, excuse, risk, burnout = mock_brain_components
     brain = CommitVigilBrain()
-    
+
     # Mock LLM to return a very polite, indirect Japanese decision
     wa_decision = decision.model_copy()
     wa_decision.message = "It might be helpful to reflect on our progress together."
     wa_decision.tone = ToneType.SUPPORTIVE
-    
+
     apply_standard_mocks(brain, excuse, risk, burnout)
     brain.adapt_tone = AsyncMock(return_value=wa_decision)  # type: ignore[method-assign]
 
     print("\n[Test Output] Testing Japanese 'Wa' Persona...")
     result = await brain.evaluate_participation("u1", "status", 100.0, 0, lang="ja")
-    
+
     assert result.decision.tone == ToneType.SUPPORTIVE
     assert "reflect" in result.decision.message
     print(f"[Test Output] Final Tone: {result.decision.tone} | Msg: {result.decision.message}")
-
 
 
 @pytest.mark.asyncio
@@ -555,22 +555,21 @@ async def test_cultural_persona_sachlichkeit_german(mock_brain_components):
     """Phase 15: Verify German 'Sachlichkeit' persona (Direct/Objective)."""
     decision, excuse, risk, burnout = mock_brain_components
     brain = CommitVigilBrain()
-    
+
     # Mock LLM to return a direct, objective German decision
     sach_decision = decision.model_copy()
     sach_decision.message = "The metric for completion is not met. Objective assessment required."
     sach_decision.tone = ToneType.NEUTRAL
-    
+
     apply_standard_mocks(brain, excuse, risk, burnout)
     brain.adapt_tone = AsyncMock(return_value=sach_decision)  # type: ignore[method-assign]
 
     print("\n[Test Output] Testing German 'Sachlichkeit' Persona...")
     result = await brain.evaluate_participation("u1", "status", 80.0, 0, lang="de")
-    
+
     assert result.decision.tone == ToneType.NEUTRAL
     assert "metric" in result.decision.message
     print(f"[Test Output] Final Tone: {result.decision.tone} | Msg: {result.decision.message}")
-
 
 
 @pytest.mark.asyncio
@@ -578,30 +577,31 @@ async def test_cultural_persona_ubuntu_af(mock_brain_components):
     """Phase 15: Verify African Ubuntu persona (Communal Responsibility)."""
     decision, excuse, risk, burnout = mock_brain_components
     brain = CommitVigilBrain()
-    
+
     # Mock LLM to return a communal, Ubuntu-inspired decision
     ubuntu_decision = decision.model_copy()
-    ubuntu_decision.message = "When one of us pauses, our entire village (the team) feels the weight."
+    ubuntu_decision.message = (
+        "When one of us pauses, our entire village (the team) feels the weight."
+    )
     ubuntu_decision.tone = ToneType.SUPPORTIVE
-    
+
     apply_standard_mocks(brain, excuse, risk, burnout)
     brain.adapt_tone = AsyncMock(return_value=ubuntu_decision)  # type: ignore[method-assign]
 
     print("\n[Test Output] Testing African 'Ubuntu' Persona...")
     result = await brain.evaluate_participation("u1", "status", 90.0, 0, lang="en-AF")
-    
+
     assert result.decision.tone == ToneType.SUPPORTIVE
     assert "village" in result.decision.message
     print(f"[Test Output] Final Tone: {result.decision.tone} | Msg: {result.decision.message}")
 
 
-
 @pytest.mark.asyncio
 async def test_prospect_audit_generation():
     """Phase 15: Verify the Sales Prospecting Audit logic."""
-    from src.schemas.agents import ProspectProfile
     from src.core.reporting import AuditReportGenerator
-    
+    from src.schemas.agents import ProspectProfile
+
     profile = ProspectProfile(
         company_name="Cursor",
         target_role="CEO",
@@ -609,19 +609,21 @@ async def test_prospect_audit_generation():
         avg_developer_salary=180000.0,
         drift_scenarios=[
             {"who": "Michael", "promise": "Finish Vibe Coding", "reality": "Just vibing"}
-        ]
+        ],
     )
-    
+
     print("\n[Test Output] Generating Prospect Audit for Cursor...")
     report = AuditReportGenerator.generate_prospect_audit(profile)
-    
+
     assert report["prospect"] == "Cursor"
     assert "roi_prediction" in report
     assert report["roi_prediction"]["annual_savings_usd"] > 0
     assert len(report["sample_interventions"]) == 1
     assert "Vibe Coding" in report["sample_interventions"][0].performance_metrics["detected_gap"]
-    
-    print(f"[Test Output] Predicted Annual Savings: ${report['roi_prediction']['annual_savings_usd']:,.2f}")
+
+    print(
+        f"[Test Output] Predicted Annual Savings: ${report['roi_prediction']['annual_savings_usd']:,.2f}"
+    )
 
 
 @pytest.mark.asyncio
@@ -629,22 +631,23 @@ async def test_cultural_persona_jeitinho_brazilian(mock_brain_components):
     """Phase 16: Verify Brazilian 'Jeitinho' persona (Warm/Relationship-focused)."""
     decision, excuse, risk, burnout = mock_brain_components
     brain = CommitVigilBrain()
-    
+
     # Mock LLM to return a warm, relationship-focused Brazilian decision
     br_decision = decision.model_copy()
-    br_decision.message = "Our partnership is very important to me, and I know we can find a way together."
+    br_decision.message = (
+        "Our partnership is very important to me, and I know we can find a way together."
+    )
     br_decision.tone = ToneType.SUPPORTIVE
-    
+
     apply_standard_mocks(brain, excuse, risk, burnout)
     brain.adapt_tone = AsyncMock(return_value=br_decision)  # type: ignore[method-assign]
 
     print("\n[Test Output] Testing Brazilian 'Jeitinho' Persona...")
     result = await brain.evaluate_participation("u1", "status", 95.0, 0, lang="pt-BR")
-    
+
     assert result.decision.tone == ToneType.SUPPORTIVE
     assert "partnership" in result.decision.message
     print(f"[Test Output] Final Tone: {result.decision.tone} | Msg: {result.decision.message}")
-
 
 
 @pytest.mark.asyncio
@@ -652,22 +655,23 @@ async def test_cultural_persona_guanxi_chinese(mock_brain_components):
     """Phase 16: Verify Chinese 'Guanxi' persona (Communal Face/Respectful)."""
     decision, excuse, risk, burnout = mock_brain_components
     brain = CommitVigilBrain()
-    
+
     # Mock LLM to return a respectful, face-saving Chinese decision
     zh_decision = decision.model_copy()
-    zh_decision.message = "For the benefit of our collective success, let us align our efforts once more."
+    zh_decision.message = (
+        "For the benefit of our collective success, let us align our efforts once more."
+    )
     zh_decision.tone = ToneType.NEUTRAL
-    
+
     apply_standard_mocks(brain, excuse, risk, burnout)
     brain.adapt_tone = AsyncMock(return_value=zh_decision)  # type: ignore[method-assign]
 
     print("\n[Test Output] Testing Chinese 'Guanxi' Persona...")
     result = await brain.evaluate_participation("u1", "status", 100.0, 0, lang="zh")
-    
+
     assert result.decision.tone == ToneType.NEUTRAL
     assert "collective" in result.decision.message
     print(f"[Test Output] Final Tone: {result.decision.tone} | Msg: {result.decision.message}")
-
 
 
 @pytest.mark.asyncio
@@ -675,22 +679,21 @@ async def test_cultural_persona_lagom_nordic(mock_brain_components):
     """Phase 16: Verify Nordic 'Lagom' persona (Balanced/Collaborative)."""
     decision, excuse, risk, burnout = mock_brain_components
     brain = CommitVigilBrain()
-    
+
     # Mock LLM to return a balanced Nordic decision
     sv_decision = decision.model_copy()
     sv_decision.message = "We should strive for a sustainable balance in our commitments."
     sv_decision.tone = ToneType.SUPPORTIVE
-    
+
     apply_standard_mocks(brain, excuse, risk, burnout)
     brain.adapt_tone = AsyncMock(return_value=sv_decision)  # type: ignore[method-assign]
 
     print("\n[Test Output] Testing Nordic 'Lagom' Persona...")
     result = await brain.evaluate_participation("u1", "status", 85.0, 0, lang="sv")
-    
+
     assert result.decision.tone == ToneType.SUPPORTIVE
     assert "balance" in result.decision.message
     print(f"[Test Output] Final Tone: {result.decision.tone} | Msg: {result.decision.message}")
-
 
 
 @pytest.mark.asyncio
@@ -698,20 +701,20 @@ async def test_cultural_persona_indian_professional(mock_brain_components):
     """Phase 16: Verify Indian Professional persona (Respectful/Technically Clear)."""
     decision, excuse, risk, burnout = mock_brain_components
     brain = CommitVigilBrain()
-    
+
     # Mock LLM to return a respectful but technically clear Indian professional decision
     in_decision = decision.model_copy()
-    in_decision.message = "I would appreciate a clear update on the technical resolution for our project."
+    in_decision.message = (
+        "I would appreciate a clear update on the technical resolution for our project."
+    )
     in_decision.tone = ToneType.FIRM
-    
+
     apply_standard_mocks(brain, excuse, risk, burnout)
     brain.adapt_tone = AsyncMock(return_value=in_decision)  # type: ignore[method-assign]
 
     print("\n[Test Output] Testing Indian Professional Persona...")
     result = await brain.evaluate_participation("u1", "status", 75.0, 0, lang="en-IN")
-    
+
     assert result.decision.tone == ToneType.FIRM
     assert "technical" in result.decision.message
     print(f"[Test Output] Final Tone: {result.decision.tone} | Msg: {result.decision.message}")
-
-

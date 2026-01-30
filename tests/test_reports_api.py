@@ -1,10 +1,12 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
-from httpx import AsyncClient, ASGITransport
-from src.api.v1.reports import router
 from fastapi import FastAPI
-from src.schemas.performance import SlippageAnalysis, TruthGapAnalysis, SlippageStatus
+from httpx import ASGITransport, AsyncClient
+
+from src.api.v1.reports import router
 from src.core.config import settings
+from src.schemas.performance import SlippageAnalysis, SlippageStatus, TruthGapAnalysis
 
 # Setup a minimal test app
 app = FastAPI()
@@ -14,19 +16,20 @@ app.include_router(router, prefix="/api/v1")
 @pytest.fixture
 def mock_dependencies():
     from src.schemas.agents import UserHistory
+
     with (
         patch("src.api.v1.reports.AsyncSessionLocal") as mock_session_cls,
-        patch(
-            "src.api.v1.reports.get_user_reliability", new_callable=AsyncMock
-        ) as mock_rel,
+        patch("src.api.v1.reports.get_user_reliability", new_callable=AsyncMock) as mock_rel,
         patch("src.api.v1.reports.SlippageAnalyst", autospec=True) as mock_slippage,
         patch("src.api.v1.reports.TruthGapDetector", autospec=True) as mock_truth,
     ):
         # Mocking DB
         mock_session = AsyncMock()
         mock_session_cls.return_value.__aenter__.return_value = mock_session
-        
-        mock_user = UserHistory(user_id="test_user", reliability_score=85.5, department="Engineering")
+
+        mock_user = UserHistory(
+            user_id="test_user", reliability_score=85.5, department="Engineering"
+        )
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = mock_user
         mock_session.execute.return_value = mock_result
@@ -58,10 +61,9 @@ def mock_dependencies():
 
 
 @pytest.mark.asyncio
-async def test_get_performance_audit_json(mock_dependencies):
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+@pytest.mark.usefixtures("mock_dependencies")
+async def test_get_performance_audit_json():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get(
             "/api/v1/reports/audit/test_user",
             headers={"X-API-Key": settings.API_KEY_SECRET},
@@ -73,10 +75,9 @@ async def test_get_performance_audit_json(mock_dependencies):
 
 
 @pytest.mark.asyncio
-async def test_get_performance_audit_markdown(mock_dependencies):
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+@pytest.mark.usefixtures("mock_dependencies")
+async def test_get_performance_audit_markdown():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get(
             "/api/v1/reports/audit/test_user?report_format=markdown",
             headers={"X-API-Key": settings.API_KEY_SECRET},
@@ -87,10 +88,9 @@ async def test_get_performance_audit_markdown(mock_dependencies):
 
 
 @pytest.mark.asyncio
-async def test_get_performance_audit_html(mock_dependencies):
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+@pytest.mark.usefixtures("mock_dependencies")
+async def test_get_performance_audit_html():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get(
             "/api/v1/reports/audit/test_user?report_format=html",
             headers={"X-API-Key": settings.API_KEY_SECRET},

@@ -3,19 +3,18 @@ from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse
+from sqlalchemy import func
 from sqlmodel import select
 
 from src.agents.learning import SupervisorFeedbackLoop
 from src.agents.performance import SlippageAnalyst, TruthGapDetector
 from src.api.deps import get_api_key
 from src.core.config import settings
-from src.core.database import AsyncSessionLocal, get_user_reliability
+from src.core.database import AsyncSessionLocal
 from src.core.logging import logger
 from src.core.reporting import AuditReportGenerator
 from src.schemas.agents import (
     AggregateReport,
-    CorrectionFeedback,
-    ProspectProfile,
     UserHistory,
 )
 from src.schemas.performance import (
@@ -23,7 +22,6 @@ from src.schemas.performance import (
     SlippageStatus,
     TruthGapAnalysis,
 )
-from sqlalchemy import func
 
 router = APIRouter()
 
@@ -39,17 +37,18 @@ async def get_performance_audit(user_id: str, report_format: str = "json"):
         statement = select(UserHistory).where(UserHistory.user_id == user_id)
         result = await session.execute(statement)
         user = result.scalar_one_or_none()
-    
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
     score = user.reliability_score
-    department = user.department or "General"
 
     # In a real enterprise app, we'd fetch actual commit histories and Slack logs here.
     # For this final audit PASS, we connect to the real UserHistory fields to prove the pipe is live.
     promised = ["Consistent behavioral alignment", f"Integrity check for {user_id}"]
-    reality = f"Historical reliability established at {score:.2f}%. No recent critical failures logged."
+    reality = (
+        f"Historical reliability established at {score:.2f}%. No recent critical failures logged."
+    )
 
     # 2. Run Agents (With robust mock fallback for demo stability)
     analyst = SlippageAnalyst()
@@ -63,8 +62,9 @@ async def get_performance_audit(user_id: str, report_format: str = "json"):
         gap = await detector.detect_gap("I am maintaining my commitments.", reality)
     except Exception as e:
         if not USE_MOCK_FALLBACK:
-            logger.error("reporting_agent_failed", error=str(e), user_id=user_id)
-            raise HTTPException(status_code=503, detail="Forensic analysis engine unavailable.")
+            raise HTTPException(
+                status_code=503, detail="Forensic analysis engine unavailable."
+            ) from e
 
         logger.warning("reporting_agent_failed_falling_back_to_mock", error=str(e))
         slippage = SlippageAnalysis(
@@ -94,9 +94,6 @@ async def get_performance_audit(user_id: str, report_format: str = "json"):
     return summary
 
 
-
-
-
 @router.get("/reports/department/{department}", dependencies=[Depends(get_api_key)])
 async def get_departmental_audit(department: str, report_format: str = "json"):
     """
@@ -109,27 +106,42 @@ async def get_departmental_audit(department: str, report_format: str = "json"):
             stats_stmt = select(
                 func.count(UserHistory.user_id).label("total_members"),
                 func.avg(UserHistory.reliability_score).label("avg_reliability"),
-                func.sum(cast(int, UserHistory.reliability_score < 70)).label("burnout_count")
+                func.sum(cast(int, UserHistory.reliability_score < 70)).label("burnout_count"),
             ).where(UserHistory.department == department)
-            
+
             stats_result = await session.execute(stats_stmt)
             stats = stats_result.one()
-            
+
             if stats.total_members == 0:
                 if not settings.DEMO_MODE:
-                    raise HTTPException(status_code=404, detail=f"No members found in department: {department}")
-                
-                logger.info("no_department_members_found_falling_back_to_demo_mock", department=department)
+                    raise HTTPException(
+                        status_code=404, detail=f"No members found in department: {department}"
+                    )
+
+                logger.info(
+                    "no_department_members_found_falling_back_to_demo_mock", department=department
+                )
                 members = [
-                    UserHistory(user_id="lead_rockstar", reliability_score=98.5, department=department),
-                    UserHistory(user_id="senior_reliable", reliability_score=92.0, department=department),
-                    UserHistory(user_id="mid_slipping", reliability_score=45.0, department=department),
+                    UserHistory(
+                        user_id="lead_rockstar", reliability_score=98.5, department=department
+                    ),
+                    UserHistory(
+                        user_id="senior_reliable", reliability_score=92.0, department=department
+                    ),
+                    UserHistory(
+                        user_id="mid_slipping", reliability_score=45.0, department=department
+                    ),
                 ]
                 avg_rel = 78.5
                 burnout = 1
             else:
                 # Top performers still need a small sub-query, but limited to 5
-                top_stmt = select(UserHistory).where(UserHistory.department == department).order_by(UserHistory.reliability_score.desc()).limit(5)
+                top_stmt = (
+                    select(UserHistory)
+                    .where(UserHistory.department == department)
+                    .order_by(UserHistory.reliability_score.desc())
+                    .limit(5)
+                )
                 top_result = await session.execute(top_stmt)
                 members = list(top_result.scalars().all())
                 avg_rel = float(stats.avg_reliability or 100.0)
@@ -139,16 +151,18 @@ async def get_departmental_audit(department: str, report_format: str = "json"):
         rate = await SupervisorFeedbackLoop.calculate_intervention_acceptance()
 
         summary = AuditReportGenerator.generate_departmental_audit(
-            department=department, 
-            members=members, 
+            department=department,
+            members=members,
             intervention_rate=rate,
             calculated_avg=avg_rel,
             calculated_burnout=burnout,
-            total_count=int(stats.total_members)
+            total_count=int(stats.total_members),
         )
 
         if report_format == "html":
-            return HTMLResponse(content=AuditReportGenerator.generate_department_html_audit(summary))
+            return HTMLResponse(
+                content=AuditReportGenerator.generate_department_html_audit(summary)
+            )
 
         return summary
     except Exception as e:
@@ -157,15 +171,21 @@ async def get_departmental_audit(department: str, report_format: str = "json"):
             department=department,
             members=[
                 UserHistory(user_id="lead_rockstar", reliability_score=98.5, department=department),
-                UserHistory(user_id="senior_reliable", reliability_score=92.0, department=department),
+                UserHistory(
+                    user_id="senior_reliable", reliability_score=92.0, department=department
+                ),
                 UserHistory(user_id="mid_slipping", reliability_score=45.0, department=department),
-                UserHistory(user_id="junior_burnout", reliability_score=62.0, department=department),
+                UserHistory(
+                    user_id="junior_burnout", reliability_score=62.0, department=department
+                ),
                 UserHistory(user_id="new_hire_risk", reliability_score=38.0, department=department),
             ],
             intervention_rate=0.88,
         )
         if report_format == "html":
-            return HTMLResponse(content=AuditReportGenerator.generate_department_html_audit(summary))
+            return HTMLResponse(
+                content=AuditReportGenerator.generate_department_html_audit(summary)
+            )
         return summary
 
 
@@ -184,21 +204,21 @@ async def get_organizational_audit(report_format: str = "json"):
     ]
     reports = []
     for d in dept_data:
-        reports.append(AggregateReport(
-            department=str(d["name"]),
-            total_members=15,
-            average_reliability_score=float(cast(float, d["score"])),
-            burnout_risk_count=int(cast(int, d["burnout"])),
-            top_performers=[f"star_{d['name']}_1", f"star_{d['name']}_2"],
-            critical_risk_members=[],
-            intervention_acceptance_rate=0.85
-        ))
-    
+        reports.append(
+            AggregateReport(
+                department=str(d["name"]),
+                total_members=15,
+                average_reliability_score=float(cast(float, d["score"])),
+                burnout_risk_count=int(cast(int, d["burnout"])),
+                top_performers=[f"star_{d['name']}_1", f"star_{d['name']}_2"],
+                critical_risk_members=[],
+                intervention_acceptance_rate=0.85,
+            )
+        )
+
     summary = AuditReportGenerator.generate_organizational_audit(reports)
 
     if report_format == "html":
         return HTMLResponse(content=AuditReportGenerator.generate_org_html_audit(summary))
 
     return summary
-
-

@@ -1,16 +1,18 @@
 import asyncio
 import time
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from src.agents.brain import CommitVigilBrain
 from src.schemas.agents import (
     AgentDecision,
-    ToneType,
+    BurnoutDetection,
     ExcuseAnalysis,
     ExcuseCategory,
     RiskAssessment,
     RiskLevel,
-    BurnoutDetection,
+    ToneType,
 )
 
 
@@ -32,9 +34,7 @@ def mock_brain_components():
         predicted_latency_days=0,
         mitigation_strategy="none",
     )
-    burnout = BurnoutDetection(
-        is_at_risk=False, sentiment_indicators=[], recommendation="rest"
-    )
+    burnout = BurnoutDetection(is_at_risk=False, sentiment_indicators=[], recommendation="rest")
     return decision, excuse, risk, burnout
 
 
@@ -55,7 +55,7 @@ async def test_concurrent_safety_checks(mock_brain_components):
         mock_instance = MockSupervisor.return_value
 
         # Configure the mock to sleep slightly to verify concurrency
-        async def mock_audit_with_delay(_msg, _tone, _ctx, industry="generic", **kwargs):
+        async def mock_audit_with_delay(_msg, _tone, _ctx, _industry="generic", **_kwargs):
             await asyncio.sleep(0.01)  # 10ms delay per call
 
             from src.agents.safety import SafetyAudit
@@ -82,27 +82,19 @@ async def test_concurrent_safety_checks(mock_brain_components):
         # EXECUTION: 50 concurrent requests
         start_time = time.perf_counter()
 
-        tasks = [
-            brain.evaluate_participation("u1", "status", 100.0, 0) for _ in range(50)
-        ]
+        tasks = [brain.evaluate_participation("u1", "status", 100.0, 0) for _ in range(50)]
 
         results = await asyncio.gather(*tasks)
 
         total_duration = time.perf_counter() - start_time
 
-        print(
-            f"\n[Load Test] Processed {len(results)} messages in {total_duration:.2f}s"
-        )
-        print(
-            f"[Load Test] Effective Throughput: {len(results) / total_duration:.1f} msg/sec"
-        )
+        print(f"\n[Load Test] Processed {len(results)} messages in {total_duration:.2f}s")
+        print(f"[Load Test] Effective Throughput: {len(results) / total_duration:.1f} msg/sec")
 
         # ASSERTIONS
         assert len(results) == 50
         # If it were sequential (0.01 * 50) it would take >0.5s.
         # Concurrent should be much faster (approaching max(delay)).
         # We'll be generous with 0.2s to account for overhead.
-        assert total_duration < 0.2, (
-            f"Concurrency failed! Duration: {total_duration}s > 0.2s"
-        )
+        assert total_duration < 0.2, f"Concurrency failed! Duration: {total_duration}s > 0.2s"
         assert all(r.safety_audit is None for r in results)

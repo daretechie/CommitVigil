@@ -18,9 +18,7 @@ from src.worker import process_commitment_eval, send_follow_up, shutdown, startu
 @pytest.mark.asyncio
 async def test_send_follow_up():
     """Test the send_follow_up wrapper function."""
-    with patch(
-        "src.worker.SlackConnector.send_notification", new_callable=AsyncMock
-    ) as mock_send:
+    with patch("src.worker.SlackConnector.send_notification", new_callable=AsyncMock) as mock_send:
         await send_follow_up("user1", "hello", slack_id="U123")
         mock_send.assert_called_once_with("hello", slack_id="U123")
 
@@ -47,9 +45,7 @@ async def test_process_commitment_eval_low_risk():
             predicted_latency_days=0,
             mitigation_strategy="none",
         ),
-        burnout=BurnoutDetection(
-            is_at_risk=False, sentiment_indicators=[], recommendation="rest"
-        ),
+        burnout=BurnoutDetection(is_at_risk=False, sentiment_indicators=[], recommendation="rest"),
     )
 
     mock_brain_instance.evaluate_participation = AsyncMock(return_value=mock_eval)
@@ -61,9 +57,7 @@ async def test_process_commitment_eval_low_risk():
             new_callable=AsyncMock,
             return_value=(95.0, "U123", 0),
         ),
-        patch(
-            "src.worker.update_user_reliability", new_callable=AsyncMock
-        ) as mock_update,
+        patch("src.worker.update_user_reliability", new_callable=AsyncMock) as mock_update,
         patch("src.worker.scheduler") as mock_scheduler,
     ):
         ctx: dict[str, str] = {}
@@ -94,9 +88,7 @@ async def test_process_commitment_eval_high_risk():
             predicted_latency_days=2,
             mitigation_strategy="nudge",
         ),
-        burnout=BurnoutDetection(
-            is_at_risk=False, sentiment_indicators=[], recommendation="rest"
-        ),
+        burnout=BurnoutDetection(is_at_risk=False, sentiment_indicators=[], recommendation="rest"),
     )
 
     mock_brain_instance.evaluate_participation = AsyncMock(return_value=mock_eval)
@@ -108,17 +100,13 @@ async def test_process_commitment_eval_high_risk():
             new_callable=AsyncMock,
             return_value=(50.0, "U123", 1),
         ),
-        patch(
-            "src.worker.update_user_reliability", new_callable=AsyncMock
-        ) as mock_update,
+        patch("src.worker.update_user_reliability", new_callable=AsyncMock) as mock_update,
         patch("src.worker.scheduler") as mock_scheduler,
     ):
         ctx: dict[str, str] = {}
         await process_commitment_eval(ctx, "user1", "task1", "status1")
 
-        mock_update.assert_called_once_with(
-            "user1", was_failure=True, tone_used=ToneType.FIRM
-        )
+        mock_update.assert_called_once_with("user1", was_failure=True, tone_used=ToneType.FIRM)
         mock_scheduler.add_job.assert_called_once()
 
 

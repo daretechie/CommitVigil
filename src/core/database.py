@@ -1,7 +1,6 @@
 # Copyright (c) 2026 CommitVigil AI. All rights reserved.
 import json
-from datetime import datetime, timedelta, timezone
-
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel, select
@@ -9,9 +8,7 @@ from sqlmodel import SQLModel, select
 from src.core.config import settings
 from src.core.logging import logger
 from src.core.state import state
-from src.schemas.agents import UserHistory, SafetyRule, CulturalPersona
-
-
+from src.schemas.agents import CulturalPersona, SafetyRule, UserHistory
 
 # Async Engine for PostgreSQL
 engine = create_async_engine(settings.DATABASE_URL, echo=False, future=True)
@@ -31,13 +28,18 @@ async def init_db():
     Gated: Only runs create_all in DEMO_MODE to protect production data.
     """
     if not settings.DEMO_MODE:
-        logger.info("db_init_skipped", reason="Not in DEMO_MODE. Use Alembic for production migrations.")
+        logger.info(
+            "db_init_skipped", reason="Not in DEMO_MODE. Use Alembic for production migrations."
+        )
         return
 
     try:
         async with engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
-            logger.warning("schema_created_via_code", message="Do not use create_all in production. Use Alembic migrations.")
+            logger.warning(
+                "schema_created_via_code",
+                message="Do not use create_all in production. Use Alembic migrations.",
+            )
         logger.info("database_initialized", url=settings.DATABASE_URL)
         await seed_safety_rules()
 
@@ -56,7 +58,6 @@ async def get_user_history(user_id: str) -> UserHistory | None:
 
 
 async def get_user_reliability(user_id: str) -> tuple[float, str | None, int]:
-
     """
     Fetch the reliability score, slack_id, and consecutive firm interventions.
     """
@@ -74,18 +75,14 @@ async def get_user_reliability(user_id: str) -> tuple[float, str | None, int]:
         return 100.0, None, 0
 
 
-async def update_user_reliability(
-    user_id: str, was_failure: bool, tone_used: str = "supportive"
-):
+async def update_user_reliability(user_id: str, was_failure: bool, tone_used: str = "supportive"):
     """
     Update historical stats and track ethical Tone-Damping status.
     Uses 'with_for_update' to ensure atomicity during multi-read-write operations.
     """
     async with AsyncSessionLocal() as session:
         # 1. Lock the row for update to ensure atomicity
-        statement = (
-            select(UserHistory).where(UserHistory.user_id == user_id).with_for_update()
-        )
+        statement = select(UserHistory).where(UserHistory.user_id == user_id).with_for_update()
         results = await session.execute(statement)
         user = results.scalar_one_or_none()
 
@@ -106,9 +103,9 @@ async def update_user_reliability(
             last_int = user.last_intervention_at
             # Ensure comparison is timezone-aware
             if last_int.tzinfo is None:
-                last_int = last_int.replace(tzinfo=timezone.utc)
+                last_int = last_int.replace(tzinfo=UTC)
 
-            time_since_last = datetime.now(timezone.utc) - last_int
+            time_since_last = datetime.now(UTC) - last_int
             if time_since_last > timedelta(hours=settings.COOLING_OFF_PERIOD_HOURS):
                 user.consecutive_firm_interventions = 0
                 logger.info("cooling_off_reset", user_id=user_id, reason="time_elapsed")
@@ -116,7 +113,7 @@ async def update_user_reliability(
         # 2. Ethical Counter Management
         if tone_used in ["firm", "confrontational"]:
             user.consecutive_firm_interventions += 1
-            user.last_intervention_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            user.last_intervention_at = datetime.now(UTC).replace(tzinfo=None)
         else:
             # Cooling-off logic: Reset counter if a supportive/neutral
             # tone is successfully used
@@ -185,10 +182,12 @@ async def get_user_by_git_email(git_email: str) -> UserHistory | None:
         statement = select(UserHistory).where(UserHistory.git_email == git_email)
         results = await session.execute(statement)
         return results.scalar_one_or_none()
+
+
 async def get_safety_rules(industry: str = "generic", department: str = "*") -> SafetyRule | None:
     """
     Fetch the safety rules for a specific industry and department with Redis caching.
-    Hierarchy: 
+    Hierarchy:
     1. Specific Industry + Specific Department
     2. Specific Industry + Wildcard Department (*)
     3. Generic Industry + Wildcard Department (*)
@@ -196,7 +195,7 @@ async def get_safety_rules(industry: str = "generic", department: str = "*") -> 
     # Normalize inputs
     industry = industry.lower()
     department = department.lower()
-    
+
     cache_key = f"safety_rules:{industry}:{department}"
     redis = state.get("redis")
 
@@ -214,29 +213,25 @@ async def get_safety_rules(industry: str = "generic", department: str = "*") -> 
     async with AsyncSessionLocal() as session:
         # Try specific industry + specific department
         statement = select(SafetyRule).where(
-            SafetyRule.industry == industry, 
+            SafetyRule.industry == industry,
             SafetyRule.department == department,
-            SafetyRule.is_active == True
+            SafetyRule.is_active,
         )
         results = await session.execute(statement)
         rule = results.scalar_one_or_none()
-        
+
         # Fallback to industry-wide rule
         if not rule and department != "*":
             statement = select(SafetyRule).where(
-                SafetyRule.industry == industry, 
-                SafetyRule.department == "*",
-                SafetyRule.is_active == True
+                SafetyRule.industry == industry, SafetyRule.department == "*", SafetyRule.is_active
             )
             results = await session.execute(statement)
             rule = results.scalar_one_or_none()
-            
+
         # Fallback to generic rule
         if not rule and industry != "generic":
             statement = select(SafetyRule).where(
-                SafetyRule.industry == "generic", 
-                SafetyRule.department == "*",
-                SafetyRule.is_active == True
+                SafetyRule.industry == "generic", SafetyRule.department == "*", SafetyRule.is_active
             )
             results = await session.execute(statement)
             rule = results.scalar_one_or_none()
@@ -250,8 +245,6 @@ async def get_safety_rules(industry: str = "generic", department: str = "*") -> 
             logger.warning("cache_population_failed", error=str(e))
 
     return rule
-
-
 
 
 async def seed_safety_rules():
@@ -278,14 +271,13 @@ async def seed_safety_rules():
             "industry": "generic",
             "hr_keywords": ["Salary", "PIP", "Firing", "Legal Threats"],
             "semantic_rules": "Enforce standard professional conduct and HR boundaries.",
-        }
+        },
     ]
 
     async with AsyncSessionLocal() as session:
         for rule_data in initial_rules:
             statement = select(SafetyRule).where(
-                SafetyRule.industry == rule_data["industry"],
-                SafetyRule.department == "*"
+                SafetyRule.industry == rule_data["industry"], SafetyRule.department == "*"
             )
             results = await session.execute(statement)
             if not results.scalar_one_or_none():
@@ -297,7 +289,13 @@ async def seed_safety_rules():
 
 
 async def set_safety_rule(
-    industry: str, hr_keywords: list[str], semantic_rules: str, department: str = "*", is_active: bool = True, is_verified: bool = False, onboarded_by: str = "system"
+    industry: str,
+    hr_keywords: list[str],
+    semantic_rules: str,
+    department: str = "*",
+    is_active: bool = True,
+    is_verified: bool = False,
+    onboarded_by: str = "system",
 ) -> SafetyRule:
     """
     Update or create a safety rule for an industry/department and clear its cache.
@@ -307,8 +305,7 @@ async def set_safety_rule(
 
     async with AsyncSessionLocal() as session:
         statement = select(SafetyRule).where(
-            SafetyRule.industry == industry,
-            SafetyRule.department == department
+            SafetyRule.industry == industry, SafetyRule.department == department
         )
         results = await session.execute(statement)
         rule = results.scalar_one_or_none()
@@ -330,11 +327,10 @@ async def set_safety_rule(
             rule.is_active = is_active
             rule.is_verified = is_verified
             rule.onboarded_by = onboarded_by
-            rule.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            rule.updated_at = datetime.now(UTC).replace(tzinfo=None)
 
         await session.commit()
         await session.refresh(rule)
-
 
     # Cache Invalidation
     redis = state.get("redis")
@@ -348,7 +344,6 @@ async def set_safety_rule(
 
     logger.info("safety_rule_updated", industry=industry, department=department)
     return rule
-
 
 
 async def get_cultural_persona(code: str) -> CulturalPersona | None:
@@ -403,7 +398,7 @@ async def create_cultural_persona(persona: CulturalPersona) -> CulturalPersona:
             await redis.delete(cache_key)
         except Exception as e:
             logger.warning("cache_invalidation_failed", error=str(e))
-    
+
     logger.info("cultural_persona_created", code=persona.code, source=persona.source)
     return persona
 
@@ -413,7 +408,7 @@ async def seed_cultural_personas():
     Seed valid system personas from the static definition in src.core.persona.
     """
     from src.core.persona import CULTURAL_PROMPTS
-    
+
     async with AsyncSessionLocal() as session:
         for code, instruction in CULTURAL_PROMPTS.items():
             code = code.lower()
@@ -422,16 +417,15 @@ async def seed_cultural_personas():
             if not results.scalar_one_or_none():
                 # Derive a simple name from the code or instruction for seeding
                 name = f"Standard {code.upper()} Persona"
-                if "Japanese" in instruction: name = "Japanese (Wa)"
-                elif "German" in instruction: name = "German (Sachlichkeit)"
-                elif "Brazilian" in instruction: name = "Brazilian (Jeitinho)"
-                
+                if "Japanese" in instruction:
+                    name = "Japanese (Wa)"
+                elif "German" in instruction:
+                    name = "German (Sachlichkeit)"
+                elif "Brazilian" in instruction:
+                    name = "Brazilian (Jeitinho)"
+
                 persona = CulturalPersona(
-                    code=code,
-                    name=name,
-                    instruction=instruction,
-                    is_verified=True,
-                    source="system"
+                    code=code, name=name, instruction=instruction, is_verified=True, source="system"
                 )
                 session.add(persona)
         await session.commit()

@@ -3,9 +3,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from src.main import app
 from src.api.deps import get_redis
 from src.core.config import settings
+from src.main import app
 from src.schemas.agents import UserHistory
 
 # Inject Auth Header Globally for Tests
@@ -82,11 +82,13 @@ def test_read_health_redis_not_initialized():
 def test_evaluate_commitment_redis_not_initialized():
     """Verify that evaluation fails with 503 if Redis is unavailable."""
     payload = {"user_id": "u1", "commitment": "c", "check_in": "ok"}
+
     # Override get_redis to raise 503
     async def mock_get_redis_fail():
         from fastapi import HTTPException
+
         raise HTTPException(status_code=503, detail="Redis service unavailable")
-    
+
     app.dependency_overrides[get_redis] = mock_get_redis_fail
     try:
         response = client.post("/api/v1/evaluate", json=payload)
@@ -99,11 +101,12 @@ def test_evaluate_commitment_redis_not_initialized():
 def test_evaluate_commitment_demo_mode_no_longer_sync():
     """Verify that even in Demo Mode, missing Redis results in 503 (Sync fallback removed)."""
     payload = {"user_id": "u1", "commitment": "c", "check_in": "ok"}
-    
+
     async def mock_get_redis_fail():
         from fastapi import HTTPException
+
         raise HTTPException(status_code=503, detail="Service Temporarily Unavailable")
-        
+
     app.dependency_overrides[get_redis] = mock_get_redis_fail
     try:
         with patch("src.api.v1.evaluation.settings.DEMO_MODE", True):
@@ -119,7 +122,7 @@ def test_evaluate_commitment_success():
     mock_job = MagicMock()
     mock_job.job_id = "test-job-id"
     mock_redis.enqueue_job.return_value = mock_job
-    
+
     app.dependency_overrides[get_redis] = lambda: mock_redis
     try:
         payload = {"user_id": "u1", "commitment": "c", "check_in": "ok"}
@@ -141,18 +144,14 @@ def test_ingest_raw_commitment():
 
 @patch("src.api.v1.config_routes.set_slack_id", new_callable=AsyncMock)
 def test_map_slack_user(mock_set):
-    response = client.post(
-        "/api/v1/users/config/slack", params={"user_id": "u1", "slack_id": "s1"}
-    )
+    response = client.post("/api/v1/users/config/slack", params={"user_id": "u1", "slack_id": "s1"})
     assert response.status_code == 200
     mock_set.assert_called_once_with("u1", "s1")
 
 
 @patch("src.api.v1.config_routes.set_git_email", new_callable=AsyncMock)
 def test_map_git_user(mock_set):
-    response = client.post(
-        "/api/v1/users/config/git", params={"user_id": "u1", "email": "e1"}
-    )
+    response = client.post("/api/v1/users/config/git", params={"user_id": "u1", "email": "e1"})
     assert response.status_code == 200
     mock_set.assert_called_once_with("u1", "e1")
 
@@ -180,14 +179,11 @@ def test_ingest_git_commitment_unmatched(mock_get_user):
 async def test_reports_audit():
     """Verify that the reports audit endpoint works with real database entries."""
     from src.core.database import AsyncSessionLocal
-    
+
     # 1. Seed the test database
     async with AsyncSessionLocal() as session:
         user = UserHistory(
-            user_id="u1",
-            reliability_score=85.0,
-            department="Engineering",
-            total_commitments=5
+            user_id="u1", reliability_score=85.0, department="Engineering", total_commitments=5
         )
         session.add(user)
         await session.commit()
@@ -197,14 +193,14 @@ async def test_reports_audit():
     with (
         patch("src.api.v1.reports.SlippageAnalyst", autospec=True) as mock_ana,
         patch("src.api.v1.reports.TruthGapDetector", autospec=True) as mock_det,
-        patch("src.api.v1.reports.AuditReportGenerator", autospec=True) as mock_gen
+        patch("src.api.v1.reports.AuditReportGenerator", autospec=True) as mock_gen,
     ):
         mock_ana_inst = mock_ana.return_value
         mock_ana_inst.analyze_performance_gap = AsyncMock(return_value=MagicMock())
-        
+
         mock_det_inst = mock_det.return_value
         mock_det_inst.detect_gap = AsyncMock(return_value=MagicMock())
-        
+
         mock_gen.generate_audit_summary.return_value = {"report": "final_content"}
 
         response = client.get("/api/v1/reports/audit/u1")
@@ -215,8 +211,8 @@ async def test_reports_audit():
 @pytest.mark.asyncio
 async def test_lifespan():
     """Test lifespan events explicitly."""
-    from src.main import lifespan
     from src.core.state import state
+    from src.main import lifespan
 
     mock_app = MagicMock()
     with (
@@ -264,15 +260,16 @@ async def test_safety_supervisor_audit():
     from src.schemas.agents import ToneType
 
     supervisor = SafetySupervisor()
-    
+
     with patch.object(supervisor.provider, "chat_completion", new_callable=AsyncMock) as mock_chat:
         from src.schemas.agents import SafetyAudit
+
         mock_chat.return_value = SafetyAudit(
             is_safe=True,
             supervisor_confidence=0.9,
             risk_of_morale_damage=0.0,
             reasoning="Safe",
-            is_hard_blocked=False
+            is_hard_blocked=False,
         )
 
         result = await supervisor.audit_message(

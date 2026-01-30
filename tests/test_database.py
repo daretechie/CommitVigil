@@ -1,9 +1,9 @@
-import pytest
-from datetime import datetime, timedelta, timezone
-from sqlmodel import select
-from src.schemas.agents import UserHistory
-from src.core.config import settings
+from datetime import UTC, datetime, timedelta
 
+import pytest
+from sqlmodel import select
+
+from src.core.config import settings
 from src.core.database import (
     get_user_by_git_email,
     get_user_reliability,
@@ -12,6 +12,7 @@ from src.core.database import (
     set_slack_id,
     update_user_reliability,
 )
+from src.schemas.agents import UserHistory
 
 # Using shared setup_test_db fixture from conftest.py
 
@@ -96,7 +97,7 @@ async def test_cooling_off_reset():
         user = UserHistory(
             user_id=user_id,
             consecutive_firm_interventions=5,
-            last_intervention_at=datetime.now(timezone.utc),
+            last_intervention_at=datetime.now(UTC),
         )
         session.add(user)
         await session.commit()
@@ -106,7 +107,7 @@ async def test_cooling_off_reset():
         statement = select(UserHistory).where(UserHistory.user_id == user_id)
         results = await session.execute(statement)
         db_user = results.scalar_one()
-        db_user.last_intervention_at = datetime.now(timezone.utc) - timedelta(
+        db_user.last_intervention_at = datetime.now(UTC) - timedelta(
             hours=settings.COOLING_OFF_PERIOD_HOURS + 1
         )
         await session.commit()

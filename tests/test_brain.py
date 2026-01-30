@@ -67,9 +67,7 @@ async def test_brain_adapt_tone_deflection(mock_brain):
     risk = await mock_brain.assess_risk("history", "status")
     burnout = await mock_brain.detect_burnout("I forgot")
 
-    decision = await mock_brain.adapt_tone(
-        excuse, risk, burnout, reliability_score=40.0
-    )
+    decision = await mock_brain.adapt_tone(excuse, risk, burnout, reliability_score=40.0)
     assert decision.tone == ToneType.FIRM
     assert "recovery" in decision.message.lower()
 

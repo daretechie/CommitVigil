@@ -1,23 +1,34 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock
+
 from src.agents.brain import CommitVigilBrain
-from src.agents.safety import SafetySupervisor
 from src.agents.learning import SupervisorFeedbackLoop
-from src.schemas.agents import ToneType, SafetyAudit, LanguageResponse
+from src.agents.safety import SafetySupervisor
+from src.schemas.agents import LanguageResponse, SafetyAudit, ToneType
+
 # Using shared setup_test_db fixture from conftest.py
 
 
 @pytest.mark.asyncio
 async def test_japanese_cultural_routing():
     from src.schemas.agents import CulturalPersona
+
     brain = CommitVigilBrain()
 
     # Mock dynamic persona lookup
-    mock_persona = CulturalPersona(code="ja", name="Japanese", instruction="High-context Japanese tone... harmony (wa)...", is_verified=True)
+    mock_persona = CulturalPersona(
+        code="ja",
+        name="Japanese",
+        instruction="High-context Japanese tone... harmony (wa)...",
+        is_verified=True,
+    )
     with patch.object(brain, "detect_language", return_value="ja"):
-        with patch.object(brain, "get_or_create_persona", new_callable=AsyncMock) as mock_get_persona:
+        with patch.object(
+            brain, "get_or_create_persona", new_callable=AsyncMock
+        ) as mock_get_persona:
             mock_get_persona.return_value = mock_persona
-            
+
             with patch.object(
                 brain.provider, "chat_completion", new_callable=AsyncMock
             ) as mock_chat:
@@ -35,13 +46,21 @@ async def test_japanese_cultural_routing():
 
 async def test_french_cultural_routing():
     from src.schemas.agents import CulturalPersona
+
     brain = CommitVigilBrain()
-    mock_persona = CulturalPersona(code="fr", name="French", instruction="French Cartesian tone... eloquence...", is_verified=True)
-    
+    mock_persona = CulturalPersona(
+        code="fr",
+        name="French",
+        instruction="French Cartesian tone... eloquence...",
+        is_verified=True,
+    )
+
     with patch.object(brain, "detect_language", return_value="fr"):
-        with patch.object(brain, "get_or_create_persona", new_callable=AsyncMock) as mock_get_persona:
+        with patch.object(
+            brain, "get_or_create_persona", new_callable=AsyncMock
+        ) as mock_get_persona:
             mock_get_persona.return_value = mock_persona
-            
+
             with patch.object(
                 brain.provider, "chat_completion", new_callable=AsyncMock
             ) as mock_chat:
@@ -58,9 +77,7 @@ async def test_french_cultural_routing():
 async def test_british_english_detection_heuristic():
     """Verify that 'cheers mate' triggers en-UK even if standard en is detected."""
     brain = CommitVigilBrain()
-    with patch.object(
-        brain.provider, "chat_completion", new_callable=AsyncMock
-    ) as mock_chat:
+    with patch.object(brain.provider, "chat_completion", new_callable=AsyncMock) as mock_chat:
         mock_chat.return_value = LanguageResponse(code="en")  # Standard LLM result
         lang = await brain.detect_language("Cheers mate, I'll have it sorted.")
         assert lang == "en-UK"
@@ -70,16 +87,20 @@ async def test_british_english_detection_heuristic():
 async def test_british_english_routing():
     """Verify that UK English triggers polite understatements."""
     from src.schemas.agents import CulturalPersona
+
     brain = CommitVigilBrain()
-    mock_persona = CulturalPersona(code="en-UK", name="British", instruction="British professional tone... understatements...", is_verified=True)
+    mock_persona = CulturalPersona(
+        code="en-UK",
+        name="British",
+        instruction="British professional tone... understatements...",
+        is_verified=True,
+    )
 
     # Explicitly asking for en-UK
     with patch.object(brain, "get_or_create_persona", new_callable=AsyncMock) as mock_get_persona:
         mock_get_persona.return_value = mock_persona
-        
-        with patch.object(
-            brain.provider, "chat_completion", new_callable=AsyncMock
-        ) as mock_chat:
+
+        with patch.object(brain.provider, "chat_completion", new_callable=AsyncMock) as mock_chat:
             mock_chat.return_value = AsyncMock()
             await brain.adapt_tone(
                 excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="en-UK"
@@ -93,15 +114,19 @@ async def test_british_english_routing():
 async def test_spanish_cultural_routing():
     """Verify that Spanish triggers warm but boundaried persona."""
     from src.schemas.agents import CulturalPersona
+
     brain = CommitVigilBrain()
-    mock_persona = CulturalPersona(code="es", name="Spanish", instruction="Spanish professional tone... Warm and engaging...", is_verified=True)
-    
+    mock_persona = CulturalPersona(
+        code="es",
+        name="Spanish",
+        instruction="Spanish professional tone... Warm and engaging...",
+        is_verified=True,
+    )
+
     with patch.object(brain, "get_or_create_persona", new_callable=AsyncMock) as mock_get_persona:
         mock_get_persona.return_value = mock_persona
-        
-        with patch.object(
-            brain.provider, "chat_completion", new_callable=AsyncMock
-        ) as mock_chat:
+
+        with patch.object(brain.provider, "chat_completion", new_callable=AsyncMock) as mock_chat:
             mock_chat.return_value = AsyncMock()
             await brain.adapt_tone(
                 excuse=AsyncMock(), risk=AsyncMock(), burnout=AsyncMock(), lang="es"
@@ -115,9 +140,7 @@ async def test_spanish_cultural_routing():
 async def test_finance_semantic_firewall():
     """Verify that Finance rules block market manipulation content."""
     supervisor = SafetySupervisor()
-    with patch.object(
-        supervisor.provider, "chat_completion", new_callable=AsyncMock
-    ) as mock_chat:
+    with patch.object(supervisor.provider, "chat_completion", new_callable=AsyncMock) as mock_chat:
         mock_chat.return_value = SafetyAudit(
             is_safe=False,
             is_hard_blocked=True,
@@ -142,9 +165,7 @@ async def test_hipaa_semantic_firewall_blocking():
     """Verify that HIPAA rules block PHI/PII semantically."""
     supervisor = SafetySupervisor()
 
-    with patch.object(
-        supervisor.provider, "chat_completion", new_callable=AsyncMock
-    ) as mock_chat:
+    with patch.object(supervisor.provider, "chat_completion", new_callable=AsyncMock) as mock_chat:
         mock_chat.return_value = SafetyAudit(
             is_safe=False,
             is_hard_blocked=True,
@@ -172,9 +193,10 @@ async def test_hipaa_semantic_firewall_blocking():
 @pytest.mark.asyncio
 async def test_feedback_loop_persistence():
     """Verify that manager feedback is actually persisted to the DB."""
-    from src.schemas.agents import SafetyFeedback
     from sqlmodel import select
+
     from src.core.database import AsyncSessionLocal
+    from src.schemas.agents import SafetyFeedback
 
     loop = SupervisorFeedbackLoop()
 
@@ -188,9 +210,7 @@ async def test_feedback_loop_persistence():
     )
 
     async with AsyncSessionLocal() as session:
-        statement = select(SafetyFeedback).where(
-            SafetyFeedback.intervention_id == "int_123"
-        )
+        statement = select(SafetyFeedback).where(SafetyFeedback.intervention_id == "int_123")
         result = await session.execute(statement)
         feedback = result.scalar_one_or_none()
 

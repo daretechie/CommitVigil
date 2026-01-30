@@ -3,7 +3,7 @@ from typing import Any
 
 import instructor
 from groq import AsyncGroq
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from src.llm.base import LLMProvider, T
 
@@ -41,9 +41,11 @@ class GroqProvider(LLMProvider):
     ) -> T:
         if not self.client:
             raise RuntimeError("Groq client not initialized. Provide a valid API Key.")
-            
+
         # Default to a safe Llama 3 model if not specified or incompatible
         # (Though we pass the model from the Brain)
         return await self.client.chat.completions.create(
-            model=model, response_model=response_model, messages=messages  # type: ignore[arg-type]
+            model=model,
+            response_model=response_model,
+            messages=messages,  # type: ignore[arg-type]
         )

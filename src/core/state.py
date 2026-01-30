@@ -1,11 +1,14 @@
 from typing import Any
+
 from arq import ArqRedis
+
 
 class ApplicationState:
     """
     Typed Application State for CommitVigil.
     2026 Audit Remediation: Moves away from raw global dicts.
     """
+
     def __init__(self):
         self.redis: ArqRedis | None = None
 
@@ -17,5 +20,6 @@ class ApplicationState:
 
     def get(self, key: str, default: Any = None) -> Any:
         return getattr(self, key, default)
+
 
 state = ApplicationState()

@@ -2,9 +2,7 @@
 from fastapi import APIRouter, Depends
 
 from src.api.deps import get_api_key
-from src.core.database import set_git_email, set_slack_id, set_safety_rule
-from src.schemas.agents import SafetyRule
-
+from src.core.database import set_git_email, set_safety_rule, set_slack_id
 
 router = APIRouter()
 
@@ -32,10 +30,11 @@ async def map_git_user(user_id: str, email: str):
 
 
 @router.post("/config/safety", dependencies=[Depends(get_api_key)])
-async def update_safety_rules(industry: str, hr_keywords: list[str], semantic_rules: str, is_active: bool = True):
+async def update_safety_rules(
+    industry: str, hr_keywords: list[str], semantic_rules: str, is_active: bool = True
+):
     """
     Elite Management: Update safety rules for a specific industry dynamically.
     """
     rule = await set_safety_rule(industry, hr_keywords, semantic_rules, is_active)
     return {"status": "success", "industry": industry, "updated_at": rule.updated_at}
-

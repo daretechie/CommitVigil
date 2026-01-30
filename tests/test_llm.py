@@ -4,8 +4,8 @@ from src.core.config import settings
 from src.llm.factory import LLMFactory
 from src.llm.groq import GroqProvider
 from src.llm.mock import MockProvider
-from src.schemas.agents import ExcuseAnalysis
 from src.llm.openai import OpenAIProvider
+from src.schemas.agents import ExcuseAnalysis
 
 
 def test_llm_factory_mock():

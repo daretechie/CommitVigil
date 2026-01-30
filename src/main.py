@@ -3,17 +3,17 @@ from contextlib import asynccontextmanager
 
 from arq import create_pool
 from arq.connections import RedisSettings
-from fastapi import FastAPI
-from fastapi_limiter import FastAPILimiter
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_limiter import FastAPILimiter
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+from prometheus_fastapi_instrumentator import Instrumentator
+from sqlalchemy import text
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from prometheus_fastapi_instrumentator import Instrumentator
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
-from sqlalchemy import text
-
+from src.api.deps import get_api_key
 from src.api.v1.router import api_router
 from src.core.config import settings
 from src.core.database import engine, init_db
@@ -24,7 +24,7 @@ from src.core.state import state
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Add security headers to all responses."""
-    
+
     async def dispatch(self, request: Request, call_next) -> Response:
         response = await call_next(request)
         # Prevent clickjacking
@@ -36,11 +36,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Referrer policy
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         # Content Security Policy (strict default)
-        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+        )
         # Enable HSTS in production (requires HTTPS)
         if not settings.DEMO_MODE:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
+
 
 # Initialize Logging
 setup_logging()
@@ -74,7 +77,7 @@ async def lifespan(fastapi_app: FastAPI):  # noqa: ARG001
     # Cleanup
     if state["redis"]:
         await state["redis"].close()
-    
+
     await SlackConnector.close()
     logger.info("application_shutdown", status="cleaning_up")
 
@@ -107,8 +110,6 @@ instrumentator = Instrumentator()
 # In production, we protect the metrics endpoint with our standard API Key
 instrumentator.instrument(app)
 
-from src.api.deps import get_api_key
-from fastapi import Depends
 
 @app.get("/metrics", dependencies=[Depends(get_api_key)], include_in_schema=False)
 async def metrics():

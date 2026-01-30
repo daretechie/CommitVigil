@@ -3,7 +3,7 @@ from typing import Any, cast
 
 import instructor
 from openai import AsyncOpenAI
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from src.llm.base import LLMProvider, T
 

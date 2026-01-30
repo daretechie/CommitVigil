@@ -1,6 +1,6 @@
 # Copyright (c) 2026 CommitVigil AI. All rights reserved.
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -23,12 +23,11 @@ class AuditReportGenerator:
     # Initialize Jinja2 Environment
     _template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
     _env = Environment(
-        loader=FileSystemLoader(_template_dir),
-        autoescape=select_autoescape(['html', 'xml'])
+        loader=FileSystemLoader(_template_dir), autoescape=select_autoescape(["html", "xml"])
     )
-    
+
     # Inject helpers
-    _env.globals.update(now=lambda: datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"))
+    _env.globals.update(now=lambda: datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC"))
 
     @staticmethod
     def generate_audit_summary(
@@ -42,8 +41,8 @@ class AuditReportGenerator:
         Creates a high-value 'Performance Integrity Audit' for a manager.
         """
         return ReportSummary(
-            report_id=f"AUDIT-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{user.user_id}",
-            generated_at=datetime.now(timezone.utc).isoformat(),
+            report_id=f"AUDIT-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}-{user.user_id}",
+            generated_at=datetime.now(UTC).isoformat(),
             subject={
                 "user_id": user.user_id,
                 "reliability_score": f"{user.reliability_score:.2f}%",
@@ -81,15 +80,15 @@ class AuditReportGenerator:
         subject_id = report.subject.get("user_id", "Unknown")
         rel_score = report.subject.get("reliability_score", "0.00%")
         total_commits = report.subject.get("total_commitments", 0)
-        
+
         status = report.performance_metrics.get("status", "UNKNOWN")
         fulfillment = report.performance_metrics.get("fulfillment_ratio", "0.00%")
         gaps = report.performance_metrics.get("detected_gap", "No data")
-        
+
         aligned = report.integrity_score.get("aligned", False)
         truth_score = report.integrity_score.get("truth_score", "0.00%")
         explanation = report.integrity_score.get("explanation", "No explanation provided")
-        
+
         req = report.intervention_recommendation.get("required", False)
         tone = report.intervention_recommendation.get("tone", "neutral")
         summary = report.intervention_recommendation.get("summary", "Maintain performance")
@@ -159,12 +158,12 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
 
     @staticmethod
     def generate_departmental_audit(
-        department: str, 
-        members: list[UserHistory], 
+        department: str,
+        members: list[UserHistory],
         intervention_rate: float,
         calculated_avg: float | None = None,
         calculated_burnout: int | None = None,
-        total_count: int | None = None
+        total_count: int | None = None,
     ) -> AggregateReport:
         """
         Enterprise Feature: Aggregates performance data for 100+ user departments.
@@ -182,8 +181,16 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
                 strategy_recommendation="Initial Audit: No member data found for this department.",
             )
 
-        avg_rel = calculated_avg if calculated_avg is not None else round(sum(m.reliability_score for m in members) / len(members), 2)
-        burnout = calculated_burnout if calculated_burnout is not None else len([m for m in members if m.reliability_score < 70.0])
+        avg_rel = (
+            calculated_avg
+            if calculated_avg is not None
+            else round(sum(m.reliability_score for m in members) / len(members), 2)
+        )
+        burnout = (
+            calculated_burnout
+            if calculated_burnout is not None
+            else len([m for m in members if m.reliability_score < 70.0])
+        )
         total_m = total_count if total_count is not None else len(members)
 
         top_perf = [m.user_id for m in members if m.reliability_score >= 90.0][:5]
@@ -191,13 +198,19 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
 
         # Tiered Departmental Strategy Logic
         if avg_rel >= 90 and burnout == 0:
-            strategy = "Elite Team Performance: Focus on high-impact objectives and reward consistency."
+            strategy = (
+                "Elite Team Performance: Focus on high-impact objectives and reward consistency."
+            )
         elif avg_rel >= 80:
-            strategy = "Standard Performance: Baseline integrity maintained. Monitor minor slippage."
+            strategy = (
+                "Standard Performance: Baseline integrity maintained. Monitor minor slippage."
+            )
         elif avg_rel >= 60 or burnout > 0:
             strategy = "Corrective Action Required: Systemic burnout or process failure detected."
         else:
-            strategy = "Critical Intervention: Reassess team workload and process integrity immediately."
+            strategy = (
+                "Critical Intervention: Reassess team workload and process integrity immediately."
+            )
 
         return AggregateReport(
             department=department,
@@ -219,9 +232,7 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
         return template.render(org=org_data)
 
     @classmethod
-    def generate_organizational_audit(
-        cls, department_reports: list[AggregateReport]
-    ) -> dict:
+    def generate_organizational_audit(cls, department_reports: list[AggregateReport]) -> dict:
         """
         Highest Hierarchy Level: The Full Organization View.
         Aggregates all departments into a single 'God-View' for the CEO/CTO.
@@ -231,8 +242,7 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
 
         total_members = sum(r.total_members for r in department_reports)
         avg_org_rel = round(
-            sum(r.average_reliability_score for r in department_reports)
-            / len(department_reports),
+            sum(r.average_reliability_score for r in department_reports) / len(department_reports),
             2,
         )
         total_burnout = sum(r.burnout_risk_count for r in department_reports)
@@ -245,7 +255,9 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
         elif avg_org_rel >= 70 or total_burnout > 0:
             rec = "Moderate Risk: Targeted intervention required to prevent systemic burnout."
         else:
-            rec = "Critical Status: Immediate structural intervention and headcount review required."
+            rec = (
+                "Critical Status: Immediate structural intervention and headcount review required."
+            )
 
         return {
             "organization_reliability": f"{avg_org_rel}%",
@@ -269,22 +281,23 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
         Supports USD, EUR, GBP.
         """
         from src.core.config import settings
+
         # 1. Calculate Slippage Costs
         # Assumption: 15% of salary is lost to "Engagement Slippage" (Task switching, ambiguity, burnout)
         slippage_factor = 0.15
-        
+
         # Handle Currency
         currency_map = {"USD": 1.0, "EUR": 0.92, "GBP": 0.78}
         rate = currency_map.get(currency.upper(), 1.0)
-        
+
         # Normalize to USD for base calculation logic, then convert back
         yearly_cost_usd = (profile.avg_developer_salary / rate) * profile.team_size
         cost_of_slippage_usd = yearly_cost_usd * slippage_factor
-        
+
         # 2. Predicted Savings (CommitVoid recovers 40% of slippage)
         recovery_rate = settings.ROI_IMPROVEMENT_FACTOR  # e.g., 0.40
         annual_savings_usd = cost_of_slippage_usd * recovery_rate
-        
+
         # Convert savings back to requested currency for display-ready value in the object
         # Note: ROIPrediction schema officially has 'annual_savings_usd', but we will
         # interpret it as 'annual_savings_in_currency' for the API consumer if they requested non-USD.
@@ -292,37 +305,49 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
         annual_savings_converted = annual_savings_usd * rate
 
         # 3. Efficiency Gains
-        hours_per_dev = 2080 # 40hr week * 52
+        hours_per_dev = 2080  # 40hr week * 52
         total_hours_lost = (profile.team_size * hours_per_dev) * slippage_factor
         hours_recovered = total_hours_lost * recovery_rate
-        
+
         # 4. Payback Period
         # Assume SaaS cost is ~1% of payroll or $500/dev/year
         licensing_cost = profile.team_size * 500
-        payback_months = (licensing_cost / annual_savings_converted) * 12 if annual_savings_converted > 0 else 0
+        payback_months = (
+            (licensing_cost / annual_savings_converted) * 12 if annual_savings_converted > 0 else 0
+        )
 
         return ROIPrediction(
             annual_savings_usd=annual_savings_converted,
             developer_hours_recovered=hours_recovered,
             slippage_reduction_percent=int(recovery_rate * 100),
             payback_period_months=round(payback_months, 1),
-            calculation_basis=f"Based on {slippage_factor*100}% slippage and {recovery_rate*100}% recovery rate in {currency}."
+            calculation_basis=f"Based on {slippage_factor * 100}% slippage and {recovery_rate * 100}% recovery rate in {currency}.",
         )
 
     @staticmethod
-    def generate_sales_brief_html(profile: ProspectProfile, roi: ROIPrediction, currency: str = "USD") -> str:
+    def generate_sales_brief_html(
+        profile: ProspectProfile, roi: ROIPrediction, currency: str = "USD"
+    ) -> str:
         """
         Generates a premium HTML one-pager for Executive Sales Meetings.
         """
-        symbol = "$" if currency == "USD" else "€" if currency == "EUR" else "£" if currency == "GBP" else currency
-        
+        symbol = (
+            "$"
+            if currency == "USD"
+            else "€"
+            if currency == "EUR"
+            else "£"
+            if currency == "GBP"
+            else currency
+        )
+
         scenarios_html = ""
         for s in profile.drift_scenarios:
             scenarios_html += f"""
             <div class="scenario-card">
-                <div class="role-badge">{s['who']}</div>
-                <div class="promise"><strong>Promise:</strong> "{s['promise']}"</div>
-                <div class="reality"><strong>Reality:</strong> "{s['reality']}"</div>
+                <div class="role-badge">{s["who"]}</div>
+                <div class="promise"><strong>Promise:</strong> "{s["promise"]}"</div>
+                <div class="reality"><strong>Reality:</strong> "{s["reality"]}"</div>
             </div>
             """
 
@@ -347,8 +372,8 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
         <body>
             <div class="container">
                 <h1>Executive Brief: {profile.company_name}</h1>
-                <p>Prepared for: <strong>{profile.target_role}</strong> | Industry: <strong>{profile.drift_scenarios[0]['who'] if profile.drift_scenarios else 'Generic'}</strong></p>
-                
+                <p>Prepared for: <strong>{profile.target_role}</strong> | Industry: <strong>{profile.drift_scenarios[0]["who"] if profile.drift_scenarios else "Generic"}</strong></p>
+
                 <h2> projected Annual ROI ({currency})</h2>
                 <div class="stat-grid">
                     <div class="stat-box">
@@ -404,13 +429,13 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
                 fulfillment_ratio=0.1,
                 detected_gap=f"User promised '{scenario['promise']}' but reality check shows '{scenario['reality']}'.",
                 risk_to_system_stability=0.7,
-                intervention_required=True
+                intervention_required=True,
             )
             mock_gap = TruthGapAnalysis(
                 gap_detected=True,
                 truth_score=0.2,
                 explanation="Significant delta between verbal commitment and technical evidence.",
-                recommended_tone="firm"
+                recommended_tone="firm",
             )
             mock_audits.append(cls.generate_audit_summary(mock_user, mock_slippage, mock_gap))
 
@@ -419,6 +444,5 @@ The subject has demonstrated a **{fulfillment}** fulfillment rate.
             "target": profile.target_role,
             "roi_prediction": roi.model_dump(),
             "sample_interventions": mock_audits,
-            "prospectus_summary": f"CommitVigil identified {roi.developer_hours_recovered} hours of recoverable technical debt for {profile.company_name}."
+            "prospectus_summary": f"CommitVigil identified {roi.developer_hours_recovered} hours of recoverable technical debt for {profile.company_name}.",
         }
-

@@ -1,5 +1,5 @@
 # Copyright (c) 2026 CommitVigil AI. All rights reserved.
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlmodel import func, select
 
@@ -34,7 +34,7 @@ class SupervisorFeedbackLoop:
                 action_taken=action,
                 final_message_sent=message,
                 feedback_notes=notes,
-                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                created_at=datetime.now(UTC).replace(tzinfo=None),
             )
             session.add(feedback)
             await session.commit()
@@ -65,17 +65,17 @@ class SupervisorFeedbackLoop:
                 logger.warning("acceptance_rate_cache_peek_failed", error=str(e))
 
         # 2. Database Calculation (Aggregated)
-        since = (datetime.now(timezone.utc) - timedelta(days=days)).replace(tzinfo=None)
+        since = (datetime.now(UTC) - timedelta(days=days)).replace(tzinfo=None)
         async with AsyncSessionLocal() as session:
             # Optimized: Single query for both counts
             statement = select(
                 func.count(SafetyFeedback.id),
-                func.count(SafetyFeedback.id).filter(SafetyFeedback.action_taken == "accepted")
+                func.count(SafetyFeedback.id).filter(SafetyFeedback.action_taken == "accepted"),
             ).where(SafetyFeedback.created_at >= since)
-            
+
             result = await session.execute(statement)
             total, accepted = result.one()
-            
+
             rate = round(accepted / total, 2) if total > 0 else 1.0
 
         # 3. Update Cache

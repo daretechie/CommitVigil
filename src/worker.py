@@ -1,10 +1,11 @@
 # Copyright (c) 2026 CommitVigil AI. All rights reserved.
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import ClassVar
 
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from arq.connections import RedisSettings
+
 from src.agents.brain import CommitVigilBrain
 from src.core.config import settings
 from src.core.database import get_user_reliability, init_db, update_user_reliability
@@ -69,14 +70,12 @@ async def process_commitment_eval(
 
         # 3. Persist results for Heatmap tracking & Ethical Cooling-off state
         is_failure = evaluation.excuse.category != ExcuseCategory.LEGITIMATE
-        await update_user_reliability(
-            user_id, was_failure=is_failure, tone_used=decision.tone
-        )
+        await update_user_reliability(user_id, was_failure=is_failure, tone_used=decision.tone)
 
         # 4. Accountability Logic: Proactive Follow-up
         # Triggered based on calculated risk thresholds
         if risk.level in [RiskLevel.HIGH, RiskLevel.CRITICAL]:
-            run_time = datetime.now(timezone.utc) + timedelta(seconds=settings.FOLLOW_UP_DELAY_SECONDS)
+            run_time = datetime.now(UTC) + timedelta(seconds=settings.FOLLOW_UP_DELAY_SECONDS)
             scheduler.add_job(
                 send_follow_up,
                 "date",

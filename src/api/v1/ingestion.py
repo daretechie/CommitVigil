@@ -1,6 +1,6 @@
 import hashlib
-from fastapi import APIRouter, Depends
 
+from fastapi import APIRouter, Depends
 from fastapi_limiter.depends import RateLimiter
 from pydantic import BaseModel, EmailStr, Field
 
@@ -17,10 +17,10 @@ class GitCommitInbound(BaseModel):
     message: str = Field(..., max_length=2000)
 
 
-
-@router.post("/ingest/raw", dependencies=[Depends(get_api_key), Depends(RateLimiter(times=10, seconds=60))])
+@router.post(
+    "/ingest/raw", dependencies=[Depends(get_api_key), Depends(RateLimiter(times=10, seconds=60))]
+)
 async def ingest_raw_commitment(user_id: str, raw_text: str):
-
     """
     Elite Feature: Extract structured commitment record from raw Slack/Discord text.
     """
@@ -29,7 +29,9 @@ async def ingest_raw_commitment(user_id: str, raw_text: str):
     extracted = await extractor.parse_conversation(raw_text)
 
     # Hash identity for Privacy-Preserving Logging
-    identity_hash = hashlib.sha256(extracted.who.encode()).hexdigest()[:12] if extracted.who else "none"
+    identity_hash = (
+        hashlib.sha256(extracted.who.encode()).hexdigest()[:12] if extracted.who else "none"
+    )
 
     # Audit: In a full production system, we would persist this to a 'tasks' table.
     logger.info(
@@ -38,7 +40,6 @@ async def ingest_raw_commitment(user_id: str, raw_text: str):
         task=extracted.what,
         owner_hash=identity_hash,
     )
-
 
     return {
         "status": "extracted",
@@ -49,9 +50,10 @@ async def ingest_raw_commitment(user_id: str, raw_text: str):
     }
 
 
-@router.post("/ingest/git", dependencies=[Depends(get_api_key), Depends(RateLimiter(times=10, seconds=60))])
+@router.post(
+    "/ingest/git", dependencies=[Depends(get_api_key), Depends(RateLimiter(times=10, seconds=60))]
+)
 async def ingest_git_commitment(commit_data: GitCommitInbound):
-
     """
     Advanced GitOps Feature: Extract commitments directly from Git Commit Messages.
     """

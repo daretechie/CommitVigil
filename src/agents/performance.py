@@ -65,15 +65,13 @@ class TruthGapDetector:
         self.provider = LLMFactory.get_provider(provider_name)
         self.model = settings.MODEL_NAME
 
-    async def detect_gap(
-        self, check_in_text: str, technical_evidence: str
-    ) -> TruthGapAnalysis:
+    async def detect_gap(self, check_in_text: str, technical_evidence: str) -> TruthGapAnalysis:
         """
         Calculates the delta between what a human claims and what the code shows.
         """
 
         prompt = f"""
-        Analyze the alignment between verbal claims and technical reality. 
+        Analyze the alignment between verbal claims and technical reality.
         Is the user exaggerating progress? Are they being honest?
         Detect the 'Truth Gap'.
 

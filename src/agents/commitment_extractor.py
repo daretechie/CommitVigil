@@ -1,6 +1,6 @@
 # Copyright (c) 2026 CommitVigil AI. All rights reserved.
 from src.core.config import settings
-from src.core.utils import truncate_text, sanitize_prompt_input
+from src.core.utils import sanitize_prompt_input, truncate_text
 from src.llm.factory import LLMFactory
 from src.schemas.agents import SlackCommitmentRecord
 
@@ -37,11 +37,7 @@ class CommitmentExtractor:
                 },
                 {
                     "role": "user",
-                    "content": (
-                        f"<conversation_log>\n"
-                        f"{sanitized_text}\n"
-                        f"</conversation_log>"
-                    ),
+                    "content": (f"<conversation_log>\n{sanitized_text}\n</conversation_log>"),
                 },
             ],
         )

@@ -3,7 +3,6 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-
 class Settings(BaseSettings):
     PROJECT_NAME: str = "CommitVigil"
     VERSION: str = "0.1.0"
@@ -55,7 +54,7 @@ class Settings(BaseSettings):
 
     # Default to localhost only for development; Production MUST override this via env var
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
-    
+
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: str | list[str]) -> list[str] | str:

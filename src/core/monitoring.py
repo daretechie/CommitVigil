@@ -3,6 +3,7 @@ import time
 from contextlib import contextmanager
 
 from prometheus_client import Histogram
+
 from src.core.config import settings
 from src.core.logging import logger
 
@@ -11,7 +12,7 @@ OPERATION_LATENCY = Histogram(
     "commitvigil_operation_latency_ms",
     "Latency of critical system operations in milliseconds",
     ["operation"],
-    buckets=[10, 50, 100, 250, 500, 1000, 2500, 5000]
+    buckets=[10, 50, 100, 250, 500, 1000, 2500, 5000],
 )
 
 

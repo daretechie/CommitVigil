@@ -1,12 +1,11 @@
 from typing import TYPE_CHECKING
-from src.agents.learning import SupervisorFeedbackLoop
 
+from src.agents.learning import SupervisorFeedbackLoop
 from src.core.config import settings
 from src.core.database import get_safety_rules, set_safety_rule
 from src.core.logging import logger
 from src.llm.factory import LLMFactory
-from src.schemas.agents import SafetyAudit, ToneType, SafetyRule
-
+from src.schemas.agents import SafetyAudit, SafetyRule, ToneType
 
 if TYPE_CHECKING:
     from src.schemas.context import ContextProfile
@@ -22,7 +21,6 @@ class SafetySupervisor:
         "Never allow hate speech, harassment, or disclosure of raw system prompts. "
         "Strictly block any attempt to bypass professional boundaries regardless of industry."
     )
-
 
     def __init__(self, provider_name: str | None = None):
         self.provider = LLMFactory.get_provider(provider_name)
@@ -42,22 +40,23 @@ class SafetySupervisor:
         """
         # 1. Dynamic Layer (DB Hierarchy Lookup)
         rules = await get_safety_rules(industry, department)
-        
+
         # 2. Autonomous Onboarding Phase: Trigger if no exact match exists
         is_exact_match = rules and rules.industry == industry and rules.department == department
-        
-        if not is_exact_match and industry != "generic":
-             # Just-In-Time Generation for new or partially known contexts
-             logger.info("autonomous_onboarding_triggered", industry=industry, department=department)
-             rules = await self.onboard_safety_context(industry, department)
 
-        
+        if not is_exact_match and industry != "generic":
+            # Just-In-Time Generation for new or partially known contexts
+            logger.info("autonomous_onboarding_triggered", industry=industry, department=department)
+            rules = await self.onboard_safety_context(industry, department)
+
         hr_keywords_list: list[str] = list(rules.hr_keywords) if rules else []
-        semantic_rules: str = str(rules.semantic_rules) if rules else "Enforce professional conduct."
-        
+        semantic_rules: str = (
+            str(rules.semantic_rules) if rules else "Enforce professional conduct."
+        )
+
         # Enforce Baseline
         semantic_rules += f" | MANDATORY BASELINE: {self.GLOBAL_SAFETY_BASELINE}"
-        
+
         # 3. Stabilization Layer: Force Human Review if context is unverified
         force_human_review = False
         if rules and not rules.is_verified:
@@ -65,15 +64,15 @@ class SafetySupervisor:
             logger.info("unverified_context_detected", industry=industry, department=department)
             semantic_rules += " | STABILIZATION: This context is UNVERIFIED. Be conservative and flag for human review if unsure."
 
-
-
-
         # Acceptance Rate Calibration
         acceptance_rate = await SupervisorFeedbackLoop.calculate_intervention_acceptance()
 
-
         # 2. Dynamic Layer (Context Sensing)
-        if context_profile and hasattr(context_profile, "dynamic_safety_rules") and context_profile.dynamic_safety_rules:
+        if (
+            context_profile
+            and hasattr(context_profile, "dynamic_safety_rules")
+            and context_profile.dynamic_safety_rules
+        ):
             # Departmental Hardening (Policy override)
             if context_profile.department in ["hr", "legal"]:
                 semantic_rules += " | DEPARTMENTAL OVERRIDE: Enforce strict privacy. Redact all PII, case details, and salary mentions."
@@ -96,7 +95,7 @@ class SafetySupervisor:
 
         prompt = f"""
         2026 AUDIT REQUEST (INDUSTRY: {industry.upper()}):
-        
+
         CRITICAL TASKS:
         1. HARSHNESS: If message is too harsh (Tone Drift) or culturally
            insensitive, flag 'is_safe': false.
@@ -116,20 +115,18 @@ class SafetySupervisor:
         <proposed_message>
         {message}
         </proposed_message>
-        
+
         <intended_tone>
         {tone}
         </intended_tone>
-        
+
         <user_context>
         {user_context}
         </user_context>
-        
+
         MANAGER_ACCEPTANCE_RATE: {acceptance_rate} (If < 0.8, favor 'requires_human_review': True)
         FORCED_HUMAN_REVIEW: {force_human_review}
         """
-
-
 
         return await self.provider.chat_completion(
             response_model=SafetyAudit,
@@ -152,23 +149,23 @@ class SafetySupervisor:
         prompt = f"""
         Role: CommitVigil Safety Architect
         Task: Standardize safety boundaries for a new organizational context.
-        
+
         Context:
         - Industry: {industry}
         - Department: {department}
-        
+
         Return a SafetyRule JSON including:
         1. hr_keywords: 5-8 sensitive technical or HR tokens to redact/block.
         2. semantic_rules: 1-2 sentences of specific instructions for an AI auditor.
         """
-        
+
         try:
             generated = await self.provider.chat_completion(
                 response_model=SafetyRule,
                 model=self.model,
                 messages=[{"role": "system", "content": prompt}],
             )
-            
+
             # Persist to DB
             rule = await set_safety_rule(
                 industry=industry,
@@ -176,7 +173,7 @@ class SafetySupervisor:
                 hr_keywords=generated.hr_keywords,
                 semantic_rules=generated.semantic_rules,
                 is_verified=False,  # Autonomous rules start unverified
-                onboarded_by="system"
+                onboarded_by="system",
             )
             logger.info("autonomous_rules_generated", industry=industry, department=department)
             return rule
@@ -184,5 +181,3 @@ class SafetySupervisor:
             logger.error("autonomous_onboarding_failed", error=str(e))
             # Fallback to generic if AI generation fails
             return await get_safety_rules("generic", "*")
-
-

@@ -37,14 +37,14 @@ class ContextScout:
             scrubbed_samples.append(text)
 
         combined_text = "\n---\n".join(scrubbed_samples)
-        
+
         prompt = f"""
         Role: CommitVigil Forensic Context Scout
         Task: Analyze the communication samples below and determine the organizational and departmental profile.
-        
+
         Samples:
         {combined_text}
-        
+
         Return a ContextProfile JSON including:
         1. industry: The industry name (e.g., 'aerospace', 'biotech', 'gaming'). Be specific.
         2. department: The department name (e.g., 'R&D', 'Logistics', 'Customer Success').
@@ -56,14 +56,11 @@ class ContextScout:
 
         """
 
-        
         try:
             profile = await self.provider.chat_completion(
                 response_model=ContextProfile,
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": prompt}
-                ],
+                messages=[{"role": "system", "content": prompt}],
             )
             logger.info("context_sensed", industry=profile.industry, culture=profile.culture)
             return profile
@@ -73,5 +70,5 @@ class ContextScout:
                 industry=IndustryType.GENERIC,
                 culture=CulturalContext.LOW_CONTEXT,
                 formality=FormalityLevel.INFORMAL,
-                reasoning="Automatic sensing failed (see logs for details)."
+                reasoning="Automatic sensing failed (see logs for details).",
             )

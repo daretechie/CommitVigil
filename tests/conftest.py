@@ -1,29 +1,29 @@
 import os
 import sys
-import pytest
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 
-from src.core.config import settings
 from src.core import database
+from src.core.config import settings
+
 
 # Mock FastAPILimiter globally for all tests
 @pytest.fixture(autouse=True, scope="session")
 def mock_limiter():
-    from fastapi_limiter import FastAPILimiter
     mock_redis = AsyncMock()
     # Mock the _check method which is called during __call__
-    mock_redis.evalsha = AsyncMock(return_value=0) 
+    mock_redis.evalsha = AsyncMock(return_value=0)
     mock_redis.script_load = AsyncMock(return_value="sha")
-    
+
     with patch("fastapi_limiter.FastAPILimiter.redis", new=mock_redis):
-        with patch("fastapi_limiter.FastAPILimiter.identifier", new=AsyncMock(return_value="test-user")):
+        with patch(
+            "fastapi_limiter.FastAPILimiter.identifier", new=AsyncMock(return_value="test-user")
+        ):
             with patch("fastapi_limiter.FastAPILimiter.http_callback", new=AsyncMock()):
                 yield
-
-
 
 
 # Test Database URL
@@ -54,23 +54,22 @@ def pytest_collection_modifyitems(config, items):
 def override_db_url(request):
     """Override database URL for the entire test session."""
     run_live = request.config.getoption("--run-live")
-    
+
     original_url = settings.DATABASE_URL
     original_llm_provider = settings.LLM_PROVIDER
     original_openai_key = settings.OPENAI_API_KEY
     original_groq_key = settings.GROQ_API_KEY
-    
+
     settings.DATABASE_URL = TEST_DATABASE_URL
-    
+
     if not run_live:
         settings.LLM_PROVIDER = "mock"
-        settings.OPENAI_API_KEY = None # Ensure no keys trigger auto-detection
+        settings.OPENAI_API_KEY = None  # Ensure no keys trigger auto-detection
         settings.GROQ_API_KEY = None
-    
+
     with patch("src.main.FastAPILimiter.init", new_callable=AsyncMock):
         yield
 
-    
     settings.DATABASE_URL = original_url
     if not run_live:
         settings.LLM_PROVIDER = original_llm_provider
@@ -96,14 +95,17 @@ async def setup_test_db():
 
     if "src.agents.learning" in sys.modules:
         import src.agents.learning
+
         src.agents.learning.AsyncSessionLocal = new_session_local
 
     if "src.api.v1.reports" in sys.modules:
         import src.api.v1.reports
+
         src.api.v1.reports.AsyncSessionLocal = new_session_local
 
     if "src.api.v1.evaluation" in sys.modules:
         import src.api.v1.evaluation
+
         src.api.v1.evaluation.AsyncSessionLocal = new_session_local
 
     async with database.engine.begin() as conn:

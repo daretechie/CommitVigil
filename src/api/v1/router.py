@@ -1,7 +1,7 @@
 # Copyright (c) 2026 CommitVigil AI. All rights reserved.
 from fastapi import APIRouter
 
-from src.api.v1 import config_routes, evaluation, ingestion, reports, feedback, sales
+from src.api.v1 import config_routes, evaluation, feedback, ingestion, reports, sales
 
 api_router = APIRouter()
 
