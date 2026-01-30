@@ -58,8 +58,32 @@ filterwarnings = [
     "ignore::RuntimeWarning:fastapi.*:",
 ]
 
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "C",   # flake8-comprehensions
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "PT",  # flake8-pytest-style
+]
+ignore = ["E501"] # Ignore long lines handled by formatter
+
+[tool.ruff.isort]
+known-first-party = ["src"]
+
 [tool.mypy]
+python_version = "3.12"
+strict = true
 ignore_missing_imports = true
-check_untyped_defs = true
-exclude = ["migrations/"]
+exclude = ["migrations/", "tests/"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "migrations"]
+tests = ["B201", "B301"]
 

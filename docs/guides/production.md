@@ -14,7 +14,7 @@ For large-scale teams, we separate the **Ingestion Layer** (API) from the **Proc
 
 ## ☸️ Kubernetes Orchestration
 
-We provide production-ready K8s manifests in [`infra/k8s/`](file:///home/daretechie/DevProject/GitHub/CommitVigil-AI/infra/k8s/).
+We provide production-ready K8s manifests in [`infra/k8s/`](file:///home/daretechie/DevProject/GitHub/CommitGuard-AI/infra/k8s/).
 
 ### Key Scaling Features:
 - **Replica Sets**: Run multiple API instances to handle high traffic.

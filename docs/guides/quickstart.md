@@ -31,6 +31,23 @@ docker compose up --build
 
 ---
 
+## 🎮 Interactive Demos
+See the system in action with these pre-configured scenarios:
+
+### 1. High-Stakes Accountability
+Simulates a manager-developer interaction with tone adaptation and safety checks.
+```bash
+./scripts/demo.sh
+```
+
+### 2. Sales Intelligence & ROI
+Simulates a prospecting flow with automated scenario generation and multi-currency ROI.
+```bash
+./scripts/demo_sales.sh
+```
+
+---
+
 ## 🧪 Quality and Stability
 CommitVigil enforces military-grade engineering standards:
 - **Mock Mode**: Set `LLM_PROVIDER="mock"` in `.env` to run the entire system with zero token cost.

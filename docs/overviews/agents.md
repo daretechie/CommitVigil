@@ -52,3 +52,9 @@ CommitVigil adapts the **ToneAdapter** to the cultural context of the user:
 > - **Risk**: High (0.85)
 > - **Tone**: Supportive
 > - **Action**: *"Hey @User, I'm detecting some burnout signs. Let's look at the scope together before the deadline."*
+
+## 6. Sales Intelligence (`ProspectingScout`)
+A specialized agent designed to generate high-fidelity "Drift Scenarios" for sales demos. It:
+- **Synthesizes** fictional but realistic commitment failures based on the prospect's industry (e.g., "Missed FDA Compliance Check" for Biotech).
+- **Calculates ROI** based on team size, average salary, and slippage recovery rates.
+- **Generates Executive Briefs** for C-Level presentations.

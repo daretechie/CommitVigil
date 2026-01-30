@@ -13,7 +13,7 @@
 
 > **"One Engine. Two Worlds. Total Accountability."**
 
-[**Full Documentation 📚**](https://daretechie.github.io/CommitVigil/) | [**Live Site 🌐**](https://daretechie.github.io/CommitVigil/) | [**Safety Validation Report 🛡️**](https://daretechie.github.io/CommitVigil/validation/safety_validation_report/) | [**Manager Feedback Guide 🎮**](docs/guides/feedback_loop.md)
+[**Full Documentation 📚**](https://daretechie.github.io/CommitVigil/) | [**Live Site 🌐**](https://daretechie.github.io/CommitVigil/) | [**Safety Validation Report 🛡️**](https://daretechie.github.io/CommitVigil/validation/safety_validation_report/) | [**Manager Feedback Guide 🎮**](docs/guides/feedback_loop.md) | [**Integration Guide 🔌**](docs/guides/integrations.md)
 
 ---
 
@@ -51,6 +51,12 @@ Every commitment—whether from Slack or a Git Commit—passes through a determi
 2.  **Predictive Risk Assessment (`RiskScorer`)**: Quantifies failure probability based on historical reliability.
 3.  **Language & Culture Router**: Identifies the primary language and selects the appropriate cultural persona.
 4.  **Safety Supervisor (`Overwatch`)**: Audits final communications for HR/Legal ethics and **Industry-Specific Semantic Compliance**.
+
+### 💼 Phase 6: Enterprise Sales Intelligence (New)
+Transform your security audit into a revenue engine.
+- **Automated Prospecting**: The `ProspectingScout` agent generates realistic "Drift Scenarios" for demos based on industry (e.g., Finance, Energy).
+- **Multi-Currency ROI**: Interactive calculator for predicting savings in USD, EUR, and GBP.
+- **Executive Briefs**: Generates premium HTML one-pagers for C-Level meetings.
 
 ---
 

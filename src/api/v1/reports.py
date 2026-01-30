@@ -94,20 +94,7 @@ async def get_performance_audit(user_id: str, report_format: str = "json"):
     return summary
 
 
-@router.post("/feedback/safety", dependencies=[Depends(get_api_key)])
-async def log_safety_feedback(feedback: CorrectionFeedback):
-    """
-    Priority 1 Feature: Track manager acceptance of Safety Supervisor interventions.
-    """
-    await SupervisorFeedbackLoop.log_manager_decision(
-        intervention_id=feedback.intervention_id,
-        user_id=feedback.user_id,
-        manager_id=feedback.manager_id,
-        action=feedback.action_taken,
-        message=feedback.final_message_sent,
-        notes=feedback.comments,
-    )
-    return {"status": "logged", "message": "Safety feedback recorded for model tuning."}
+
 
 
 @router.get("/reports/department/{department}", dependencies=[Depends(get_api_key)])
@@ -214,31 +201,4 @@ async def get_organizational_audit(report_format: str = "json"):
 
     return summary
 
-@router.post("/demo/generate-prospect-audit", dependencies=[Depends(get_api_key)])
-async def generate_prospect_audit(profile: ProspectProfile):
-    """
-    SALES ENABLEMENT: Generates a high-impact 'Demo Audit' for potential prospects.
-    Includes ROI Prediction and simulated commitment drift scenarios.
-    """
-    logger.info("prospect_audit_generated", company=profile.company_name, target=profile.target_role)
-    return AuditReportGenerator.generate_prospect_audit(profile)
 
-
-@router.get("/demo/predict-roi", dependencies=[Depends(get_api_key)])
-async def predict_prospect_roi(team_size: int, avg_salary: float = 150000.0):
-    """
-    SALES INTELLIGENCE: Quick calculator for potential savings.
-    """
-    profile = ProspectProfile(
-        company_name="Abstract Prospect",
-        target_role="VP Engineering",
-        team_size=team_size,
-        avg_developer_salary=avg_salary
-    )
-    roi = AuditReportGenerator.predict_roi(profile)
-    return {
-        "annual_savings": f"${roi.annual_savings_usd:,.2f}",
-        "recovered_hours": f"{roi.developer_hours_recovered:,.1f}",
-        "payback_months": roi.payback_period_months,
-        "slippage_reduction": f"{roi.slippage_reduction_percent}%",
-    }

@@ -9,7 +9,7 @@ CommitGuard AI's "Safety Supervisor" monitors all communications. Sometimes, the
 3. The manager submits feedback (Accept, Reject, or Modify).
 
 ## API Integration
-To submit feedback via the API, use the `POST /api/v1/feedback/safety` endpoint.
+To submit feedback via the API, use the `POST /api/v1/safety/feedback` endpoint.
 
 ### Example Request
 ```json

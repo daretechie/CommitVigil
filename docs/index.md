@@ -25,3 +25,14 @@ CommitVigil is built on a **Decoupled Event-Driven Architecture**:
 - **Redis & ARQ**: Distributed background processing for high-volume orchestration.
 - **The Brain**: Multi-agent LLM reasoning loop.
 - **PostgreSQL**: Industrial-grade persistence with atomic row-locking for score integrity.
+- **Pluggable Connectors**: Source-agnostic design ready for Jira, MS Teams, Linear, and custom CRM integrations.
+
+---
+
+## 💰 Sales Intelligence (ROI)
+Calculate the projected savings for a prospective client.
+```bash
+curl -X 'GET' \
+  -H 'X-API-Key: YOUR_API_KEY' \
+  'http://localhost:8000/api/v1/sales/roi-calculator?team_size=50&currency=USD'
+```

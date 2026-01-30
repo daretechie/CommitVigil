@@ -14,10 +14,10 @@ Redis is used for Rate Limiting (`fastapi-limiter`) and Background Job Queueing 
 - If **API is up** but **Worker is down**: Commitments will accumulate in Redis. Scale up the `worker` deployment.
 - If **Redis is down**: The API will fail to enqueue jobs.
 
-### 2. Manual Recovery (Docker Compose)
+### 2. Manual Recovery (Docker)
 ```bash
-docker-compose restart redis
-docker-compose logs -f redis
+docker compose restart redis
+docker compose logs -f redis
 ```
 
 ### 3. Kubernetes Recovery
@@ -30,7 +30,7 @@ Call the health endpoint:
 ```bash
 curl http://localhost:8000/health
 ```
-Verify `redis_status: "online"` in the JSON response.
+Verify `"redis": "healthy"` inside the `dependencies` block of the JSON response.
 
 ## Post-Failure Analysis
 Check Token Usage logs to ensure no duplicate withdrawals occurred during the reconnection window.

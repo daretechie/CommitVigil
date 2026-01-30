@@ -51,3 +51,9 @@ Managers can now generate high-value, professional audit reports for their team 
 
 > [!TIP]
 > Use the **Markdown** format for embedding audit summaries directly into GitHub Pull Request comments for collective accountability.
+
+## 6. Sales Enablement & ROI 💰
+For leaders justifying the budget for CommitVigil, use the **ROI Calculator**:
+
+*   **Projected Savings**: Calculates recovered developer hours based on a 40% reduction in "Engagement Slippage".
+*   **Executive Briefs**: Generate a one-page HTML summary for your CFO using the `/sales/executive-brief` endpoint.

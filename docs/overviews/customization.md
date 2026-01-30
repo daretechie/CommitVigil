@@ -24,8 +24,8 @@ You can customize the system's "Strictness" and "Caution" via environment variab
 ## 2. Model Configs & Context Injection
 The "Secret Sauce" of CommitVigil is in the **System Prompts**. You can find and modify the decision-making logic in the following locations:
 
-*   **Behavioral Reasoning**: Located in [src/agents/brain.py](https://github.com/daretechie/CommitVigil-AI/blob/main/src/agents/brain.py).
-*   **Safety Supervision**: Located in [src/agents/safety.py](https://github.com/daretechie/CommitVigil-AI/blob/main/src/agents/safety.py).
+*   **Behavioral Reasoning**: Located in [src/agents/brain.py](https://github.com/daretechie/CommitGuard-AI/blob/main/src/agents/brain.py).
+*   **Safety Supervision**: Located in [src/agents/safety.py](https://github.com/daretechie/CommitGuard-AI/blob/main/src/agents/safety.py).
 
 ---
 

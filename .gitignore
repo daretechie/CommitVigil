@@ -156,8 +156,7 @@ cython_debug/
 *.sqlite
 .ruff_cache/
 brain/
-docs/reference/prospecting_log.md
-docs/reference/demo_script.md
+seed_log.txt
 # Ignore reports content but keep the folder
 reports/*
 !reports/.gitkeep
